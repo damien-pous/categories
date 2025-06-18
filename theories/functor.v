@@ -29,25 +29,26 @@ HB.instance Definition _ (𝐂: Quiver) :=
   IsPreFunctor.Build 𝐂 𝐂 idfun (fun a b => setoid_id).
 HB.instance Definition _ (𝐂: PreCat) :=
   IsFunctor.Build 𝐂 𝐂 idfun (fun=> eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+Definition id_functor {𝐂: PreCat} := idfun: Functor 𝐂 𝐂.
 
 (** composition of functors *)
-HB.instance Definition _ {C D E: Quiver} {F: PreFunctor C D} {G: PreFunctor D E} :=
-  IsPreFunctor.Build C E (G \o F) (fun _ _ => setoid_comp (Fhom G) (Fhom F)).
-
-Program Definition _functor_comp {C D E: PreCat} {F: Functor C D} {G: Functor D E} :=
-  IsFunctor.Build C E (G \o F) _ _.
+HB.instance Definition _ {𝐂 𝐃 𝐄: Quiver} {F: PreFunctor 𝐂 𝐃} {G: PreFunctor 𝐃 𝐄} :=
+  IsPreFunctor.Build 𝐂 𝐄 (G \o F) (fun _ _ => setoid_comp (Fhom G) (Fhom F)).
+Program Definition _functor_comp {𝐂 𝐃 𝐄: PreCat} {F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} :=
+  IsFunctor.Build 𝐂 𝐄 (G \o F) _ _.
 Next Obligation. intros. cbn. by rewrite 2!Fidmap. Qed.
 Next Obligation. intros. cbn. by rewrite 2!Fcomp. Qed.
-HB.instance Definition _ C D E F G := @_functor_comp C D E F G.
+HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_functor_comp 𝐂 𝐃 𝐄 F G.
+Definition comp_functor {𝐂 𝐃 𝐄: PreCat}{F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} := G \o F: Functor 𝐂 𝐄.
 
 (** constant functor *)
-Definition cst (C D : Quiver) (c : C) := fun of D => c.
-Arguments cst {C} D c.
-HB.instance Definition _ {C D : PreCat} (c : C) :=
-  IsPreFunctor.Build D C (cst D c) (fun _ _ => const idmap).
-HB.instance Definition _ {C D : Cat} (c : C) :=
-  IsFunctor.Build D C (cst D c) (fun=> eqv_refl)
+Definition cst {𝐂 𝐃: Quiver} (D: 𝐃) := fun of 𝐂 => D.
+HB.instance Definition _ {𝐂: Quiver} {𝐃: PreCat} (D: 𝐃) :=
+  IsPreFunctor.Build 𝐂 𝐃 (cst D) (fun _ _ => const idmap).
+HB.instance Definition _ {𝐂: PreCat} {𝐃: Cat} (D: 𝐃) :=
+  IsFunctor.Build 𝐂 𝐃 (cst D) (fun=> eqv_refl)
     (fun _ _ _ _ _ => eqv_sym _ _ (compo1 idmap)).
+Definition cst_functor {𝐂: PreCat} {𝐃: Cat} (D: 𝐃) := cst D: Functor 𝐂 𝐃.
 
 
 (** * Natural transformations *)
@@ -127,9 +128,7 @@ Qed.
 HB.instance Definition _ {𝐂 𝐃: Cat} := isSetoid.Build (Functor 𝐂 𝐃) _.
 
 HB.instance Definition _ := IsQuiver.Build Cat Functor.
-HB.instance Definition _ := IsPreCat.Build Cat
-                              (fun C => idfun: Functor C C)
-                              (fun C D E F G => (G \o F): Functor C E).
+HB.instance Definition _ := IsPreCat.Build Cat (@id_functor) (@comp_functor).
 Program Definition _cat_cat := IsCat.Build Cat _ _ _ _.
 Admit Obligations.
 HB.instance Definition _ := _cat_cat.

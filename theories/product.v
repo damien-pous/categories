@@ -143,7 +143,7 @@ End prod.
 Definition cat_top: Terminal Cat.
   exists (Cat1: Cat)=>X.
   unshelve eexists=>//.
-  exact (cst _ (tt: Cat1): Functor _ _).
+  exact (cst_functor (tt: Cat1)).
   move=>F _/=. sorry. 
 Defined.
 Definition cat_prod (C D: Cat): Product C D.
