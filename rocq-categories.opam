@@ -1,0 +1,31 @@
+opam-version: "2.0"
+maintainer: "damien.pous@ens-lyon.fr"
+version: "dev"
+
+homepage: "https://github.com/damien-pous/categories"
+dev-repo: "git+https://github.com/damien-pous/categories.git"
+bug-reports: "https://github.com/damien-pous/categories/issues"
+license: "GNU LGPL"
+
+synopsis: "A library for category theory"
+description: """
+Library about category theory, with hom-setoids.
+Hierarchy of structures implemented with Hierarchy Builder.
+"""
+
+build: [
+  [make "-j%{jobs}%" ]
+]
+install: [make "install"]
+depends: [
+  "rocq-prover" {>= "9.0"}
+  "rocq-partial-orders"
+]
+
+tags: [
+  "keyword:category theory"
+  "keyword:setoid"
+]
+authors: [
+  "Damien Pous"
+]

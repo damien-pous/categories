@@ -1,0 +1,11 @@
+-native-compiler no
+-arg -type-in-type
+-arg -w -arg -undo-batch-mode
+-arg -w -arg -notation-overridden          # temporary, for mathcomp
+-arg -w -arg +HB.no-new-instance
+
+-R theories/ Categories
+theories/cat.v
+theories/functor.v
+theories/span.v
+theories/product.v
