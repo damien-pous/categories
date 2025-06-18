@@ -5,6 +5,7 @@ From PartialOrders Require Export setoid.
 #[export] Set Implicit Arguments.
 #[export] Unset Strict Implicit.
 #[export] Unset Printing Implicit Defensive.
+#[export] Unset Asymmetric Patterns.
 #[export] Obligation Tactic := idtac. 
 
 (** reserved notations *)
