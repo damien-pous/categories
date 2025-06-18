@@ -18,7 +18,7 @@ build: [
 ]
 install: [make "install"]
 depends: [
-  "rocq-prover" {>= "9.0"}
+  "rocq-core" {>= "9.0"}
   "rocq-partial-orders"
 ]
 
