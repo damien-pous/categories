@@ -24,6 +24,10 @@ HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @prefunctor 𝐂 𝐃 F := {
 HB.structure Definition functor (𝐂 𝐃: PreCat) :=
   { F of IsFunctor 𝐂 𝐃 F & }.
 
+(** rewriting tupe *)
+Definition cats := (@Fidmap,@compo1,@comp1o,@Fcomp,@compoA)%core.
+
+
 (** identity functor *)
 HB.instance Definition _ (𝐂: Quiver) :=
   IsPreFunctor.Build 𝐂 𝐂 idfun (fun a b => setoid_id).
@@ -36,8 +40,8 @@ HB.instance Definition _ {𝐂 𝐃 𝐄: Quiver} {F: PreFunctor 𝐂 𝐃} {G: 
   IsPreFunctor.Build 𝐂 𝐄 (G \o F) (fun _ _ => setoid_comp (Fhom G) (Fhom F)).
 Program Definition _functor_comp {𝐂 𝐃 𝐄: PreCat} {F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} :=
   IsFunctor.Build 𝐂 𝐄 (G \o F) _ _.
-Next Obligation. intros. cbn. by rewrite 2!Fidmap. Qed.
-Next Obligation. intros. cbn. by rewrite 2!Fcomp. Qed.
+Next Obligation. intros. cbn. by rewrite !cats. Qed.
+Next Obligation. intros. cbn. by rewrite !cats. Qed.
 HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_functor_comp 𝐂 𝐃 𝐄 F G.
 Definition comp_functor {𝐂 𝐃 𝐄: PreCat}{F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} := G \o F: Functor 𝐂 𝐄.
 
@@ -74,7 +78,7 @@ Definition natural_id {𝐂 𝐃: PreCat} (F: PreFunctor 𝐂 𝐃) :=
   fun X => \idmap (F X).
 Lemma natural_id_natural (𝐂 𝐃: Cat) (F: PreFunctor 𝐂 𝐃):
   IsNatural 𝐂 𝐃 F F (natural_id F).
-Proof. by constructor=>X Y f; rewrite /natural_id/= compo1 comp1o. Qed.
+Proof. by constructor=>X Y f; rewrite /natural_id/= !cats. Qed.
 HB.instance Definition _ 𝐂 𝐃 F := @natural_id_natural 𝐂 𝐃 F.
 
 Definition natural_comp {𝐂 𝐃: PreCat} (F G H: PreFunctor 𝐂 𝐃) (m: F ~> G) (n : G ~> H) :=
