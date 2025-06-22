@@ -3,7 +3,7 @@ A Rocq library about category theory, with hom-setoids.
 # REQUIREMENTS
 
 - rocq-prover 9.0 (see branch 8.20 for backports)
-- rocq-partial-orders (http://github.com:damien-pous/partial-orders.git) 
+- rocq-partial-orders (https://github.com/damien-pous/partial-orders) 
 
 # AUTHORS
 
