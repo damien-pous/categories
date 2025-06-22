@@ -32,10 +32,21 @@ Reserved Notation "X ⊗ Y" (at level 29).
 
 Reserved Notation "𝐂 ^op" (at level 1, format "𝐂 ^op").
 
-
 Declare Scope cat_scope.
 Delimit Scope cat_scope with cat.
 Local Open Scope cat_scope.
+
+
+(** for temporarily admitting things *)
+Axiom sorry: forall {A: Type}, A.
+Ltac sorry := exact: sorry. 
+
+
+(** casting morphism-like types *)
+Definition ecast' {A} {T: A -> A -> Type} [a b a' b'] (x: T a b) (aa: a = a') (bb: b = b'): T a' b' :=
+  eq_rect _ (fun a => T a b') (eq_rect _ _ x _ bb) _ aa.
+Arguments ecast' {_ _} [_ _ _ _] _ & _ _: simpl never.
+Notation ecast a' b' f := (@ecast' _ _ _ _ a' b' f _ _).
 
        
 (** * Categories *)
@@ -75,7 +86,7 @@ HB.mixin Record IsCat 𝐂 of precat 𝐂 := {
   #[canonical=no] compo1: forall {A B: 𝐂} (f: A ~> B), idmap ∘ f ≡ f;
   #[canonical=no] compoA: forall {A B C D: 𝐂} (f: A ~> B) (g: B ~> C) (h: C ~> D),
       h ∘ (g ∘ f) ≡ (h ∘ g) ∘ f;
-  #[canonical=no] compoE: forall {A B C}, Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 A B C);
+  #[canonical=no] comp_eqv: forall {A B C}, Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 A B C);
 }.
 #[short(type="Cat")]
 HB.structure Definition cat := { 𝐂 of IsCat 𝐂 & }.
@@ -83,8 +94,11 @@ Bind Scope cat_scope with Cat.
 Arguments compo1 {_ _ _}.
 Arguments comp1o {_ _ _}.
 Arguments compoA {_ _ _ _ _}.
-Arguments compoE {_ _ _ _}.
-Existing Instance compoE.
+Arguments comp_eqv {_ _ _ _}.
+Existing Instance comp_eqv.
+
+(** rewriting tuple *)
+Definition cats := (@compo1, @comp1o, @compoA)%core.
 
 (** duality: opposite category *)
 Definition catop (𝐂: Type): Type := 𝐂.
@@ -97,7 +111,7 @@ HB.instance Definition _ (𝐂: Cat) := IsCat.Build (𝐂^op)
   (fun _ _ => compo1) 
   (fun _ _ => comp1o)
   (fun _ _ _ _ _ _ _ => eqv_sym _ _ (compoA _ _ _))
-  (fun _ _ _ _ _ H _ _ H' => compoE _ _ H' _ _ H).
+  (fun _ _ _ _ _ H _ _ H' => comp_eqv _ _ H' _ _ H).
 (** key for dual morphisms *)
 Definition morphop {𝐂: Quiver} [x y: 𝐂] (f: x ~> y): y ~>_(𝐂^op) x := f.
 
@@ -120,7 +134,7 @@ Program Definition _prod_cat (𝐂 𝐃: Cat) := IsCat.Build (𝐂*𝐃)%type _ 
 Next Obligation. split; apply: comp1o. Qed.
 Next Obligation. split; apply: compo1. Qed.
 Next Obligation. split; apply: compoA. Qed.
-Next Obligation. move=>*??[??]??[??]. split=>/=; exact: compoE. Qed.
+Next Obligation. move=>*??[??]??[??]. split=>/=; exact: comp_eqv. Qed.
 HB.instance Definition _ 𝐂 𝐃 := _prod_cat 𝐂 𝐃. 
 
 
@@ -183,32 +197,57 @@ Arguments isoK' {_ _ _}.
 Notation "A ≃_ 𝐂 B" := (@iso.type 𝐂 A B) (only parsing).
 Notation "A ≃ B" := (Iso A B).
 
+Definition mk_iso {𝐂: PreCat} {X Y: 𝐂} (i: X ~> Y) (j: Y ~> X): i ∘ j ≡ idmap -> j ∘ i ≡ idmap -> X ≃ Y.
+Proof. move=>ij ji. exists i. split. by exists j. Defined. 
+Arguments mk_iso {_ _ _}. 
+
 (** forward and backward components *)
-Definition forward {𝐂: Cat} [A B: 𝐂] (i: Iso A B) := bare i.
+Definition forward {𝐂: PreCat} [A B: 𝐂] (i: Iso A B) := bare i.
 Notation "f '¹'" := (forward f) (at level 9, format "f '¹'").
 Notation "f '⁻¹'" := (inverse f) (at level 9, format "f '⁻¹'").
 
+Section s.
+Context {𝐂: Cat}.
+Implicit Types A B C: 𝐂.
+
 (** isomorphisms form a groupoid *)
-Lemma _iso_id {𝐂: Cat} (X: 𝐂): IsIso _ X X idmap.
+Lemma _iso_id A: IsIso _ A A idmap.
 Proof. exists idmap. exact: compo1. exact: comp1o. Defined.
-Lemma _iso_comp {𝐂: Cat} {X Y Z: 𝐂} (f: X ≃ Y) (g: Y ≃ Z) : IsIso _ X Z (g ∘ f).
+Lemma _iso_comp A B C (f: A ≃ B) (g: B ≃ C): IsIso _ A C (g ∘ f).
 Proof.
   exists (f⁻¹ ∘ g⁻¹).
   abstract (by rewrite compoA -(compoA f⁻¹) isoK comp1o isoK).
   abstract (by rewrite -compoA (compoA f) isoK' compo1 isoK').
 Defined.
 
-HB.instance Definition _ {𝐂: Cat} (X: 𝐂) := _iso_id X. 
-HB.instance Definition _ {𝐂: Cat} (X Y Z: 𝐂) (f: X ≃ Y) (g: Y ≃ Z) := _iso_comp f g. 
-HB.instance Definition _ {𝐂: Cat} (X Y: 𝐂) (i: X ≃ Y) := @IsIso.Build _ Y X (i⁻¹) (i¹) (isoK' i) (isoK i). 
+HB.instance Definition _ A := _iso_id A. 
+HB.instance Definition _ A B C (f: A ≃ B) (g: B ≃ C) := _iso_comp f g. 
+HB.instance Definition _ A B (i: A ≃ B) := @IsIso.Build _ B A (i⁻¹) (i¹) (isoK' i) (isoK i). 
 
-Definition iso_refl {𝐂: Cat} (X: 𝐂) : X ≃ X := idmap.
-Definition iso_trans {𝐂: Cat} {X Y Z: 𝐂} (i: X ≃ Y) (j: Y ≃ Z): X ≃ Z := j ∘ i.
-Definition iso_sym {𝐂: Cat} {X Y: 𝐂} (i: X ≃ Y): Y ≃ X := i⁻¹. 
+Definition iso_refl A: A ≃ A := idmap.
+Definition iso_trans A B C (i: A ≃ B) (j: B ≃ C): A ≃ C := j ∘ i.
+Definition iso_sym A B (i: A ≃ B): B ≃ A := i⁻¹. 
 
-Definition mk_iso {𝐂: PreCat} {X Y: 𝐂} (i: X ~> Y) (j: Y ~> X): i ∘ j ≡ idmap -> j ∘ i ≡ idmap -> X ≃ Y.
-Proof. move=>ij ji. exists i. split. by exists j. Defined. 
-Arguments mk_iso {_ _ _}. 
+Lemma iso_switch_src_r A A' B (f: A ~> B) (g: A' ~> B) (i: A ≃ A'): f ≡ g ∘ i <-> f ∘ i⁻¹ ≡ g.
+Proof.
+  split.
+  - move=>->. by rewrite -compoA isoK cats.
+  - move=><-. by rewrite -compoA isoK' cats.
+Qed.
 
-Axiom sorry: forall {A: Type}, A.
-Ltac sorry := exact: sorry. 
+Lemma iso_switch_tgt_r A B B' (f: A ~> B) (g: A ~> B') (i: B' ≃ B): f ≡ i ∘ g <-> i⁻¹ ∘ f  ≡ g.
+Proof.
+  split.
+  - move=>->. by rewrite compoA isoK' cats.
+  - move=><-. by rewrite compoA isoK cats.
+Qed.
+
+Lemma iso_switch_src_l A A' B (f: A ~> B) (g: A' ~> B) (i: A' ≃ A): f ∘ i ≡ g <-> f ≡ g ∘ i⁻¹.
+Proof. split=>H; exact/eqv_sym/iso_switch_src_r/eqv_sym. Qed.
+
+Lemma iso_switch_tgt_l A B B' (f: A ~> B) (g: A ~> B') (i: B ≃ B'): i ∘ f ≡ g <-> f  ≡ i⁻¹ ∘ g.
+Proof. split=>H; exact/eqv_sym/iso_switch_tgt_r/eqv_sym. Qed.
+
+End s. 
+Definition iso_switch :=
+  (@iso_switch_src_l, @iso_switch_src_r, @iso_switch_tgt_l, @iso_switch_tgt_r)%core.

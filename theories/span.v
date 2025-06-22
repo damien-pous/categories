@@ -35,4 +35,4 @@ Program Definition _span_cat (𝐂: Cat) (A B: 𝐂) :=
 Next Obligation. intros. apply: comp1o. Qed.
 Next Obligation. intros. apply: compo1. Qed.
 Next Obligation. intros. apply: compoA. Qed.
-Next Obligation. repeat intro. exact: compoE. Qed.
+Next Obligation. repeat intro. exact: comp_eqv. Qed.

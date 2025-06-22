@@ -80,7 +80,9 @@ Section prod.
   Definition PROD (X: 𝐂*𝐂): 𝐂 := X.1 × X.2. 
   Program Definition _PROD_prefunctor :=
     IsPreFunctor.Build _ _ PROD (fun A B => (efun f => pair' f.1 f.2)).
-  Next Obligation. Admitted.
+  Next Obligation.
+    move=>/=A B f g [fg1 fg2]; apply: pair_eqv; by rewrite ?fg1 ?fg2. 
+  Qed.
   HB.instance Definition _ := _PROD_prefunctor.
   Program Definition _PROD_functor := IsFunctor.Build _ _ PROD _ _.
   Next Obligation.
@@ -106,14 +108,22 @@ Section prod.
   Proof.
     apply: (mk_iso (pair (fst∘fst) (pair (snd∘fst) snd))
               (pair (pair fst (fst∘snd)) (snd∘snd))).
-    - sorry.
-    - sorry.
+    - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o.
+      by rewrite -compoA !fst_pair.
+      apply prod_ext; rewrite compoA ?(fst_pair,snd_pair)//.
+      by rewrite -compoA fst_pair snd_pair.
+    - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o.
+      apply prod_ext; rewrite compoA ?(fst_pair,snd_pair)//.
+      by rewrite -compoA snd_pair fst_pair.
+      by rewrite -compoA !snd_pair.
   Defined.
 
   Definition UNIT (X: Cat1): 𝐂 := top. 
   Program Definition _UNIT_prefunctor :=
     IsPreFunctor.Build _ _ UNIT (fun A B => (efun f => unique_elt (terminalP _ _))).
-  Next Obligation. Admitted.
+  Next Obligation.
+    move=>/=A B f g fg/=. exact: uniqueness. 
+  Qed.
   HB.instance Definition _ := _UNIT_prefunctor.
   Program Definition _UNIT_functor := IsFunctor.Build _ _ UNIT _ _.
   Next Obligation. intro. exact: (uniqueness (terminalP _ _)). Qed.
@@ -125,7 +135,7 @@ Section prod.
     apply: (mk_iso snd (pair (unique_elt (terminalP _ X)) idmap)).
     - apply snd_pair.
     - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) ?compo1 comp1o//.
-      sorry. 
+      exact: (Unicity (terminalP top_ _)).
   Defined.
   
   Definition prod_unitr X: X×top ≃ X.
@@ -133,7 +143,7 @@ Section prod.
     apply: (mk_iso fst (pair idmap (unique_elt (terminalP _ X)))).
     - apply fst_pair.
     - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) ?compo1 comp1o//.
-      sorry. 
+      exact: (Unicity (terminalP top_ _)).
   Defined.
   
 End prod.
@@ -143,9 +153,11 @@ End prod.
 Definition cat_top: Terminal Cat.
   exists (Cat1: Cat)=>X.
   unshelve eexists=>//.
-  exact (cst_functor (tt: Cat1)).
-  move=>F _/=. sorry. 
+  exact (functor_cst (tt: Cat1)).
+  move=>F _/=. split.
+  repeat unshelve eexists. 
 Defined.
+
 Definition cat_prod (C D: Cat): Product C D.
   unshelve eexists. exists (C * D: Cat)%type.
   unshelve eexists. exact Datatypes.fst. 
@@ -156,8 +168,16 @@ Definition cat_prod (C D: Cat): Product C D.
   unshelve eexists=>//.
   unshelve eexists. cbn.
   unshelve eexists. move=>x. exact: (@spanl _ _ _ X x, @spanr _ _ _ X x).
-  sorry. cbn. sorry.
-  sorry. 
+  unshelve eexists.
+  unshelve eexists.
+  move=>A B. unshelve eexists.
+  move=>f. split=>/=.
+  exact: (Fhom (@spanl _ _ _ X) f).
+  exact: (Fhom (@spanr _ _ _ X) f).
+  sorry.
+  sorry.
+  cbn. rewrite /functor_comp/=. sorry.
+  cbn. sorry.
 Defined.
 HB.instance Definition _ := IsCartesian.Build Cat cat_top cat_prod.
 
