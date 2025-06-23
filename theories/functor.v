@@ -158,9 +158,10 @@ HB.instance Definition _ 𝐂 𝐃 := _functor_cat 𝐂 𝐃.
 
 Section s.
 Context {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃).
+Definition functor_equiv := F ≃ G. 
 Program Definition iso_ntx'
   (i: forall X, F X ≃ G X) (n: F ~> G)
-  (H: forall X, n X ≡ (i X)¹): F ≃ G :=
+  (H: forall X, n X ≡ (i X)¹): functor_equiv :=
   mk_iso n (mk_ntx G F (fun X => (i X)⁻¹) _) _ _.
 Next Obligation.
   intros. cbn. rewrite -iso_switch. setoid_rewrite <-(H X).
@@ -172,7 +173,7 @@ Next Obligation. move=>i n H A/=. by rewrite H isoK'. Qed.
 
 Definition iso_ntx
   (i: forall X, F X ≃ G X):
-  (forall X Y h, (i Y)¹ ∘ Fhom F h ≡ Fhom G h ∘ (i X)¹) -> F ≃ G.
+  (forall X Y h, (i Y)¹ ∘ Fhom F h ≡ Fhom G h ∘ (i X)¹) -> functor_equiv.
 Proof.
   move=>N. unshelve apply: iso_ntx'.
   exact: i.
@@ -180,13 +181,15 @@ Proof.
   done.
 Defined.
 
-Definition iso_ntx_pw (i: F ≃ G): forall X, F X ≃ G X :=
-  fun X => mk_iso (i¹ X) (i⁻¹ X) (isoK i X) (isoK' i X).
+Definition iso_ntx_pw_ (i: functor_equiv): forall X, F X ~> G X := fun X => (i¹ X).
+HB.instance Definition _ (i: functor_equiv) X :=
+  IsIso.Build _ _ _ (iso_ntx_pw_ i X) (isoK i X) (isoK' i X).
+Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X := iso_ntx_pw_ i X. 
 
 Lemma same_functor
   (FG1: forall X, F X = G X)
   (FG2: forall (A B: 𝐂) (f: A ~> B), Fhom G f ≡ ecast' (T:=hom) (Fhom F f) (FG1 A) (FG1 B)):
-  F ≃ G.
+  functor_equiv.
 Proof.
   unshelve apply: iso_ntx.
   - intro. rewrite FG1. exact: iso_refl.
@@ -195,8 +198,12 @@ Proof.
     by rewrite !cats. 
 Defined.
 End s.
+Coercion iso_ntx_pw: functor_equiv >-> Funclass.
+Infix "≈" := functor_equiv (at level 70): cat_scope.
 
-Record functor_eqv {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃): Prop := { feq_iso: F ≃ G }. 
+(* Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹.  *)
+
+Record functor_eqv {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃): Prop := { feq_iso: F ≈ G }. 
 
 #[local] Instance Equivalence_functor_eqv {𝐂 𝐃: Cat}: Equivalence (@functor_eqv 𝐂 𝐃). 
 Proof.
@@ -208,7 +215,6 @@ Qed.
 HB.instance Definition _ {𝐂 𝐃: Cat} := isSetoid.Build (Functor 𝐂 𝐃) _.
 HB.instance Definition _ := IsQuiver.Build Cat Functor.
 HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp).
-
 
 Section strict.
 Context {A B C: Cat}.

@@ -251,3 +251,9 @@ Proof. split=>H; exact/eqv_sym/iso_switch_tgt_r/eqv_sym. Qed.
 End s. 
 Definition iso_switch :=
   (@iso_switch_src_l, @iso_switch_src_r, @iso_switch_tgt_l, @iso_switch_tgt_r)%core.
+
+Program Definition pair_iso {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B'):
+  (A,B) ≃_((𝐂*𝐃)%type) (A',B') :=
+  @mk_iso (𝐂*𝐃)%type (A,B) (A',B') (i¹,j¹) (i⁻¹,j⁻¹) _ _.
+Next Obligation. split; exact: isoK. Qed.
+Next Obligation. split; exact: isoK'. Qed.

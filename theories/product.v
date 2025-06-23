@@ -96,6 +96,14 @@ Section prod.
   HB.instance Definition _ := _PROD_functor. 
 
   Implicit Types X Y Z T: 𝐂.
+
+  Lemma pair'_iso {X Y X' Y'} (i: X ≃ X') (j: Y ≃ Y'): X×Y ≃ X'×Y'.
+  Proof.
+   apply: (mk_iso (pair' i j) (pair' i⁻¹ j⁻¹));
+     abstract by apply: prod_ext; rewrite compoA ?(fst_pair,snd_pair)
+                                  -compoA ?(fst_pair,snd_pair)
+                                     compoA ?(isoK,isoK') !cats.
+  Defined.
     
   Definition prod_sym X Y: X×Y ≃ Y×X.
   Proof.
@@ -181,6 +189,8 @@ Definition cat_prod (C D: Cat): Product C D.
 Defined.
 HB.instance Definition _ := IsCartesian.Build Cat cat_top cat_prod.
 
+
+(** Bifunctors *)
 
 Definition app11 {A B D: Cat} (F: A×B ~> D) (X: A) (Y: B): D := F(X,Y).
 Definition app22 {A B D: Cat} (F: A×B ~> D) {X X' Y Y'}
