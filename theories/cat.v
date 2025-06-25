@@ -8,10 +8,9 @@ From PartialOrders Require Export setoid.
 #[export] Unset Asymmetric Patterns.
 #[export] Obligation Tactic := idtac. 
 
-(** reserved notations *)
+(** ** reserved notations *)
 
-Reserved Notation "A ≃ B" (at level 70, format "A  ≃  B").
-Reserved Notation "A ≃_ 𝐂 B" (at level 70, 𝐂 at level 0, format "A  ≃_ 𝐂  B").
+(** morphisms, monos, epis, isos *)
 
 Reserved Notation "a ~> b" (at level 99, b at level 200, format "a  ~>  b").
 Reserved Notation "a ~>_ 𝐂 b" (at level 99, 𝐂 at level 0).
@@ -22,14 +21,24 @@ Reserved Notation "a ↪_ 𝐂 b" (at level 99, 𝐂 at level 0).
 Reserved Notation "a ↠ b" (at level 99, b at level 200, format "a  ↠  b").
 Reserved Notation "a ↠_ 𝐂 b" (at level 99, 𝐂 at level 0).
 
+Reserved Notation "A ≃ B" (at level 70, format "A  ≃  B").
+Reserved Notation "A ≃_ 𝐂 B" (at level 70, 𝐂 at level 0, format "A  ≃_ 𝐂  B").
+
 Reserved Notation "a ⥲ b" (at level 99, b at level 200, format "a  ⥲  b").
 Reserved Notation "a ⥲_ 𝐂 b" (at level 99, 𝐂 at level 0).
+(** natural isomorphisms *)
+Reserved Notation "F ≈ G" (at level 70).
 
+(** composition *)
 Reserved Notation "f ∘ g" (at level 40, left associativity). 
 Reserved Notation "f ∘[ 𝐂 ] g" (at level 40).
 
-Reserved Notation "X ⊗ Y" (at level 29).
+(** tensor (in monoidal categories) *)
+Reserved Notation "X ⊗ Y" (at level 31, right associativity). (* objects *)
+Reserved Notation "f · g" (at level 30, right associativity). (* morphisms *)
+Reserved Notation "n ⊚ m" (at level 30, right associativity). (* natural transformations *)
 
+(** opposite category *)
 Reserved Notation "𝐂 ^op" (at level 1, format "𝐂 ^op").
 
 Declare Scope cat_scope.

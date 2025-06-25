@@ -19,46 +19,39 @@ Arguments Fhom {_ _} _ {_ _}.
 HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @prefunctor 𝐂 𝐃 F := {
     #[canonical=no] Fidmap: forall A: 𝐂, Fhom F (\idmap A) ≡ idmap;
     #[canonical=no] Fcomp: forall {A B C: 𝐂} (f: A ~> B) (g: B ~> C), Fhom F (g ∘ f) ≡ Fhom F g ∘ Fhom F f;
-}.
+  }.
 #[short(type="Functor")]
-HB.structure Definition functor (𝐂 𝐃: PreCat) :=
+HB.structure Definition functor (𝐂 𝐃: Cat) :=
   { F of IsFunctor 𝐂 𝐃 F & }.
 
 (** rewriting tuple *)
 Definition cats := (@Fidmap, cats, @Fcomp)%core.
 
-
 (** identity functor *)
 HB.instance Definition _ (𝐂: Quiver) :=
   IsPreFunctor.Build 𝐂 𝐂 idfun (fun a b => setoid_id).
-HB.instance Definition _ (𝐂: PreCat) :=
+HB.instance Definition _ (𝐂: Cat) :=
   IsFunctor.Build 𝐂 𝐂 idfun (fun=> eqv_refl) (fun _ _ _ _ _ => eqv_refl).
-Definition functor_id {𝐂: PreCat} := idfun: Functor 𝐂 𝐂.
 
 (** composition of functors *)
 HB.instance Definition _ {𝐂 𝐃 𝐄: Quiver} {F: PreFunctor 𝐂 𝐃} {G: PreFunctor 𝐃 𝐄} :=
   IsPreFunctor.Build 𝐂 𝐄 (types_comp G F) (fun _ _ => setoid_comp (Fhom G) (Fhom F)).
-Program Definition _comp_functor {𝐂 𝐃 𝐄: PreCat} {F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} :=
+Program Definition _comp_functor {𝐂 𝐃 𝐄: Cat} {F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} :=
   IsFunctor.Build 𝐂 𝐄 (types_comp G F) _ _.
 Next Obligation. intros. cbn. by rewrite !cats. Qed.
 Next Obligation. intros. cbn. by rewrite !cats. Qed.
 HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_comp_functor 𝐂 𝐃 𝐄 F G.
-Definition functor_comp {𝐂 𝐃 𝐄: PreCat} (F: Functor 𝐂 𝐃) (G: Functor 𝐃 𝐄): Functor 𝐂 𝐄 :=
-  types_comp G F.
 
 (** constant functor *)
 Definition cst {𝐂 𝐃: Quiver} (D: 𝐃) := fun of 𝐂 => D.
 HB.instance Definition _ {𝐂: Quiver} {𝐃: PreCat} (D: 𝐃) :=
   IsPreFunctor.Build 𝐂 𝐃 (cst D) (fun _ _ => const idmap).
-HB.instance Definition _ {𝐂: PreCat} {𝐃: Cat} (D: 𝐃) :=
+HB.instance Definition _ {𝐂 𝐃: Cat} (D: 𝐃) :=
   IsFunctor.Build 𝐂 𝐃 (cst D) (fun=> eqv_refl)
     (fun _ _ _ _ _ => eqv_sym _ _ (compo1 idmap)).
-Definition functor_cst {𝐂: PreCat} {𝐃: Cat} (D: 𝐃): Functor 𝐂 𝐃 :=
-  cst D.
 
 Section s.
-  Context {𝐂 𝐃: PreCat}.
-  Variables (F: Functor 𝐂 𝐃) (A B: 𝐂) (i: A ≃ B).
+  Context {𝐂 𝐃: Cat} (F: Functor 𝐂 𝐃) (A B: 𝐂) (i: A ≃ B).
   Program Definition _functor_iso := @IsIso.Build _ _ _ (Fhom F i) (Fhom F i⁻¹) _ _.
   Next Obligation. intros. by rewrite -Fcomp isoK Fidmap. Qed.
   Next Obligation. intros. by rewrite -Fcomp isoK' Fidmap. Qed.
@@ -75,76 +68,47 @@ End s.
 (** naturality *)
 HB.mixin Record IsNatural {𝐂: Quiver} {𝐃: PreCat} (F G: PreFunctor 𝐂 𝐃) (n : forall X, F X ~> G X) :=
   { #[canonical=no] natural: forall (X Y: 𝐂) (f: X ~> Y), n Y ∘ Fhom F f ≡ Fhom G f ∘ n X }.
-#[short(type="ntx")]
-HB.structure Definition Natural {𝐂 𝐃} F G :=
+#[short(type="NTX")]
+HB.structure Definition Natural {𝐂 𝐃: Cat} (F G: PreFunctor 𝐂 𝐃) :=
   { n of @IsNatural 𝐂 𝐃 F G n }.
 Arguments natural {_ _ _ _} _ [_ _] _.
-Definition mk_ntx {𝐂: Quiver} {𝐃: PreCat} (F G: PreFunctor 𝐂 𝐃)
+Definition mk_ntx {𝐂 𝐃: Cat} (F G: PreFunctor 𝐂 𝐃)
   (n : forall X, F X ~> G X) (H: forall (X Y: 𝐂) (f: X ~> Y), n Y ∘ Fhom F f ≡ Fhom G f ∘ n X)
-  := HB.pack_for (ntx F G) n (IsNatural.Build _ _ F G n H).
+  := HB.pack_for (NTX F G) n (IsNatural.Build _ _ F G n H).
 Arguments mk_ntx {_ _} _ _ _ _.
 
 (** setoid structure on natural transformations *)
-HB.instance Definition _ (𝐂: Quiver) (𝐃: PreCat) (F G: PreFunctor 𝐂 𝐃) :=
-  Setoid.copy (ntx F G) (kernel (@Natural.sort 𝐂 𝐃 F G)).
+HB.instance Definition _ (𝐂 𝐃: Cat) (F G: PreFunctor 𝐂 𝐃) :=
+  Setoid.copy (NTX F G) (kernel (@Natural.sort 𝐂 𝐃 F G)).
 
 (** category of functors and natural transformations *)
-HB.instance Definition _  (𝐂: Quiver) (𝐃: PreCat) :=
-  IsQuiver.Build (PreFunctor 𝐂 𝐃) (@ntx 𝐂 𝐃).
-HB.instance Definition _  (𝐂 𝐃: PreCat) :=
-  IsQuiver.Build (Functor 𝐂 𝐃) (@ntx 𝐂 𝐃).
+HB.instance Definition _  𝐂 𝐃 :=
+  IsQuiver.Build (Functor 𝐂 𝐃) (@NTX 𝐂 𝐃).
 
-Definition ntx_id {𝐂 𝐃: PreCat} (F: PreFunctor 𝐂 𝐃) :=
+Definition ntx_id_ {𝐂 𝐃: PreCat} (F: PreFunctor 𝐂 𝐃) :=
   fun X => \idmap (F X).
-Arguments ntx_id {_ _} _ _ /. 
+Arguments ntx_id_ {_ _} _ _ /. 
 Lemma _ntx_id_natural (𝐂 𝐃: Cat) (F: PreFunctor 𝐂 𝐃):
-  IsNatural 𝐂 𝐃 F F (ntx_id F).
+  IsNatural 𝐂 𝐃 F F (ntx_id_ F).
 Proof. by constructor=>X Y f; rewrite /= !cats. Qed.
 HB.instance Definition _ 𝐂 𝐃 F := @_ntx_id_natural 𝐂 𝐃 F.
+Definition ntx_id {𝐂 𝐃} (F: Functor 𝐂 𝐃): F ~> F := (ntx_id_ F: NTX _ _). 
 
-Definition ntx_comp {𝐂 𝐃: PreCat} (F G H: PreFunctor 𝐂 𝐃) (m: forall X, F X ~> G X) (n: forall X, G X ~> H X) :=
+Definition ntx_comp_ {𝐂 𝐃: PreCat} (F G H: PreFunctor 𝐂 𝐃) (m: forall X, F X ~> G X) (n: forall X, G X ~> H X) :=
   fun X => n X ∘ m X.
-Arguments ntx_comp {_ _ _ _ _} _ _ _/. 
-Lemma _ntx_comp_natural (𝐂 𝐃: Cat) (F G H: PreFunctor 𝐂 𝐃) (m: F ~> G) (n: G ~> H) :
-  IsNatural 𝐂 𝐃 F H (@ntx_comp 𝐂 𝐃 F G H m n).
+Arguments ntx_comp_ {_ _ _ _ _} _ _ _/. 
+Lemma _ntx_comp_natural (𝐂 𝐃: Cat) (F G H: Functor 𝐂 𝐃) (m: F ~> G) (n: G ~> H) :
+  IsNatural 𝐂 𝐃 F H (@ntx_comp_ 𝐂 𝐃 F G H m n).
 Proof.
   constructor=>A B f /=.
   by rewrite -compoA natural compoA natural compoA.
 Qed.
 HB.instance Definition _ 𝐂 𝐃 F G H m n := @_ntx_comp_natural 𝐂 𝐃 F G H m n.
-
-Definition ntx_comp' {𝐂 𝐃 𝐄: PreCat} {F G: PreFunctor 𝐂 𝐃} {F' G': PreFunctor 𝐃 𝐄}
-  (k: forall X, F X ~> G X) (h: forall X, F' X ~> G' X): forall X, (types_comp F' F) X ~> (types_comp G' G) X :=
-  (fun X => h _ ∘ Fhom _ (k _)).
-Arguments ntx_comp' {_ _ _ _ _ _ _} _ _ _/. 
-Program Definition _ntx_comp'_natural {𝐂 𝐃 𝐄: Cat} {F G: Functor 𝐂 𝐃} {F' G': Functor 𝐃 𝐄}
-  (k: F ~> G) (h: F' ~> G') := IsNatural.Build 𝐂 𝐄 (types_comp F' F) (types_comp G' G) (ntx_comp' k h) _.
-Next Obligation.
-  intros=>/=.
-  rewrite natural -compoA !natural.
-  rewrite compoA -Fcomp natural. 
-  by rewrite !cats.
-Qed.
-HB.instance Definition _ 𝐂 𝐃 𝐄 F G F' G' k h := @_ntx_comp'_natural 𝐂 𝐃 𝐄 F G F' G' k h.
+Definition ntx_comp {𝐂 𝐃} (F G H: Functor 𝐂 𝐃) (n: F ~> G) (m: G ~> H): F ~> H :=
+  (ntx_comp_ n m: NTX _ _). 
 
 HB.instance Definition _ {𝐂 𝐃: Cat} :=
-  IsPreCat.Build (PreFunctor 𝐂 𝐃)
-    (fun F => ntx_id F: ntx F F)
-    (fun F G H m n => ntx_comp m n: ntx F H).
-HB.instance Definition _ {𝐂 𝐃: Cat} :=
-  IsPreCat.Build (Functor 𝐂 𝐃)
-    (fun F => ntx_id F: ntx F F)
-    (fun F G H m n => ntx_comp m n: ntx F H).
-
-Lemma _prefunctor_cat (𝐂 𝐃: Cat): IsCat (PreFunctor 𝐂 𝐃).
-Proof.
-  constructor; repeat intro.
-  - exact: comp1o. 
-  - exact: compo1. 
-  - exact: compoA.
-  - exact: comp_eqv.
-Qed.
-HB.instance Definition _ 𝐂 𝐃 := _prefunctor_cat 𝐂 𝐃.
+  IsPreCat.Build (Functor 𝐂 𝐃) ntx_id ntx_comp.
 
 Lemma _functor_cat (𝐂 𝐃: Cat): IsCat (Functor 𝐂 𝐃).
 Proof.
@@ -199,7 +163,7 @@ Proof.
 Defined.
 End s.
 Coercion iso_ntx_pw: functor_equiv >-> Funclass.
-Infix "≈" := functor_equiv (at level 70): cat_scope.
+Infix "≈" := functor_equiv: cat_scope.
 
 (* Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹.  *)
 
@@ -214,42 +178,61 @@ Proof.
 Qed.
 HB.instance Definition _ {𝐂 𝐃: Cat} := isSetoid.Build (Functor 𝐂 𝐃) _.
 HB.instance Definition _ := IsQuiver.Build Cat Functor.
+Definition functor_id {𝐂: Cat}: 𝐂 ~> 𝐂 := idfun: Functor 𝐂 𝐂.
+Definition functor_comp {𝐂 𝐃 𝐄: Cat} (F: 𝐂 ~> 𝐃) (G: 𝐃 ~> 𝐄): 𝐂 ~> 𝐄 := types_comp G F: Functor _ _.
+Definition functor_cst {𝐂 𝐃: Cat} (D: 𝐃): 𝐂 ~> 𝐃 := cst D: Functor _ _.
 HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp).
 
+
+Definition ntx_comp'_ {𝐂 𝐃 𝐄: PreCat} {F G: PreFunctor 𝐂 𝐃} {F' G': PreFunctor 𝐃 𝐄}
+  (k: forall X, F X ~> G X) (h: forall X, F' X ~> G' X): forall X, (types_comp F' F) X ~> (types_comp G' G) X :=
+  (fun X => h _ ∘ Fhom _ (k _)).
+Arguments ntx_comp'_ {_ _ _ _ _ _ _} _ _ _/. 
+Program Definition _ntx_comp'_natural {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}
+  (k: F ~> G) (h: F' ~> G') := IsNatural.Build 𝐂 𝐄 (types_comp F' F) (types_comp G' G) (ntx_comp'_ k h) _.
+Next Obligation.
+  intros=>/=.
+  rewrite natural -compoA !natural.
+  rewrite compoA -Fcomp natural. 
+  by rewrite !cats.
+Qed.
+HB.instance Definition _ 𝐂 𝐃 𝐄 F G F' G' k h := @_ntx_comp'_natural 𝐂 𝐃 𝐄 F G F' G' k h.
+Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}
+  (n: F ~> G) (m: F' ~> G'): (F' ∘ F) ~> (G' ∘ G) :=
+  (ntx_comp'_ n m: NTX _ _). 
+Notation "h ⊚ k" := (ntx_comp' k h): cat_scope.
+
 Section strict.
-Context {A B C: Cat}.
-Notation "h ⊗ k" := ((ntx_comp' k h: ntx _ _): _ ~>_(Functor _ _) _). 
-Notation "` F" := (ntx_id F) (at level 4).
-Lemma endo_exchange {F G H: Functor A B} {F' G' H': Functor B C}
+Context {𝐂 𝐃 𝐄: Cat}.
+Lemma endo_exchange {F G H: 𝐂 ~> 𝐃} {F' G' H': 𝐃 ~> 𝐄}
   (i: F ~> G) (j: G ~> H)
   (i': F' ~> G') (j': G' ~> H'):
-  (j'⊗j) ∘ (i'⊗i) ≡ (j'∘i') ⊗ (j∘i).
+  (j'⊚j) ∘ (i'⊚i) ≡ (j'∘i') ⊚ (j∘i).
 Proof.
   intro X; cbn.
   rewrite -!compoA. apply comp_eqv=>//.
   by rewrite !cats natural.
 Qed.
 
-Lemma ntx_id_comp {F: Functor A B} {G: Functor B C}:
-  ntx_id (types_comp G F) ≡ `G ⊗ `F.
+Lemma ntx_id_comp {F: 𝐂 ~> 𝐃} {G: 𝐃 ~> 𝐄}:
+  \idmap (G ∘ F) ≡ \idmap G ⊚ \idmap F.
 Proof. intro X; cbn. by rewrite !cats. Qed.
 
-Lemma ntx_comp'_eqv {F G: Functor A B} {F' G': Functor B C}:
+Lemma ntx_comp'_eqv {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}:
   Proper (eqv ==> eqv ==> eqv) (@ntx_comp' _ _ _ F G F' G').
 Proof. intros i i' ii j j' jj X. by rewrite /= (ii _) (jj _). Qed.
 
 Lemma functor_comp_eqv:
-  Proper (eqv ==> eqv ==> eqv) (@functor_comp A B C).
+  Proper (eqv ==> eqv ==> eqv) (@functor_comp 𝐂 𝐃 𝐄).
 Proof.
   intros F G [i] F' G' [j]. split.
-  apply: (mk_iso (j¹⊗ i¹) (j⁻¹⊗i⁻¹)).
+  apply: (mk_iso (j¹⊚ i¹) (j⁻¹⊚i⁻¹)).
   rewrite endo_exchange.
-  etransitivity. exact: (ntx_comp'_eqv (isoK i) (isoK j)). symmetry. exact: ntx_id_comp. 
+  etransitivity. exact: (ntx_comp'_eqv (isoK i) (isoK j)). by rewrite -ntx_id_comp. 
   rewrite endo_exchange.
-  etransitivity. exact: (ntx_comp'_eqv (isoK' i) (isoK' j)). symmetry. exact: ntx_id_comp. 
+  etransitivity. exact: (ntx_comp'_eqv (isoK' i) (isoK' j)). by rewrite -ntx_id_comp. 
 Qed.
 End strict.
-
 
 Program Definition _cat_cat := IsCat.Build Cat _ _ _ _.
 Next Obligation. split. exact: same_functor. Qed.

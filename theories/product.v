@@ -17,6 +17,7 @@ Structure Terminal (𝐂: Quiver) := {
 
 Section PROD.
 Context {𝐂: Cat} {A B: 𝐂}.
+Implicit Types X Y: 𝐂.
 Definition isProduct := @isTerminal (Span A B).
 Definition Product := @Terminal (Span A B).
 Coercion ob_Product (X: Product): 𝐂 := span_ob (terminal X). 
@@ -27,26 +28,26 @@ Definition snd: AB' ~> B := spanr.
 Definition pair {X} (f: X ~> A) (g: X ~> B): X ~> AB'.
   eapply (terminalP AB (span f g)).
 Defined.
-Lemma fst_pair {X} (f: 𝐂 X A) (g: 𝐂 X B): fst ∘ pair f g ≡ f.
+Lemma fst_pair {X} (f: X ~> A) (g: X ~> B): fst ∘ pair f g ≡ f.
 Proof.
   rewrite /pair. 
   destruct (unique_elt (terminalP AB (span f g))) as [? [H _]].
   apply H. 
 Qed.  
-Lemma snd_pair {X} (f: 𝐂 X A) (g: 𝐂 X B):
+Lemma snd_pair {X} (f: X ~> A) (g: X ~> B):
   snd ∘ pair f g ≡ g.
 Proof.
   rewrite /pair. 
   destruct (unique_elt (terminalP AB (span f g))) as [? [_ H]].
   apply H. 
 Qed.  
-Lemma pairU {X} (f: 𝐂 X A) (g: 𝐂 X B) (h: 𝐂 X AB'):
+Lemma pairU {X} (f: X ~> A) (g: X ~> B) (h: X ~> AB'):
   fst ∘ h ≡ f -> snd ∘ h ≡ g -> h ≡ pair f g.
 Proof.
   move=>F G. symmetry.
   by unshelve eapply (uniqueness (terminalP AB (span f g)) (exist _ h _)).
 Qed.
-Lemma pair_ext {X} (h: 𝐂 X AB'): h ≡ pair (fst ∘ h) (snd ∘ h).
+Lemma pair_ext {X} (h: X ~> AB'): h ≡ pair (fst ∘ h) (snd ∘ h).
 Proof. by apply pairU. Qed.
 Instance pair_eqv {X}: Proper (eqv ==> eqv ==> eqv) (@pair X).
 Proof.
@@ -54,7 +55,7 @@ Proof.
   apply pairU; rewrite -?ff -?gg.
   apply fst_pair. apply snd_pair.
 Qed.
-Lemma prod_ext {X} (f g: 𝐂 X AB'): fst ∘ f ≡ fst ∘ g -> snd ∘ f ≡ snd ∘ g -> f ≡ g.
+Lemma prod_ext {X} (f g: X ~> AB'): fst ∘ f ≡ fst ∘ g -> snd ∘ f ≡ snd ∘ g -> f ≡ g.
 Proof. move=>F G. rewrite (pair_ext g). by apply pairU. Qed.
 End PROD.
 Arguments isProduct {_}. 
@@ -74,7 +75,8 @@ Infix "×" := prod (at level 30).
 
 Section prod.
   Context {𝐂: CCat}.
-  Definition pair' {X Y Z T: 𝐂} (f: 𝐂 X Y) (g: 𝐂 Z T): 𝐂 (X×Z) (Y×T) :=
+  Implicit Types X Y Z T: 𝐂.
+  Definition pair' {X Y Z T} (f: X ~> Y) (g: Z ~> T): X×Z ~> Y×T :=
     pair (f∘fst) (g∘snd).
 
   Definition PROD (X: 𝐂*𝐂): 𝐂 := X.1 × X.2. 
@@ -94,8 +96,6 @@ Section prod.
       rewrite -!compoA ?(fst_pair,snd_pair)//.
   Qed.
   HB.instance Definition _ := _PROD_functor. 
-
-  Implicit Types X Y Z T: 𝐂.
 
   Lemma pair'_iso {X Y X' Y'} (i: X ≃ X') (j: Y ≃ Y'): X×Y ≃ X'×Y'.
   Proof.

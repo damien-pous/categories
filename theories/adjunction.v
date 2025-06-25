@@ -1,0 +1,18 @@
+(** * adjunctions *)
+
+Require Export functor.
+
+Local Open Scope cat_scope.
+
+(** ** indexed by the left adjoint *)
+HB.mixin Record isLeftAdjoint {𝐂 𝐃: Cat} (F: 𝐂 ~> 𝐃) (* F of @functor 𝐂 𝐃 F *) :=
+  { #[canonical=no] radj: 𝐃 ~> 𝐂; 
+    #[canonical=no] unit: \idmap 𝐂 ~> radj ∘ F;
+    #[canonical=no] counit: F ∘ radj ~> \idmap 𝐃;
+    #[canonical=no] counit_unit: idmap ⊚ counit ∘ unit ⊚ idmap ≡ ntx_id _;
+    #[canonical=no] unit_counit: idmap ⊚ unit ∘ counit ⊚ idmap ≡ ntx_id _;
+  }.
+#[short(type="LeftAdjoint")]
+HB.structure Definition leftAdjoint {𝐂 𝐃: Cat} := {F of isLeftAdjoint 𝐂 𝐃 F & }.
+Arguments radj {_ _}.
+Infix "⊣" := LeftAdjoint (at level 79): cat_scope.

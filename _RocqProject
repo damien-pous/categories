@@ -9,3 +9,4 @@ theories/cat.v
 theories/functor.v
 theories/span.v
 theories/product.v
+theories/adjunction.v
