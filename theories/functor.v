@@ -27,6 +27,30 @@ HB.structure Definition functor (𝐂 𝐃: Cat) :=
 (** rewriting tuple *)
 Definition cats := (@Fidmap, cats, @Fcomp)%core.
 
+(** extension of the normalisation tactic to deal with functors *)
+Module HL.
+  Export HL.
+  Section s.
+  Context {𝐂 𝐃} {F: Functor 𝐂 𝐃}. 
+  Fixpoint map {A B} (u: hom_list A B): hom_list (F A) (F B) :=
+    match u with
+    | nil => nil
+    | cons u v => cons (Fhom F u) (map v)
+    end.
+  Lemma eval_map {A B} (u: hom_list A B) : eval (map u) ≡ Fhom F (eval u).
+  Proof.
+    elim: u=>[/=|C D f u IH]; simpl map. by rewrite Fidmap.
+    by rewrite 2!eval_cons IH Fcomp.
+  Qed.
+    
+  Program Definition r_Fhom {A B} (f: reified A B) :=
+    reify (Fhom F f) (map (norm f)) _.
+  Next Obligation. intros. by rewrite eval_map normE. Qed.  
+  End s.
+End HL.
+(* TOTHINK: projection is on setoid_morphism.sort *)
+Canonical HL.r_Fhom.
+
 (** identity functor *)
 HB.instance Definition _ (𝐂: Quiver) :=
   IsPreFunctor.Build 𝐂 𝐂 idfun (fun a b => setoid_id).
@@ -38,8 +62,8 @@ HB.instance Definition _ {𝐂 𝐃 𝐄: Quiver} {F: PreFunctor 𝐂 𝐃} {G: 
   IsPreFunctor.Build 𝐂 𝐄 (types_comp G F) (fun _ _ => setoid_comp (Fhom G) (Fhom F)).
 Program Definition _comp_functor {𝐂 𝐃 𝐄: Cat} {F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} :=
   IsFunctor.Build 𝐂 𝐄 (types_comp G F) _ _.
-Next Obligation. intros. cbn. by rewrite !cats. Qed.
-Next Obligation. intros. cbn. by rewrite !cats. Qed.
+Next Obligation. intros. cbn. by cat. Qed.
+Next Obligation. intros. cbn. by cat. Qed.
 HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_comp_functor 𝐂 𝐃 𝐄 F G.
 
 (** constant functor *)
@@ -152,14 +176,14 @@ Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X := iso_ntx_pw_ i X.
 
 Lemma same_functor
   (FG1: forall X, F X = G X)
-  (FG2: forall (A B: 𝐂) (f: A ~> B), Fhom G f ≡ ecast' (T:=hom) (Fhom F f) (FG1 A) (FG1 B)):
+  (FG2: forall (A B: 𝐂) (f: A ~> B), Fhom G f ≡ cast2' (T:=hom) (Fhom F f) (FG1 A) (FG1 B)):
   functor_equiv.
 Proof.
   unshelve apply: iso_ntx.
   - intro. rewrite FG1. exact: iso_refl.
-  - intros A B f. rewrite /= FG2 /ecast' /=.
+  - intros A B f. rewrite /= FG2 /cast2' /=.
     destruct (FG1 A); destruct (FG1 B).
-    by rewrite !cats. 
+    by simpl; cat. 
 Defined.
 End s.
 Coercion iso_ntx_pw: functor_equiv >-> Funclass.
@@ -194,7 +218,7 @@ Next Obligation.
   intros=>/=.
   rewrite natural -compoA !natural.
   rewrite compoA -Fcomp natural. 
-  by rewrite !cats.
+  by cat.
 Qed.
 HB.instance Definition _ 𝐂 𝐃 𝐄 F G F' G' k h := @_ntx_comp'_natural 𝐂 𝐃 𝐄 F G F' G' k h.
 Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}
@@ -211,7 +235,7 @@ Lemma endo_exchange {F G H: 𝐂 ~> 𝐃} {F' G' H': 𝐃 ~> 𝐄}
 Proof.
   intro X; cbn.
   rewrite -!compoA. apply comp_eqv=>//.
-  by rewrite !cats natural.
+  normalise. by rewrite natural.
 Qed.
 
 Lemma ntx_id_comp {F: 𝐂 ~> 𝐃} {G: 𝐃 ~> 𝐄}:

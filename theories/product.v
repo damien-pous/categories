@@ -102,7 +102,7 @@ Section prod.
    apply: (mk_iso (pair' i j) (pair' i⁻¹ j⁻¹));
      abstract by apply: prod_ext; rewrite compoA ?(fst_pair,snd_pair)
                                   -compoA ?(fst_pair,snd_pair)
-                                     compoA ?(isoK,isoK') !cats.
+                                     compoA ?(isoK,isoK'); cat.
   Defined.
     
   Definition prod_sym X Y: X×Y ≃ Y×X.

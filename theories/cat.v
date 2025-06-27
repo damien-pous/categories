@@ -52,10 +52,10 @@ Ltac sorry := exact: sorry.
 
 
 (** casting morphism-like types *)
-Definition ecast' {A} {T: A -> A -> Type} [a b a' b'] (x: T a b) (aa: a = a') (bb: b = b'): T a' b' :=
+Definition cast2' {A} {T: A -> A -> Type} [a b a' b'] (x: T a b) (aa: a = a') (bb: b = b'): T a' b' :=
   eq_rect _ (fun a => T a b') (eq_rect _ _ x _ bb) _ aa.
-Arguments ecast' {_ _} [_ _ _ _] _ & _ _: simpl never.
-Notation ecast a' b' f := (@ecast' _ _ _ _ a' b' f _ _).
+Arguments cast2' {_ _} [_ _ _ _] _ & !_ !_.
+Notation cast2 a' b' f := (@cast2' _ _ _ _ a' b' f _ _).
 
        
 (** * Categories *)
@@ -266,3 +266,84 @@ Program Definition pair_iso {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: 
   @mk_iso (𝐂*𝐃)%type (A,B) (A',B') (i¹,j¹) (i⁻¹,j⁻¹) _ _.
 Next Obligation. split; exact: isoK. Qed.
 Next Obligation. split; exact: isoK'. Qed.
+
+(** ** extensible normalisation tactic via canonical structures *)
+Module HL.
+Section s.
+Context {𝐂: Cat}.
+Implicit Types A B C: 𝐂.
+Inductive hom_list_ C: 𝐂 -> Type :=
+| nil: hom_list_ C C
+| cons: forall {A B}, (A ~> B) -> hom_list_ C B -> hom_list_ C A.
+Notation hom_list A B := (hom_list_ B A).
+Arguments nil {_}. 
+Definition single {A B} (f: A ~> B) := cons f nil. 
+Fixpoint eval {B C} (u: hom_list B C): B ~> C :=
+  match u with
+  | nil => idmap
+  | cons g u => 
+      match u with
+      | nil => fun g => g
+      | _ => fun _ => g \; eval u
+      end g
+  end.
+Fixpoint app {A B} (u: hom_list A B): forall {C}, hom_list B C -> hom_list A C :=
+  match u with
+  | nil => fun _ v => v
+  | cons f u => fun _ v => cons f (app u v)
+  end.
+Lemma eval_nil {A}: eval (@nil A) ≡ idmap.
+Proof. done. Qed.
+Lemma eval_cons {A B C} f u: eval (@cons C A B f u) ≡ f \; eval u.
+Proof. revert A f. case: u=>//= A f. by rewrite compo1. Qed.
+Lemma eval_single {A B} (f: A~>B): eval (single f) ≡ f.
+Proof. by rewrite eval_cons eval_nil compo1. Qed.
+Lemma eval_app {A B C} u v: eval (@app A B u C v) ≡ eval u \; eval v.
+Proof.
+  revert C v. elim: u=>[|B' C' f u IH] C v; simpl app.
+  by rewrite eval_nil comp1o.
+  by rewrite 2!eval_cons IH compoA.
+Qed.
+  
+Structure reified A B := reify {
+    term:> A ~> B;
+    #[canonical=no] norm: hom_list A B;
+    #[canonical=no] normE: eval norm ≡ term;
+}.
+Arguments reify {_ _}.
+Definition r_id {A} := reify (\idmap A) nil eval_nil.
+Program Definition r_comp {A B C} (u: reified A B) (v: reified B C) :=
+  reify (u \; v) (app (norm u) (norm v)) _.
+Next Obligation. intros. by rewrite eval_app 2!normE. Qed.
+Definition r_var {A B} (f: A~>B) := reify f (single f) (eval_single f).
+
+Lemma normalise {A B} (u v: reified A B): eval (norm u) ≡ eval (norm v) -> u ≡ v.
+Proof. by rewrite 2!normE. Qed.
+
+End s.
+Notation hom_list A B := (hom_list_ B A).
+Arguments nil {_ _}.
+Arguments reify {_ _ _}.
+Program Definition r_sym1 {𝐂 𝐃: Cat} {A B: 𝐂} {A' B': 𝐃}
+  (f: (A~>B) -> (A'~>B')) (Hf: Proper (eqv ==> eqv) f)
+  (u: reified A B) := reify (f u) (single (f (eval (norm u)))) _.
+Next Obligation. intros. by rewrite eval_single normE. Qed.
+Program Definition r_sym2 {𝐂 𝐃 𝐄: Cat} {A B: 𝐂} {A' B': 𝐃} {A'' B'': 𝐄}
+  (f: (A~>B) -> (A'~>B') -> (A''~>B'')) (Hf: Proper (eqv ==> eqv ==> eqv) f)
+  (u: reified A B) (v: reified A' B') := reify (f u v) (single (f (eval (norm u)) (eval (norm v)))) _.
+Next Obligation. intros. by rewrite eval_single 2!normE. Qed.
+Arguments r_sym1 {_ _ _ _ _ _}.
+Arguments r_sym2 {_ _ _ _ _ _ _ _ _}.
+End HL.
+Canonical HL.r_id. 
+Canonical HL.r_comp. 
+Canonical HL.r_var. 
+Ltac normalise := apply: HL.normalise; simpl HL.eval.
+Ltac cat := exact: HL.normalise.
+
+
+Goal forall (C: Cat) A (f: C A A), idmap ∘ f ∘ (idmap ∘ f) ∘ f ≡ f ∘ (idmap ∘ f) ∘ (idmap ∘ f).
+  intros. normalise. reflexivity.
+  Restart.
+  intros. by cat. 
+Qed.
