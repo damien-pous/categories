@@ -16,3 +16,11 @@ HB.mixin Record isLeftAdjoint {𝐂 𝐃: Cat} (F: 𝐂 ~> 𝐃) (* F of @functo
 HB.structure Definition leftAdjoint {𝐂 𝐃: Cat} := {F of isLeftAdjoint 𝐂 𝐃 F & }.
 Arguments radj {_ _}.
 Infix "⊣" := LeftAdjoint (at level 79): cat_scope.
+
+Section theory.
+Context {𝐂 𝐃: Cat} (F: 𝐂 ⊣ 𝐃).
+Definition up {A B} (f: leftAdjoint.sort F A ~> B): A ~> radj F B :=
+  Fhom (radj F) f ∘ unit A.
+Definition dn {A B} (f: A ~> radj F B): leftAdjoint.sort F A ~> B :=
+  counit B ∘ Fhom (leftAdjoint.sort F) f. 
+End theory.
