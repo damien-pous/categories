@@ -80,13 +80,12 @@ Section prod.
     pair (f∘fst) (g∘snd).
 
   Definition PROD (X: 𝐂*𝐂): 𝐂 := X.1 × X.2. 
-  Program Definition _PROD_prefunctor :=
-    IsPreFunctor.Build _ _ PROD (fun A B => (efun f => pair' f.1 f.2)).
+  HB.instance Definition _ :=
+    IsPreFunctor.Build _ _ PROD (fun A B f => pair' f.1 f.2).
+  Program Definition _PROD_functor := IsFunctor.Build _ _ PROD _ _ _.
   Next Obligation.
     move=>/=A B f g [fg1 fg2]; apply: pair_eqv; by rewrite ?fg1 ?fg2. 
   Qed.
-  HB.instance Definition _ := _PROD_prefunctor.
-  Program Definition _PROD_functor := IsFunctor.Build _ _ PROD _ _.
   Next Obligation.
     symmetry. apply: pairU; by rewrite comp1o compo1.
   Qed.
@@ -127,13 +126,12 @@ Section prod.
   Defined.
 
   Definition UNIT (X: Cat1): 𝐂 := top. 
-  Program Definition _UNIT_prefunctor :=
-    IsPreFunctor.Build _ _ UNIT (fun A B => (efun f => unique_elt (terminalP _ _))).
+  HB.instance Definition _ :=
+    IsPreFunctor.Build _ _ UNIT (fun A B f => unique_elt (terminalP _ _)).
+  Program Definition _UNIT_functor := IsFunctor.Build _ _ UNIT _ _ _.
   Next Obligation.
     move=>/=A B f g fg/=. exact: uniqueness. 
   Qed.
-  HB.instance Definition _ := _UNIT_prefunctor.
-  Program Definition _UNIT_functor := IsFunctor.Build _ _ UNIT _ _.
   Next Obligation. intro. exact: (uniqueness (terminalP _ _)). Qed.
   Next Obligation. intros. exact: (uniqueness (terminalP _ _)). Qed.
   HB.instance Definition _ := _UNIT_functor. 
@@ -169,22 +167,20 @@ Defined.
 Definition cat_prod (C D: Cat): Product C D.
   unshelve eexists. exists (C * D: Cat)%type.
   unshelve eexists. exact Datatypes.fst. 
-  unshelve eexists. split. unshelve eexists. exact Datatypes.fst. sorry. sorry. 
+  unshelve eexists. split. intros ??. exact Datatypes.fst. sorry. 
   unshelve eexists. exact Datatypes.snd. 
-  unshelve eexists. split. unshelve eexists. exact Datatypes.snd. sorry. sorry.
+  unshelve eexists. split. intros ??. exact Datatypes.snd. sorry. 
   move=>X. cbn.
   unshelve eexists=>//.
   unshelve eexists. cbn.
   unshelve eexists. move=>x. exact: (@spanl _ _ _ X x, @spanr _ _ _ X x).
   unshelve eexists.
   unshelve eexists.
-  move=>A B. unshelve eexists.
-  move=>f. split=>/=.
+  move=>A B f. split. 
   exact: (Fhom (@spanl _ _ _ X) f).
   exact: (Fhom (@spanr _ _ _ X) f).
   sorry.
   sorry.
-  cbn. rewrite /functor_comp/=. sorry.
   cbn. sorry.
 Defined.
 HB.instance Definition _ := IsCartesian.Build Cat cat_top cat_prod.

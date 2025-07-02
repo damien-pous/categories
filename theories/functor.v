@@ -8,7 +8,7 @@ Local Open Scope cat_scope.
 
 (** prefunctor: a functor without laws *)
 HB.mixin Record IsPreFunctor (𝐂 𝐃: Quiver) (F: 𝐂 -> 𝐃) := {
-   #[canonical=no] Fhom: forall A B: 𝐂, (A ~> B) -eqv-> (F A ~> F B)
+   #[canonical=no] Fhom: forall A B: 𝐂, (A ~> B) -> (F A ~> F B)
   }.
 #[short(type="PreFunctor")]
 HB.structure Definition prefunctor 𝐂 𝐃 :=
@@ -17,12 +17,17 @@ Arguments Fhom {_ _} _ {_ _}.
 
 (** functor: prefunctor + laws *)
 HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @prefunctor 𝐂 𝐃 F := {
+    #[canonical=no] Fhom_eqv: forall {A B: 𝐂}, Proper (eqv ==> eqv) (@Fhom _ _ F A B);
     #[canonical=no] Fidmap: forall A: 𝐂, Fhom F (\idmap A) ≡ idmap;
     #[canonical=no] Fcomp: forall {A B C: 𝐂} (f: A ~> B) (g: B ~> C), Fhom F (g ∘ f) ≡ Fhom F g ∘ Fhom F f;
   }.
 #[short(type="Functor")]
 HB.structure Definition functor (𝐂 𝐃: Cat) :=
   { F of IsFunctor 𝐂 𝐃 F & }.
+
+Existing Instance Fhom_eqv. 
+HB.instance Definition _ 𝐂 𝐃 (F: Functor 𝐂 𝐃) (A B: 𝐂) :=
+  isExtensional.Build _ _ (@Fhom _ _ F A B) _. 
 
 (** rewriting tuple *)
 Definition cats := (@Fidmap, cats, @Fcomp)%core.
@@ -53,15 +58,16 @@ Canonical HL.r_Fhom.
 
 (** identity functor *)
 HB.instance Definition _ (𝐂: Quiver) :=
-  IsPreFunctor.Build 𝐂 𝐂 idfun (fun a b => setoid_id).
+  IsPreFunctor.Build 𝐂 𝐂 idfun (fun A B => types_id).
 HB.instance Definition _ (𝐂: Cat) :=
-  IsFunctor.Build 𝐂 𝐂 idfun (fun=> eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  IsFunctor.Build 𝐂 𝐂 idfun _ (fun=> eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
 (** composition of functors *)
 HB.instance Definition _ {𝐂 𝐃 𝐄: Quiver} {F: PreFunctor 𝐂 𝐃} {G: PreFunctor 𝐃 𝐄} :=
-  IsPreFunctor.Build 𝐂 𝐄 (types_comp G F) (fun _ _ => setoid_comp (Fhom G) (Fhom F)).
+  IsPreFunctor.Build 𝐂 𝐄 (types_comp G F) (fun _ _ => types_comp (Fhom G) (Fhom F)).
 Program Definition _comp_functor {𝐂 𝐃 𝐄: Cat} {F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} :=
-  IsFunctor.Build 𝐂 𝐄 (types_comp G F) _ _.
+  IsFunctor.Build 𝐂 𝐄 (types_comp G F) _ _ _.
+Next Obligation. repeat intro. by do 2 apply: Fhom_eqv. Qed.
 Next Obligation. intros. cbn. by cat. Qed.
 Next Obligation. intros. cbn. by cat. Qed.
 HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_comp_functor 𝐂 𝐃 𝐄 F G.
@@ -71,7 +77,7 @@ Definition cst {𝐂 𝐃: Quiver} (D: 𝐃) := fun of 𝐂 => D.
 HB.instance Definition _ {𝐂: Quiver} {𝐃: PreCat} (D: 𝐃) :=
   IsPreFunctor.Build 𝐂 𝐃 (cst D) (fun _ _ => const idmap).
 HB.instance Definition _ {𝐂 𝐃: Cat} (D: 𝐃) :=
-  IsFunctor.Build 𝐂 𝐃 (cst D) (fun=> eqv_refl)
+  IsFunctor.Build 𝐂 𝐃 (cst D) (fun _ _ _ _ _ => eqv_refl) (fun=> eqv_refl)
     (fun _ _ _ _ _ => eqv_sym _ _ (compo1 idmap)).
 
 Section s.
@@ -215,7 +221,7 @@ Arguments ntx_comp'_ {_ _ _ _ _ _ _} _ _ _/.
 Program Definition _ntx_comp'_natural {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}
   (k: F ~> G) (h: F' ~> G') := IsNatural.Build 𝐂 𝐄 (types_comp F' F) (types_comp G' G) (ntx_comp'_ k h) _.
 Next Obligation.
-  intros=>/=.
+  intros. cbn. 
   rewrite natural -compoA !natural.
   rewrite compoA -Fcomp natural. 
   by cat.
