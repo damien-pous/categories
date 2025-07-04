@@ -5,7 +5,7 @@ Require Export functor.
 Local Open Scope cat_scope.
 
 (** ** indexed by the left adjoint *)
-HB.mixin Record isLeftAdjoint {𝐂 𝐃: Cat} (F: 𝐂 ~> 𝐃) (* F of @functor 𝐂 𝐃 F *) :=
+#[primitive] HB.mixin Record isLeftAdjoint {𝐂 𝐃: Cat} (F: 𝐂 ~> 𝐃) (* F of @functor 𝐂 𝐃 F *) :=
   { #[canonical=no] radj: 𝐃 ~> 𝐂; 
     #[canonical=no] unit: \idmap 𝐂 ~> radj ∘ F;
     #[canonical=no] counit: F ∘ radj ~> \idmap 𝐃;

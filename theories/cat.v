@@ -1,6 +1,7 @@
 (** * categories with hom-setoids *)
 
 From PartialOrders Require Export setoid.
+From elpi Require Import elpi coercion.
 
 #[export] Set Implicit Arguments.
 #[export] Unset Strict Implicit.
@@ -90,7 +91,7 @@ Notation "f ∘[ 𝐂 ] g" := (@comp _ 𝐂 _ _ _ g f) (only parsing): cat_scope
 Notation "f \; g" := (comp f g) (only parsing): cat_scope.
 
 (** categories: precategories + laws *)
-HB.mixin Record IsCat 𝐂 of precat 𝐂 := {
+#[primitive] HB.mixin Record IsCat 𝐂 of precat 𝐂 := {
   #[canonical=no] comp1o: forall {A B: 𝐂} (f: A ~> B), f ∘ idmap ≡ f;
   #[canonical=no] compo1: forall {A B: 𝐂} (f: A ~> B), idmap ∘ f ≡ f;
   #[canonical=no] compoA: forall {A B C D: 𝐂} (f: A ~> B) (g: B ~> C) (h: C ~> D),
@@ -105,6 +106,19 @@ Arguments comp1o {_ _ _}.
 Arguments compoA {_ _ _ _ _}.
 Arguments comp_eqv {_ _ _ _}.
 Existing Instance comp_eqv.
+
+(** tweaking coercions so that objects can always be seen as identity morphisms *)
+Elpi Accumulate coercion.db lp:"
+coercion _ V T E R :- coq.unify-eq T {{precat.sort _}} ok, coq.unify-eq E {{Setoid.sort _}} ok, !, R = {{@idmap _ lp:V}}.
+".
+(* Check fun C: Cat => fun A: C => A: A ~> A. *)
+
+(** (locally) import this module to get the underlying object printed instead of [idmap] *)
+Module SEEOBJ.
+  Coercion idmap: precat.sort >-> Setoid.sort.
+End SEEOBJ.
+(* Import SEEOBJ. *)
+(* Check fun C: Cat => fun A: C => A: A ~> A. *)
 
 (** rewriting tuple *)
 Definition cats := (@compo1, @comp1o, @compoA)%core.
@@ -317,8 +331,12 @@ Program Definition r_comp {A B C} (u: reified A B) (v: reified B C) :=
 Next Obligation. intros. by rewrite eval_app 2!normE. Qed.
 Definition r_var {A B} (f: A~>B) := reify f (single f) (eval_single f).
 
-Lemma normalise {A B} (u v: reified A B): eval (norm u) ≡ eval (norm v) -> u ≡ v.
+Lemma cats' {a b} (u v: reified a b):
+  term u ≡ term v <-> eval (norm u) ≡ eval (norm v).
 Proof. by rewrite 2!normE. Qed.
+
+Lemma normalise {A B} (u v: reified A B): eval (norm u) ≡ eval (norm v) -> u ≡ v.
+Proof. apply cats'. Qed.
 
 End s.
 Notation hom_list A B := (hom_list_ B A).
@@ -340,10 +358,12 @@ Canonical HL.r_comp.
 Canonical HL.r_var. 
 Ltac normalise := apply: HL.normalise; simpl HL.eval.
 Ltac cat := exact: HL.normalise.
-
+Definition cats' := @HL.cats'.
 
 Goal forall (C: Cat) A (f: C A A), idmap ∘ f ∘ (idmap ∘ f) ∘ f ≡ f ∘ (idmap ∘ f) ∘ (idmap ∘ f).
   intros. normalise. reflexivity.
   Restart.
   intros. by cat. 
+  Restart.
+  intros. rewrite cats'/=. reflexivity. 
 Qed.

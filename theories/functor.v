@@ -7,7 +7,7 @@ Local Open Scope cat_scope.
 (** * Functors *)
 
 (** prefunctor: a functor without laws *)
-HB.mixin Record IsPreFunctor (𝐂 𝐃: Quiver) (F: 𝐂 -> 𝐃) := {
+#[primitive] HB.mixin Record IsPreFunctor (𝐂 𝐃: Quiver) (F: 𝐂 -> 𝐃) := {
    #[canonical=no] Fhom: forall A B: 𝐂, (A ~> B) -> (F A ~> F B)
   }.
 #[short(type="PreFunctor")]
@@ -16,7 +16,7 @@ HB.structure Definition prefunctor 𝐂 𝐃 :=
 Arguments Fhom {_ _} _ {_ _}. 
 
 (** functor: prefunctor + laws *)
-HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @prefunctor 𝐂 𝐃 F := {
+#[primitive] HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @prefunctor 𝐂 𝐃 F := {
     #[canonical=no] Fhom_eqv: forall {A B: 𝐂}, Proper (eqv ==> eqv) (@Fhom _ _ F A B);
     #[canonical=no] Fidmap: forall A: 𝐂, Fhom F (\idmap A) ≡ idmap;
     #[canonical=no] Fcomp: forall {A B C: 𝐂} (f: A ~> B) (g: B ~> C), Fhom F (g ∘ f) ≡ Fhom F g ∘ Fhom F f;
@@ -96,7 +96,7 @@ End s.
 (** * Natural transformations *)
 
 (** naturality *)
-HB.mixin Record IsNatural {𝐂: Quiver} {𝐃: PreCat} (F G: PreFunctor 𝐂 𝐃) (n : forall X, F X ~> G X) :=
+#[primitive] HB.mixin Record IsNatural {𝐂: Quiver} {𝐃: PreCat} (F G: PreFunctor 𝐂 𝐃) (n : forall X, F X ~> G X) :=
   { #[canonical=no] natural: forall (X Y: 𝐂) (f: X ~> Y), n Y ∘ Fhom F f ≡ Fhom G f ∘ n X }.
 #[short(type="NTX")]
 HB.structure Definition Natural {𝐂 𝐃: Cat} (F G: PreFunctor 𝐂 𝐃) :=

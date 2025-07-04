@@ -63,7 +63,7 @@ Arguments Product {_}.
 
 (** Categories with all finite products (i.e., cartesian monoidal) *)
 
-HB.mixin Record IsCartesian 𝐂 of cat 𝐂 := {
+#[primitive] HB.mixin Record IsCartesian 𝐂 of cat 𝐂 := {
     #[canonical=no] top_: Terminal 𝐂;
     #[canonical=no] prod_: forall A B: 𝐂, Product A B;    
   }.
