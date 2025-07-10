@@ -164,42 +164,84 @@ Definition cat_top: Terminal Cat.
   repeat unshelve eexists. 
 Defined.
 
+HB.instance Definition _ (C D: Cat) :=
+  IsPreFunctor.Build (C*D: Cat)%type C Datatypes.fst (fun A B f => f.1).
+Program Definition _fst_functor (C D: Cat) :=
+  IsFunctor.Build (C*D: Cat)%type C Datatypes.fst _ _ _.
+Next Obligation. intros * F G FG. apply FG. Qed.
+Next Obligation. done. Qed.
+Next Obligation. done. Qed.
+HB.instance Definition _ C D := _fst_functor C D.
+
+HB.instance Definition _ (C D: Cat) :=
+  IsPreFunctor.Build (C*D: Cat)%type D Datatypes.snd (fun A B f => f.2).
+Program Definition _snd_functor (C D: Cat) :=
+  IsFunctor.Build (C*D: Cat)%type D Datatypes.snd _ _ _.
+Next Obligation. intros * F G FG. apply FG. Qed.
+Next Obligation. done. Qed.
+Next Obligation. done. Qed.
+HB.instance Definition _ C D := _snd_functor C D.
+
+
+Definition types_pair' {C A B} (F: C -> A) (G: C -> B) X := (F X, G X). 
+HB.instance Definition _ (C A B: Cat) (F: C ~> A) (G: C ~> B) :=
+  IsPreFunctor.Build C (A*B: Cat)%type (types_pair' F G) (fun _ _ h => (Fhom F h, Fhom G h)).
+Program Definition _types_pair'_functor (C A B: Cat) (F: C ~> A) (G: C ~> B) :=
+  IsFunctor.Build C (A*B: Cat)%type (types_pair' F G) _ _ _.
+Next Obligation. split; exact: Fhom_eqv. Qed.
+Next Obligation. split; exact: Fidmap. Qed.
+Next Obligation. split; exact: Fcomp. Qed.
+HB.instance Definition _ C A B F G := @_types_pair'_functor C A B F G.
+
+Definition types_pair'_ntx {C A B: Cat} (F F': C ~> A) (G G': C ~> B)
+  (f: F ~> F') (g: G ~> G'): (types_pair' F G: Functor _ _) ~> (types_pair' F' G': Functor _ _).
+  exists (fun X => (f X, g X)).
+  split; split; split; cbn; exact: natural.
+Defined.
+Definition types_pair'_iso {C A B: Cat} (F F': C ~> A) (G G': C ~> B)
+  (f: F ≃ F') (g: G ≃ G'): (types_pair' F G: Functor _ _) ≃ (types_pair' F' G': Functor _ _).
+  apply: (mk_iso (types_pair'_ntx f¹ g¹) (types_pair'_ntx f⁻¹ g⁻¹)).
+  { split.
+    - exact: isoK (iso_ntx_pw f _).
+    - exact: isoK (iso_ntx_pw g _). }
+  { split.
+    - exact: isoK' (iso_ntx_pw f _).
+    - exact: isoK' (iso_ntx_pw g _). }
+Defined.
+
 Definition cat_prod (C D: Cat): Product C D.
-  unshelve eexists. exists (C * D: Cat)%type.
-  unshelve eexists. exact Datatypes.fst. 
-  unshelve eexists. split. intros ??. exact Datatypes.fst. sorry. 
-  unshelve eexists. exact Datatypes.snd. 
-  unshelve eexists. split. intros ??. exact Datatypes.snd. sorry. 
-  move=>X. cbn.
-  unshelve eexists=>//.
-  unshelve eexists. cbn.
-  unshelve eexists. move=>x. exact: (@spanl _ _ _ X x, @spanr _ _ _ X x).
   unshelve eexists.
-  unshelve eexists.
-  move=>A B f. split. 
-  exact: (Fhom (@spanl _ _ _ X) f).
-  exact: (Fhom (@spanr _ _ _ X) f).
-  sorry.
-  sorry.
-  cbn. sorry.
+  exists (C * D: Cat)%type.
+  exact: (Datatypes.fst: Functor _ _). 
+  exact: (Datatypes.snd: Functor _ _).
+  unshelve eexists=>//. 
+  exists ((types_pair' (spanl (s:=X)) (spanr (s:=X))): Functor _ _).
+  split; split; exact: same_functor.
+  destruct X as [X L R]=>/=[[F [[HL] [HR]]]] _. cbn. split.
+  apply: iso_trans. apply: types_pair'_iso; apply: iso_sym; eassumption.
+  clear. unshelve apply: mk_iso.
+  { unshelve eexists.
+    - split; exact: idmap; split; split; split=>/=; cat.
+    - repeat split=>/=; cat. }
+  { unshelve eexists.
+    - split; exact: idmap; split; split; split=>/=; cat.
+    - repeat split=>/=; cat. }
+  split=>/=; cat. 
+  split=>/=; cat. 
 Defined.
 HB.instance Definition _ := IsCartesian.Build Cat cat_top cat_prod.
-
 
 (** Bifunctors *)
 
 Definition app11 {A B D: Cat} (F: A×B ~> D) (X: A) (Y: B): D := F(X,Y).
 Definition app22 {A B D: Cat} (F: A×B ~> D) {X X' Y Y'}
-  (f: A X X') (g: B Y Y')
-  : D (app11 F X Y) (app11 F X' Y') :=
+  (f: A X X') (g: B Y Y'): app11 F X Y ~> app11 F X' Y' :=
   @Fhom _ _ F (X,Y) (X',Y') (f,g).
 Instance app22_eqv {A B D F X X' Y Y'}: Proper (eqv ==> eqv ==> eqv) (@app22 A B D F X X' Y Y').
 Proof. intros ??? ???. by apply extensional. Qed.
 
 Definition times {X X' Y Y': Cat}
-  (f: X ~> X')
-  (g: Y ~> Y')
-  : X×Y ~> X'×Y' :=
+  (f: X ~> X') (g: Y ~> Y'): X×Y ~> X'×Y' :=
   app22 (@PROD Cat: Functor _ _) f g.
 Instance times_eqv {X X' Y Y'}: Proper (eqv ==> eqv ==> eqv) (@times X X' Y Y').
 Proof. apply (app22_eqv (F:=@PROD Cat: Functor _ _)). Qed.
