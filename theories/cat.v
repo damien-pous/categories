@@ -346,6 +346,8 @@ Program Definition r_sym1 {𝐂 𝐃: Cat} {A B: 𝐂} {A' B': 𝐃}
   (f: (A~>B) -> (A'~>B')) (Hf: Proper (eqv ==> eqv) f)
   (u: reified A B) := reify (f u) (single (f (eval (norm u)))) _.
 Next Obligation. intros. by rewrite eval_single normE. Qed.
+Definition r_ext {𝐂 𝐃: Cat} {A B: 𝐂} {A' B': 𝐃}
+  (f: (A~>B) -eqv-> (A'~>B')) := Eval hnf in r_sym1 (extensional f).
 Program Definition r_sym2 {𝐂 𝐃 𝐄: Cat} {A B: 𝐂} {A' B': 𝐃} {A'' B'': 𝐄}
   (f: (A~>B) -> (A'~>B') -> (A''~>B'')) (Hf: Proper (eqv ==> eqv ==> eqv) f)
   (u: reified A B) (v: reified A' B') := reify (f u v) (single (f (eval (norm u)) (eval (norm v)))) _.
@@ -356,6 +358,7 @@ End HL.
 Canonical HL.r_id. 
 Canonical HL.r_comp. 
 Canonical HL.r_var. 
+Canonical HL.r_ext. 
 Ltac normalise := apply: HL.normalise; simpl HL.eval.
 Ltac cat := exact: HL.normalise.
 Definition cats' := @HL.cats'.
