@@ -143,9 +143,9 @@ Definition Cat1 := unit.
 HB.instance Definition _ := IsQuiver.Build Cat1 (fun _ _ => unit).
 HB.instance Definition _ := IsPreCat.Build Cat1 (fun _ => tt) (fun _ _ _ _ _ => tt).
 HB.instance Definition _ := IsCat.Build Cat1
-                              (fun _ _ _ => I) (fun _ _ _ => I)
-                              (fun _ _ _ _ _ _ _ => I)
-                              (fun _ _ _ _ _ _ _ _ _ => I).
+                              (fun _ _ _ => erefl) (fun _ _ _ => erefl)
+                              (fun _ _ _ _ _ _ _ => erefl)
+                              (fun _ _ _ _ _ _ _ _ _ => erefl).
 
 (** product of categories *)
 HB.instance Definition _ (𝐂 𝐃: Quiver) := IsQuiver.Build (𝐂*𝐃)%type
