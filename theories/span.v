@@ -17,9 +17,9 @@ Arguments spanr {_ _ _ _}.
 
 Definition Span_morphism {𝐂: PreCat} {A B: 𝐂} (X Y: Span A B) :=
   { h: X ~> Y | spanl ∘ h ≡ spanl /\ spanr ∘ h ≡ spanr }.
-
-HB.instance Definition _ (𝐂: Cat) (A B: 𝐂) :=
+HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) :=
   IsQuiver.Build (Span A B) Span_morphism. 
+
 Program Definition _span_precat (𝐂: Cat) (A B: 𝐂) :=
   IsPreCat.Build (Span A B)
     (fun X => exist _ idmap _)

@@ -15,14 +15,15 @@ Structure Terminal (𝐂: Quiver) := {
 
 (** Products *)
 
+Definition isProduct {𝐂: PreCat} (A B: 𝐂) := @isTerminal (Span A B).
+Arguments isProduct {_}. 
+Definition Product {𝐂: PreCat} (A B: 𝐂) := @Terminal (Span A B).
+Coercion ob_Product{𝐂: PreCat} (A B: 𝐂) (X: Product A B): 𝐂 := span_ob (terminal X). 
+
 Section PROD.
-Context {𝐂: Cat} {A B: 𝐂}.
+Context {𝐂: Cat} {A B: 𝐂} {AB: Product A B}.
 Implicit Types X Y: 𝐂.
-Definition isProduct := @isTerminal (Span A B).
-Definition Product := @Terminal (Span A B).
-Coercion ob_Product (X: Product): 𝐂 := span_ob (terminal X). 
-Context {AB: Product}.
-Let AB': 𝐂 := AB.
+Let AB' := ob_Product AB.
 Definition fst: AB' ~> A := spanl.
 Definition snd: AB' ~> B := spanr.
 Definition pair {X} (f: X ~> A) (g: X ~> B): X ~> AB'.
@@ -58,20 +59,21 @@ Qed.
 Lemma prod_ext {X} (f g: X ~> AB'): fst ∘ f ≡ fst ∘ g -> snd ∘ f ≡ snd ∘ g -> f ≡ g.
 Proof. move=>F G. rewrite (pair_ext g). by apply pairU. Qed.
 End PROD.
-Arguments isProduct {_}. 
-Arguments Product {_}. 
 
 (** Categories with all finite products (i.e., cartesian monoidal) *)
 
-#[primitive] HB.mixin Record IsCartesian 𝐂 of cat 𝐂 := {
+#[primitive] HB.mixin Record IsCartesian 𝐂 of precat 𝐂 := {
     #[canonical=no] top_: Terminal 𝐂;
     #[canonical=no] prod_: forall A B: 𝐂, Product A B;    
   }.
+#[short(type="PreCCat")]
+HB.structure Definition preccat := { 𝐂 of IsCartesian 𝐂 & }.
+Definition top {𝐂: PreCCat}: 𝐂 := terminal top_.
+Definition prod {𝐂: PreCCat} (A B: 𝐂): 𝐂 := span_ob (terminal (prod_ A B)).
+Infix "×" := prod (at level 30).
+
 #[short(type="CCat")]
-HB.structure Definition ccat := { 𝐂 of IsCartesian 𝐂 & }.
-Definition top {𝐂: CCat}: 𝐂 := terminal top_.
-Definition prod {𝐂: CCat} (A B: 𝐂): 𝐂 := span_ob (terminal (prod_ A B)).
-Infix "×" := prod (at level 30): cat_scope.
+HB.structure Definition ccat := { 𝐂 of preccat 𝐂 & cat 𝐂 }.
 
 Section prod.
   Context {𝐂: CCat}.
