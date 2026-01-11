@@ -25,14 +25,16 @@ Reserved Notation "a ↠_ 𝐂 b" (at level 99, 𝐂 at level 0).
 Reserved Notation "A ≃ B" (at level 70, format "A  ≃  B").
 Reserved Notation "A ≃_ 𝐂 B" (at level 70, 𝐂 at level 0, format "A  ≃_ 𝐂  B").
 
+(* unused so far *)
 Reserved Notation "a ⥲ b" (at level 99, b at level 200, format "a  ⥲  b").
 Reserved Notation "a ⥲_ 𝐂 b" (at level 99, 𝐂 at level 0).
+
 (** natural isomorphisms *)
 Reserved Notation "F ≈ G" (at level 70).
 
 (** composition *)
 Reserved Notation "f ∘ g" (at level 40, left associativity). 
-Reserved Notation "f ∘[ 𝐂 ] g" (at level 40).
+Reserved Notation "f ∘[ 𝐂 ] g" (at level 40). (* TOTHINK: change for ∘_ ? *)
 
 (** tensor (in monoidal categories) *)
 Reserved Notation "X ⊗ Y" (at level 31, right associativity). (* objects *)
@@ -71,8 +73,8 @@ Bind Scope cat_scope with Quiver.
 Bind Scope cat_scope with hom.
 Arguments hom {_}.
 Coercion hom: Quiver >-> Funclass.
-Notation "a ~> b" := (hom a b).
-Notation "a ~>_ 𝐂 b" := (@hom 𝐂 a b) (only parsing) : cat_scope.
+Notation "a ~> b" := (hom a b): cat_scope.
+Notation "a ~>_ 𝐂 b" := (@hom 𝐂 a b) (only parsing): cat_scope.
 Notation bare f := (f: hom _ _). 
 
 (** precategories: quivers + id and comp *)
@@ -82,10 +84,10 @@ Notation bare f := (f: hom _ _).
 }.
 #[short(type="PreCat")]
 HB.structure Definition precat := { 𝐂 of IsPreCat 𝐂 & }.
-Arguments idmap {_ _}.
+Arguments idmap {_ _}, {_}.
 Arguments comp {_ _ _ _}.
 Bind Scope cat_scope with PreCat.
-Notation "\idmap A" := (@idmap _ A) (only parsing, at level 0) : cat_scope.
+(* Notation "\idmap A" := (@idmap _ A) (only parsing, at level 0) : cat_scope. *)
 Notation "f ∘ g" := (comp g f) : cat_scope.
 Notation "f ∘[ 𝐂 ] g" := (@comp _ 𝐂 _ _ _ g f) (only parsing): cat_scope.
 Notation "f \; g" := (comp f g) (only parsing): cat_scope.
@@ -165,6 +167,7 @@ HB.instance Definition _ 𝐂 𝐃 := _prod_cat 𝐂 𝐃.
 
 (** in Setoids *)
 
+(* TODO: move to partialorders lib *)
 Record Unique [T: Setoid.type] (P : T -> Type) := {
     unique_elt: T;
     unique_prop: P unique_elt;
@@ -197,7 +200,7 @@ Arguments unique_morph {_ _ _ _}.
 Arguments Unicity {_ _ _ _}.
 
 Notation "∃! x .. y , P" := (Unique_morph (fun x => .. (Unique_morph (fun y => P)) ..))
-  (at level 200, x binder, y binder, right associativity) : cat_scope.
+  (at level 200, x binder, y binder, right associativity): cat_scope.
 
 Lemma unique_morph_eqv {𝐂: Quiver} [A B: 𝐂] (P Q: (A ~> B) -> Type):
   (forall f, P f -> Q f) -> forall p: Unique_morph P, forall q: Unique_morph Q, unique_morph p ≡ unique_morph q.
@@ -209,25 +212,25 @@ Qed.
 (** * Isomorphisms *)
 
 HB.mixin Record IsIso (𝐂: PreCat) A B (f: 𝐂 A B) := {
-    #[canonical=no] inverse: 𝐂 B A;
-    #[canonical=no] isoK: f ∘ inverse ≡ idmap;
-    #[canonical=no] isoK': inverse ∘ f ≡ idmap }.
+    #[canonical=no] inv: 𝐂 B A;
+    #[canonical=no] isoK: f ∘ inv ≡ idmap;
+    #[canonical=no] isoK': inv ∘ f ≡ idmap }.
 #[short(type="Iso")]
 HB.structure Definition iso 𝐂 A B := { f of @IsIso 𝐂 A B f }.
-Arguments inverse {_ _ _}.
+Arguments inv {_ _ _}.
 Arguments isoK {_ _ _}.
 Arguments isoK' {_ _ _}.
-Notation "A ≃_ 𝐂 B" := (@iso.type 𝐂 A B) (only parsing).
-Notation "A ≃ B" := (Iso A B).
+Notation "A ≃_ 𝐂 B" := (@iso.type 𝐂 A B) (only parsing): cat_scope.
+Notation "A ≃ B" := (Iso A B): cat_scope.
 
 Definition mk_iso {𝐂: PreCat} {X Y: 𝐂} (i: X ~> Y) (j: Y ~> X): i ∘ j ≡ idmap -> j ∘ i ≡ idmap -> X ≃ Y.
 Proof. move=>ij ji. exists i. split. by exists j. Defined. 
 Arguments mk_iso {_ _ _}. 
 
 (** forward and backward components *)
-Definition forward {𝐂: PreCat} [A B: 𝐂] (i: Iso A B) := bare i.
-Notation "f '¹'" := (forward f) (at level 9, format "f '¹'").
-Notation "f '⁻¹'" := (inverse f) (at level 9, format "f '⁻¹'").
+(* Definition forward {𝐂: PreCat} [A B: 𝐂] (i: Iso A B) := bare i. *)
+Notation "f '¹'" := (iso.sort f) (only parsing, at level 9(* , format "f '¹'" *)): cat_scope.
+Notation "f '⁻¹'" := (inv f) (at level 9, format "f '⁻¹'"): cat_scope.
 
 Section s.
 Context {𝐂: Cat}.
@@ -251,35 +254,70 @@ Definition iso_refl A: A ≃ A := idmap.
 Definition iso_trans A B C (i: A ≃ B) (j: B ≃ C): A ≃ C := j ∘ i.
 Definition iso_sym A B (i: A ≃ B): B ≃ A := i⁻¹. 
 
-Lemma iso_switch_src_r A A' B (f: A ~> B) (g: A' ~> B) (i: A ≃ A'): f ≡ g ∘ i <-> f ∘ i⁻¹ ≡ g.
+Lemma invI A B (i: A ≃ B): i⁻¹⁻¹ ≡ i.
+Proof. done. Qed.
+Lemma inv_id A: (idmap A)⁻¹ ≡ idmap.
+Proof. done. Qed.
+Lemma inv_comp A B C (i: A ≃ B) (j: B ≃ C): (j∘i)⁻¹ ≡ i⁻¹∘j⁻¹.
+Proof. done. Qed.
+
+Lemma iso_src_r A A' B (f: A ~> B) (g: A' ~> B) (i: A ≃ A'): f ≡ g ∘ i <-> f ∘ i⁻¹ ≡ g.
 Proof.
   split.
   - move=>->. by rewrite -compoA isoK cats.
   - move=><-. by rewrite -compoA isoK' cats.
 Qed.
 
-Lemma iso_switch_tgt_r A B B' (f: A ~> B) (g: A ~> B') (i: B' ≃ B): f ≡ i ∘ g <-> i⁻¹ ∘ f  ≡ g.
-Proof.
-  split.
-  - move=>->. by rewrite compoA isoK' cats.
-  - move=><-. by rewrite compoA isoK cats.
-Qed.
+Lemma iso_src_l A A' B (f: A ~> B) (g: A' ~> B) (i: A' ≃ A): f ∘ i ≡ g <-> f ≡ g ∘ i⁻¹.
+Proof. split=>H; exact/eqv_sym/iso_src_r/eqv_sym. Qed.
 
-Lemma iso_switch_src_l A A' B (f: A ~> B) (g: A' ~> B) (i: A' ≃ A): f ∘ i ≡ g <-> f ≡ g ∘ i⁻¹.
-Proof. split=>H; exact/eqv_sym/iso_switch_src_r/eqv_sym. Qed.
+(* TODO: generalize to epis / turn into an equivalence? *)
+Lemma epi A B (i: A ≃ B) C (f g: B ~> C): f ∘ i ≡ g ∘ i -> f ≡ g.
+Proof. by rewrite iso_src_r -compoA isoK cats. Qed.
 
-Lemma iso_switch_tgt_l A B B' (f: A ~> B) (g: A ~> B') (i: B ≃ B'): i ∘ f ≡ g <-> f  ≡ i⁻¹ ∘ g.
-Proof. split=>H; exact/eqv_sym/iso_switch_tgt_r/eqv_sym. Qed.
+Lemma inv_eqv A B (i j: A ≃ B): i ≡[𝐂 A B] j -> i⁻¹ ≡ j⁻¹.
+Proof. move=>ij. apply: (epi (i:=i)). by rewrite isoK' ij isoK'. Qed.
+
+Lemma inv_inj A B (i j: A ≃ B): i⁻¹ ≡ j⁻¹ -> i ≡ j.
+Proof. by move=>/inv_eqv. Qed.
 
 End s. 
-Definition iso_switch :=
-  (@iso_switch_src_l, @iso_switch_src_r, @iso_switch_tgt_l, @iso_switch_tgt_r)%core.
+Arguments epi {_ _ _} _ {_}.
+Definition iso_src := (@iso_src_l, @iso_src_r)%core.
 
-Program Definition pair_iso {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B'):
-  (A,B) ≃_((𝐂*𝐃)%type) (A',B') :=
-  @mk_iso (𝐂*𝐃)%type (A,B) (A',B') (i¹,j¹) (i⁻¹,j⁻¹) _ _.
-Next Obligation. split; exact: isoK. Qed.
-Next Obligation. split; exact: isoK'. Qed.
+(** isomorphisms in the opposite category *)
+Definition iso_op {𝐂: Cat} (A B: 𝐂) (i: A ≃ B): B ≃_(𝐂^op) A :=
+  @mk_iso 𝐂^op B A i¹ i⁻¹ (isoK' i) (isoK i).
+
+(** dual lemmas *)
+Lemma iso_tgt_r {𝐂: Cat} (A B B': 𝐂) (f: A ~> B) (g: A ~> B') (i: B' ≃ B): f ≡ i ∘ g <-> i⁻¹ ∘ f  ≡ g.
+Proof. exact: (iso_src_r _ _ (iso_op i)). Qed.
+Lemma iso_tgt_l {𝐂: Cat} (A B B': 𝐂) (f: A ~> B) (g: A ~> B') (i: B ≃ B'): i ∘ f ≡ g <-> f  ≡ i⁻¹ ∘ g.
+Proof. exact: (iso_src_l _ _ (iso_op i)). Qed.
+Definition iso_tgt := (@iso_tgt_l, @iso_tgt_r)%core.
+
+(* TODO: generalize to monos / turn into an equivalence? *)
+Lemma mono {𝐂: Cat} (A B: 𝐂) (i: A ≃ B) C (f g: C ~> A): i ∘ f ≡ i ∘ g -> f ≡ g.
+Proof. exact: (epi (iso_op i)). Qed.
+Arguments mono {_ _ _} _ {_}.
+
+
+(** isomorphisms in product categories *)
+Lemma _iso_pair {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B'):
+   IsIso (𝐂*𝐃)%type (A,B) (A',B') (bare i,bare j).
+Proof.
+  exists (i⁻¹, j⁻¹).
+  abstract (split; exact: isoK).
+  abstract (split; exact: isoK').
+Defined.
+(* TOFIX: why is this failing? *)
+Fail HB.instance Definition _ 𝐂 𝐃 A A' B B' i j := @_iso_pair 𝐂 𝐃 A A' B B' i j. 
+(* meanwhile, we use the following explicit pair constructor for isos *)
+Definition pair_iso {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B') :=
+  (* (A,B) ≃_((𝐂*𝐃)%type) (A',B') := *)
+  HB.pack_for ((A,B) ≃_((𝐂*𝐃)%type) (A',B')) (bare i,bare j) (@_iso_pair 𝐂 𝐃 A A' B B' i j).
+
+
 
 (** ** extensible normalisation tactic via canonical structures *)
 Module HL.
@@ -325,7 +363,8 @@ Structure reified A B := reify {
     #[canonical=no] normE: eval norm ≡ term;
 }.
 Arguments reify {_ _}.
-Definition r_id {A} := reify (\idmap A) nil eval_nil.
+Definition r_id {A} := reify (idmap A) nil eval_nil.
+
 Program Definition r_comp {A B C} (u: reified A B) (v: reified B C) :=
   reify (u \; v) (app (norm u) (norm v)) _.
 Next Obligation. intros. by rewrite eval_app 2!normE. Qed.
@@ -342,6 +381,8 @@ End s.
 Notation hom_list A B := (hom_list_ B A).
 Arguments nil {_ _}.
 Arguments reify {_ _ _}.
+
+(** helpers to declare additional symbols under which normalisation should occur *)
 Program Definition r_sym1 {𝐂 𝐃: Cat} {A B: 𝐂} {A' B': 𝐃}
   (f: (A~>B) -> (A'~>B')) (Hf: Proper (eqv ==> eqv) f)
   (u: reified A B) := reify (f u) (single (f (eval (norm u)))) _.
@@ -358,11 +399,14 @@ End HL.
 Canonical HL.r_id. 
 Canonical HL.r_comp. 
 Canonical HL.r_var. 
-Canonical HL.r_ext. 
+Canonical HL.r_ext.
+
+(** end-user normalisation and decision tactics *)
 Ltac normalise := apply: HL.normalise; simpl HL.eval.
 Ltac cat := exact: HL.normalise.
 Definition cats' := @HL.cats'.
 
+(** tests *)
 Goal forall (C: Cat) A (f: C A A), idmap ∘ f ∘ (idmap ∘ f) ∘ f ≡ f ∘ (idmap ∘ f) ∘ (idmap ∘ f).
   intros. normalise. reflexivity.
   Restart.

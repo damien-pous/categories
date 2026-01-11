@@ -18,7 +18,7 @@ Arguments Fhom {_ _} _ {_ _}.
 (** functor: prefunctor + laws *)
 #[primitive] HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @prefunctor 𝐂 𝐃 F := {
     #[canonical=no] Fhom_eqv: forall {A B: 𝐂}, Proper (eqv ==> eqv) (@Fhom _ _ F A B);
-    #[canonical=no] Fidmap: forall A: 𝐂, Fhom F (\idmap A) ≡ idmap;
+    #[canonical=no] Fidmap: forall A: 𝐂, Fhom F A ≡ F A;
     #[canonical=no] Fcomp: forall {A B C: 𝐂} (f: A ~> B) (g: B ~> C), Fhom F (g ∘ f) ≡ Fhom F g ∘ Fhom F f;
   }.
 #[short(type="Functor")]
@@ -111,12 +111,12 @@ Arguments mk_ntx {_ _} _ _ _ _.
 HB.instance Definition _ (𝐂 𝐃: Cat) (F G: PreFunctor 𝐂 𝐃) :=
   Setoid.copy (NTX F G) (kernel (@Natural.sort 𝐂 𝐃 F G)).
 
-(** category of functors and natural transformations *)
+(** ** category of functors and natural transformations *)
 HB.instance Definition _  𝐂 𝐃 :=
   IsQuiver.Build (Functor 𝐂 𝐃) (@NTX 𝐂 𝐃).
 
 Definition ntx_id_ {𝐂 𝐃: PreCat} (F: PreFunctor 𝐂 𝐃) :=
-  fun X => \idmap (F X).
+  fun X => idmap (F X).
 Arguments ntx_id_ {_ _} _ _ /. 
 Lemma _ntx_id_natural (𝐂 𝐃: Cat) (F: PreFunctor 𝐂 𝐃):
   IsNatural 𝐂 𝐃 F F (ntx_id_ F).
@@ -150,36 +150,34 @@ Proof.
 Qed.
 HB.instance Definition _ 𝐂 𝐃 := _functor_cat 𝐂 𝐃.
 
+(** ** functor equivalence (i.e., natural isomorphisms) *)
+
 Section s.
 Context {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃).
-Definition functor_equiv := F ≃ G. 
+Definition functor_equiv := F ≃ G.
+
+(** alternative constructors for natural isomorphisms  *)
 Program Definition iso_ntx'
   (i: forall X, F X ≃ G X) (n: F ~> G)
-  (H: forall X, n X ≡ (i X)¹): functor_equiv :=
+  (H: forall X, n X ≡ i X): functor_equiv :=
   mk_iso n (mk_ntx G F (fun X => (i X)⁻¹) _) _ _.
 Next Obligation.
-  intros. cbn. rewrite -iso_switch. setoid_rewrite <-(H X).
-  rewrite -compoA -natural.
+  intros=>/=. rewrite iso_src/=.
+  (* TOFIX: ugly term here, why do we need cbn? *)
+  cbn.
+  rewrite -H -compoA -natural.
   by rewrite compoA H isoK' cats. 
 Qed.
 Next Obligation. move=>i n H A/=. by rewrite H isoK. Qed.
 Next Obligation. move=>i n H A/=. by rewrite H isoK'. Qed.
 
+(** via natural tranformations which are pointwise isomorphisms *)
 Definition iso_ntx
   (i: forall X, F X ≃ G X):
-  (forall X Y h, (i Y)¹ ∘ Fhom F h ≡ Fhom G h ∘ (i X)¹) -> functor_equiv.
-Proof.
-  move=>N. unshelve apply: iso_ntx'.
-  exact: i.
-  exact: (mk_ntx _ _ (fun X => (i X)¹) N).
-  done.
-Defined.
+  (forall X Y h, i Y ∘ Fhom F h ≡ Fhom G h ∘ i X) -> functor_equiv.
+Proof. move=>N. exact: (@iso_ntx' i (mk_ntx _ _ i N)). Defined.
 
-Definition iso_ntx_pw_ (i: functor_equiv): forall X, F X ~> G X := fun X => (i¹ X).
-HB.instance Definition _ (i: functor_equiv) X :=
-  IsIso.Build _ _ _ (iso_ntx_pw_ i X) (isoK i X) (isoK' i X).
-Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X := iso_ntx_pw_ i X. 
-
+(** when the functors actually are pointwise equal *)
 Lemma same_functor
   (FG1: forall X, F X = G X)
   (FG2: forall (A B: 𝐂) (f: A ~> B), Fhom G f ≡ cast2' (T:=hom) (Fhom F f) (FG1 A) (FG1 B)):
@@ -191,13 +189,24 @@ Proof.
     destruct (FG1 A); destruct (FG1 B).
     by simpl; cat. 
 Defined.
+
+(** natural isomorphisms pointwise yield isomorphisms *)
+Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X :=
+  mk_iso (i¹ X) (i⁻¹ X) (isoK i X) (isoK' i X). 
+
+(* Definition iso_ntx_pw_ (i: functor_equiv): forall X, F X ~> G X := fun X => (i¹ X). *)
+(* HB.instance Definition _ (i: functor_equiv) X := *)
+(*   IsIso.Build _ _ _ (iso_ntx_pw_ i X) (isoK i X) (isoK' i X). *)
+(* Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X := iso_ntx_pw_ i X.  *)
+
 End s.
 Coercion iso_ntx_pw: functor_equiv >-> Funclass.
 Infix "≈" := functor_equiv: cat_scope.
 
-(* Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹.  *)
+(* Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹. *)
 
-Record functor_eqv {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃): Prop := { feq_iso: F ≈ G }. 
+#[projections(primitive=no)]
+Record functor_eqv {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃): Prop := { _: F ≈ G }. 
 
 #[local] Instance Equivalence_functor_eqv {𝐂 𝐃: Cat}: Equivalence (@functor_eqv 𝐂 𝐃). 
 Proof.
@@ -207,12 +216,23 @@ Proof.
   -- intros F G H [i] [j]. split. apply: iso_trans; eassumption.
 Qed.
 HB.instance Definition _ {𝐂 𝐃: Cat} := isSetoid.Build (Functor 𝐂 𝐃) _.
+
 HB.instance Definition _ := IsQuiver.Build Cat Functor.
 Definition functor_id {𝐂: Cat}: 𝐂 ~> 𝐂 := idfun: Functor 𝐂 𝐂.
 Definition functor_comp {𝐂 𝐃 𝐄: Cat} (F: 𝐂 ~> 𝐃) (G: 𝐃 ~> 𝐄): 𝐂 ~> 𝐄 := types_comp G F: Functor _ _.
 Definition functor_cst {𝐂 𝐃: Cat} (D: 𝐃): 𝐂 ~> 𝐃 := cst D: Functor _ _.
 HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp).
 
+
+Lemma iso_ntx_alt (𝐂 𝐃: Cat) (F G: 𝐂 ~> 𝐃) (i: F ≈ G) A B (f: A ~> B):
+  Fhom G f ≡ i B ∘ Fhom F f ∘ (i A)⁻¹.
+Proof. rewrite natural -compoA isoK. cat. Qed.
+
+Lemma iso_ntx_eqv (𝐂 𝐃: Cat) (F G: 𝐂 ~> 𝐃) (i: F ≈ G) A B (f g: A ~> B):
+  Fhom F f ≡ Fhom F g -> Fhom G f ≡ Fhom G g.
+Proof. rewrite 2!(iso_ntx_alt i). by move=>->. Qed.
+
+(* Check fun {𝐂 𝐃: Cat} (F G: 𝐂 ~> 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹. *)
 
 Definition ntx_comp'_ {𝐂 𝐃 𝐄: PreCat} {F G: PreFunctor 𝐂 𝐃} {F' G': PreFunctor 𝐃 𝐄}
   (k: forall X, F X ~> G X) (h: forall X, F' X ~> G' X): forall X, (types_comp F' F) X ~> (types_comp G' G) X :=
@@ -245,7 +265,7 @@ Proof.
 Qed.
 
 Lemma ntx_id_comp {F: 𝐂 ~> 𝐃} {G: 𝐃 ~> 𝐄}:
-  \idmap (G ∘ F) ≡ \idmap G ⊚ \idmap F.
+  idmap (G ∘ F) ≡ idmap G ⊚ idmap F.
 Proof. intro X; cbn. by rewrite !cats. Qed.
 
 Lemma ntx_comp'_eqv {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}:

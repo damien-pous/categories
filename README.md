@@ -1,8 +1,8 @@
-A Rocq library about category theory, with hom-setoids.
+A Rocq library about (E-)category theory
 
 # REQUIREMENTS
 
-- rocq-prover 9.0 (see branch 8.20 for backports)
+- rocq-prover 9.0 or above
 - rocq-partial-orders (https://github.com/damien-pous/partial-orders) 
 
 # AUTHORS

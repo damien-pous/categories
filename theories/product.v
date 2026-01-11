@@ -71,7 +71,7 @@ Arguments Product {_}.
 HB.structure Definition ccat := { 𝐂 of IsCartesian 𝐂 & }.
 Definition top {𝐂: CCat}: 𝐂 := terminal top_.
 Definition prod {𝐂: CCat} (A B: 𝐂): 𝐂 := span_ob (terminal (prod_ A B)).
-Infix "×" := prod (at level 30).
+Infix "×" := prod (at level 30): cat_scope.
 
 Section prod.
   Context {𝐂: CCat}.
