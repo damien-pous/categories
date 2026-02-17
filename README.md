@@ -1,4 +1,5 @@
 A Rocq library about (E-)category theory
+and then monoidal categories
 
 # REQUIREMENTS
 
@@ -11,6 +12,7 @@ A Rocq library about (E-)category theory
 
 Based on work with
 - Samuel Arsac (ENS de Lyon, Plume team, LIP, ENS de Lyon) 
+- Olivier Laurent (CNRS, Plume team, LIP, ENS de Lyon) 
 - Cyril Cohen (Inria, Cash team, LIP, ENS de Lyon)
 - Russ Harmer (CNRS, Plume team, LIP, ENS de Lyon) 
 

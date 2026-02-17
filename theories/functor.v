@@ -1,6 +1,7 @@
 (** * Functors and natural transformations *)
 
 Require Export cat.
+Require Import cast.
 
 Local Open Scope cat_scope.
 

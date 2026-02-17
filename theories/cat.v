@@ -52,14 +52,6 @@ Local Open Scope cat_scope.
 (** for temporarily admitting things *)
 Axiom sorry: forall {A: Type}, A.
 Ltac sorry := exact: sorry. 
-
-
-(** casting morphism-like types *)
-Definition cast2' {A} {T: A -> A -> Type} [a b a' b'] (x: T a b) (aa: a = a') (bb: b = b'): T a' b' :=
-  eq_rect _ (fun a => T a b') (eq_rect _ _ x _ bb) _ aa.
-Arguments cast2' {_ _} [_ _ _ _] _ & !_ !_.
-Notation cast2 a' b' f := (@cast2' _ _ _ _ a' b' f _ _).
-
        
 (** * Categories *)
 

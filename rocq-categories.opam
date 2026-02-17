@@ -11,6 +11,7 @@ synopsis: "A library for category theory"
 description: """
 Library about category theory, with hom-setoids.
 Hierarchy of structures implemented with Hierarchy Builder.
+Decision procedure for monoidal categories.
 """
 
 build: [
