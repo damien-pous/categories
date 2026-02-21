@@ -11,7 +11,7 @@ synopsis: "A library for category theory"
 description: """
 Library about category theory, with hom-setoids.
 Hierarchy of structures implemented with Hierarchy Builder.
-Decision procedure for monoidal categories.
+Inference of MacLane morphisms and decision procedure for monoidal categories.
 """
 
 build: [
@@ -20,6 +20,7 @@ build: [
 install: [make "install"]
 depends: [
   "rocq-core" {>= "9.1"}
+  "rocq-stdlib"
   "rocq-partial-orders"
 ]
 

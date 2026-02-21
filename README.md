@@ -1,4 +1,7 @@
-A Rocq library about (E-)category theory and monoidal categories
+A Rocq library about category theory and monoidal categories
+
+homepage: https://perso.ens-lyon.fr/damien.pous/string-diagrams/
+string diagram graphical editor: https://github.com/damien-pous/string-diagrams/
 
 # REQUIREMENTS
 
