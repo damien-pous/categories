@@ -1,4 +1,4 @@
-(** * McLane's coherence theorem for monoidal categories
+(** * MacLane's coherence theorem for monoidal categories
 
    this proof is largely inspired from the one by Ilya Beylin
    and Peter Dybjer in
@@ -23,10 +23,10 @@ Variable X: Type.
 Inductive tree :=
 | t_ob: X -> tree
 | t_unit: tree
-| t_tens: tree -> tree -> tree.
+| t_tensor: tree -> tree -> tree.
 Implicit Types a b c: tree.
 Notation "1" := t_unit. 
-Infix "⊗" := t_tens. 
+Infix "⊗" := t_tensor. 
 
 (** object normal forms (the type [N] in Ilya Beylin and Peter Dybjer's paper)  *)
 Implicit Types n m: arity X.
@@ -58,33 +58,33 @@ Fixpoint Norm a: norm :=
 (** We write this function as a second tensor since it behaves like tensor *)
 Infix "⊙" := Norm (at level 31, right associativity). 
 
-(** syntax for McLane morphisms, from one tree to another *)
-Inductive mclane: tree -> tree -> Type :=
-(* | mcl_var: forall x, mclane (t_ob x) (t_ob x) *)
-(* | mcl_unit: mclane 1 1 *)
-| mcl_id: forall a, mclane a a
-| mcl_comp: forall a b c, mclane a b -> mclane b c -> mclane a c
-| mcl_tensor: forall a b c d, mclane a b -> mclane c d -> mclane (a⊗c) (b⊗d)
-| mcl_inv: forall a b, mclane a b -> mclane b a
-| mcl_assoc: forall a b c, mclane ((a⊗b)⊗c) (a⊗(b⊗c))
-| mcl_unitl: forall a, mclane (1⊗a) a
-| mcl_unitr: forall a, mclane (a⊗1) a
+(** syntax for MacLane morphisms, from one tree to another *)
+Inductive maclane: tree -> tree -> Type :=
+(* | mcl_var: forall x, maclane (t_ob x) (t_ob x) *)
+(* | mcl_unit: maclane 1 1 *)
+| mcl_id: forall a, maclane a a
+| mcl_comp: forall a b c, maclane a b -> maclane b c -> maclane a c
+| mcl_tensor: forall a b c d, maclane a b -> maclane c d -> maclane (a⊗c) (b⊗d)
+| mcl_inv: forall a b, maclane a b -> maclane b a
+| mcl_assoc: forall a b c, maclane ((a⊗b)⊗c) (a⊗(b⊗c))
+| mcl_unitl: forall a, maclane (1⊗a) a
+| mcl_unitr: forall a, maclane (a⊗1) a
 .
 
 Notation "f ∘ g" := (mcl_comp g f).
 Notation "f · g" := (mcl_tensor f g).
 Notation "f ⁻¹" := (mcl_inv f).
 
-(* Fixpoint mcl_id {a}: mclane a a := *)
+(* Fixpoint mcl_id {a}: maclane a a := *)
 (*   match a with *)
 (*   | t_ob x => mcl_var x *)
 (*   | t_unit => mcl_unit *)
-(*   | t_tens a b => mcl_id · mcl_id *)
+(*   | t_tensor a b => mcl_id · mcl_id *)
 (*   end. *)
 
 (** functoriality of [⊙] in its second argument *)
-Fixpoint Norm12 a n m (h: mclane n m): mclane (a ⊙ n) (a ⊙ m) :=
-  match a return mclane (a ⊙ n) (a ⊙ m) with
+Fixpoint Norm12 a n m (h: maclane n m): maclane (a ⊙ n) (a ⊙ m) :=
+  match a return maclane (a ⊙ n) (a ⊙ m) with
   | 1 => h
   | a ⊗ b => Norm12 a (Norm12 b h)
   | _ => mcl_id _ · h
@@ -94,7 +94,7 @@ Fixpoint Norm12 a n m (h: mclane n m): mclane (a ⊙ n) (a ⊙ m) :=
     (the function J[|·|]_n in Peter and Ilya's paper,
      which we can define in one go)
  *)
-Fixpoint Norm21 a b (f: mclane a b) n: mclane (a ⊙ n) (b ⊙ n) :=
+Fixpoint Norm21 a b (f: maclane a b) n: maclane (a ⊙ n) (b ⊙ n) :=
   match f with
   | g ∘ f => Norm21 g n ∘ Norm21 f n
   | f · g => Norm12 _ (Norm21 g n)  ∘ Norm21 f _
@@ -104,7 +104,7 @@ Fixpoint Norm21 a b (f: mclane a b) n: mclane (a ⊙ n) (b ⊙ n) :=
 
 (** alternative definition of [Norm21], via propositional equality,
     (like in Peter and Ilya's paper)  *)
-Lemma Norm_eq a b (h: mclane a b): forall n, a⊙n = b⊙n.
+Lemma Norm_eq a b (h: maclane a b): forall n, a⊙n = b⊙n.
 Proof.
   induction h=>//=n.
   by rewrite IHh1.
@@ -112,30 +112,30 @@ Proof.
 Defined.
 
 (** intuitively, [Norm21'] always returns the identity *)
-Definition Norm21' a b (h: mclane a b) n: mclane (a ⊙ n) (b ⊙ n).
+Definition Norm21' a b (h: maclane a b) n: maclane (a ⊙ n) (b ⊙ n).
 Proof. rewrite (Norm_eq h). exact: mcl_id. Defined.
 
 (** normalising natural isomorphism *)
-Fixpoint ξ a n: mclane (a ⊗ n) (a ⊙ n) :=
+Fixpoint ξ a n: maclane (a ⊗ n) (a ⊙ n) :=
   match a with
   | t_ob x => mcl_id _
   | t_unit => mcl_unitl _
-  | t_tens a b => ξ _ _ ∘ mcl_id _ · ξ _ _ ∘ mcl_assoc _ _ _
+  | t_tensor a b => ξ _ _ ∘ mcl_id _ · ξ _ _ ∘ mcl_assoc _ _ _
   end.
 
 (** final functor and normalising natural isomorphism
     ([Norm=Nf] and [φ=ν] in Peter and Ilya's paper) *)
 Definition Nf a := a ⊙ nil.
-Definition φ a: mclane a (Nf a) := ξ a nil ∘ (mcl_unitr a)⁻¹.
+Definition φ a: maclane a (Nf a) := ξ a nil ∘ (mcl_unitr a)⁻¹.
 
-Theorem find_McLane a b (e: Nf a = Nf b): mclane a b.
+Theorem find_MacLane a b (e: Nf a = Nf b): maclane a b.
 Proof.
   apply: mcl_comp. exact/φ.
   rewrite e. apply: mcl_inv. exact/φ. 
 Qed.
 
 (** canonization functor *)
-Definition canonize a b (h: mclane a b): mclane a b :=
+Definition canonize a b (h: maclane a b): maclane a b :=
   mcl_inv (φ b) ∘ Norm21 h nil ∘ φ a.
 
 (** additional properties *)
@@ -164,7 +164,7 @@ Fixpoint eval_tree {𝐂: PreMonoidalCat} (a: tree 𝐂): 𝐂 :=
   match a with
   | t_ob A => A
   | t_unit => unit 
-  | t_tens a b => eval_tree a ⊗ eval_tree b
+  | t_tensor a b => eval_tree a ⊗ eval_tree b
   end.
 
 (** tweaking coercions to use [eval_tree] from [tree] also to classes before [premonoidalcat.sort]
@@ -191,62 +191,62 @@ Section s.
 Context {𝐂: PreMonoidalCat}.
 Implicit Types a b c d: tree 𝐂.  
 
-(** evaluation of McLane expressions *)
-Fixpoint eval_mclane a b (h: mclane a b): a ~> b := 
+(** evaluation of MacLane expressions *)
+Fixpoint eval_maclane a b (h: maclane a b): a ~> b := 
   match h with
   | mcl_id => idmap
-  | mcl_comp f g => eval_mclane g ∘ eval_mclane f
-  | mcl_tensor f g => eval_mclane f · eval_mclane g
-  | mcl_inv f => eval_mclane_inv f
+  | mcl_comp f g => eval_maclane g ∘ eval_maclane f
+  | mcl_tensor f g => eval_maclane f · eval_maclane g
+  | mcl_inv f => eval_maclane_inv f
   | mcl_assoc a b c => assoc a b c
   | mcl_unitl a => unitl a
   | mcl_unitr a => unitr a
   end
-with eval_mclane_inv a b (h: mclane a b): b ~> a := 
+with eval_maclane_inv a b (h: maclane a b): b ~> a := 
   match h with
   | mcl_id => idmap
-  | mcl_comp f g => eval_mclane_inv f ∘ eval_mclane_inv g
-  | mcl_tensor f g => eval_mclane_inv f · eval_mclane_inv g
-  | mcl_inv f => eval_mclane f
+  | mcl_comp f g => eval_maclane_inv f ∘ eval_maclane_inv g
+  | mcl_tensor f g => eval_maclane_inv f · eval_maclane_inv g
+  | mcl_inv f => eval_maclane f
   | mcl_assoc a b c => assoc' a b c
   | mcl_unitl a => unitl' a
   | mcl_unitr a => unitr' a
   end.
 
-Lemma mcl_isoK a b (h: mclane a b): eval_mclane h ∘ eval_mclane_inv h ≡ idmap
-with mcl_isoK' a b (h: mclane a b): eval_mclane_inv h ∘ eval_mclane h ≡ idmap.
+Lemma mcl_isoK a b (h: maclane a b): eval_maclane h ∘ eval_maclane_inv h ≡ idmap
+with mcl_isoK' a b (h: maclane a b): eval_maclane_inv h ∘ eval_maclane h ≡ idmap.
 Proof.
   - destruct h=>//=.
     -- cat.
-    -- by rewrite compoA -(compoA _ (eval_mclane h1)) mcl_isoK cats mcl_isoK.
+    -- by rewrite compoA -(compoA _ (eval_maclane h1)) mcl_isoK cats mcl_isoK.
     -- by rewrite exchange 2!mcl_isoK tensor_id.
-    -- exact: (isoK (assoc_ (_,_,_))). 
-    -- exact: (isoK (unitl_ (tt,_))). 
-    -- exact: (isoK (unitr_ (_,tt))). 
+    -- exact: isoK.
+    -- exact: isoK.
+    -- exact: isoK.
   - destruct h=>//=.
     -- cat.
-    -- by rewrite compoA -(compoA _ (eval_mclane_inv h2)) mcl_isoK' cats mcl_isoK'.
+    -- by rewrite compoA -(compoA _ (eval_maclane_inv h2)) mcl_isoK' cats mcl_isoK'.
     -- by rewrite exchange 2!mcl_isoK' tensor_id.
-    -- exact: (isoK' (assoc_ (_,_,_))). 
-    -- exact: (isoK' (unitl_ (tt,_))). 
-    -- exact: (isoK' (unitr_ (_,tt))). 
+    -- exact: isoK'. 
+    -- exact: isoK'.
+    -- exact: isoK'.
 Qed.
 
-HB.instance Definition _ a b (h: mclane a b) :=
-  @IsIso.Build _ _ _ (eval_mclane h) (eval_mclane_inv h) (mcl_isoK h) (mcl_isoK' h).
-HB.instance Definition _ a b (h: mclane a b) :=
-  @IsIso.Build _ _ _ (eval_mclane_inv h) (eval_mclane h) (mcl_isoK' h) (mcl_isoK h).
+HB.instance Definition _ a b (h: maclane a b) :=
+  @IsIso.Build _ _ _ (eval_maclane h) (eval_maclane_inv h) (mcl_isoK h) (mcl_isoK' h).
+HB.instance Definition _ a b (h: maclane a b) :=
+  @IsIso.Build _ _ _ (eval_maclane_inv h) (eval_maclane h) (mcl_isoK' h) (mcl_isoK h).
 
 (* TOTHINK: remove? *)
-Coercion eval_mclane: mclane >-> Setoid.sort.
+Coercion eval_maclane: maclane >-> Setoid.sort.
 
-Definition iso_mclane a b (h: mclane a b): a ≃ b := eval_mclane h. 
+Definition iso_maclane a b (h: maclane a b): a ≃ b := eval_maclane h. 
 
-Lemma eval_mclane_invE a b (h: mclane a b): h⁻¹ = mcl_inv h.
+Lemma eval_maclane_invE a b (h: maclane a b): h⁻¹ = mcl_inv h.
 Proof. done. Qed.
 
-Lemma eval_mclane_cast a a' b b' (f: mclane a b) aa bb:
-  eval_mclane (@cast2' _ _ a b a' b' f aa bb) =
+Lemma eval_maclane_cast a a' b b' (f: maclane a b) aa bb:
+  eval_maclane (@cast2' _ _ a b a' b' f aa bb) =
     hcast' f (f_equal eval_tree aa) (f_equal eval_tree bb). 
 Proof. by destruct aa; destruct bb. Qed.
 
@@ -259,19 +259,19 @@ Ltac reify_ob A :=
   | ?A ⊗ ?B =>
       let a := reify_ob A in
       let b := reify_ob B in
-      constr:(t_tens a b)
+      constr:(t_tensor a b)
   | eval_tree ?t => constr:(t)
   | ?A => constr:(t_ob A)
   end.
 
-Ltac find_mclane :=
+Ltac find_maclane :=
   match goal with
   | |- Bridge ?A ?B => 
       let a := reify_ob A in
       let b := reify_ob B in
-      refine (iso_mclane (@find_McLane _ a b erefl))
+      refine (iso_maclane (@find_MacLane _ a b erefl))
   end.
-Local Hint Extern 0 (Bridge _ _) => find_mclane: typeclass_instances.
+Local Hint Extern 0 (Bridge _ _) => find_maclane: typeclass_instances.
 
 
 Section test.
@@ -296,13 +296,13 @@ Goal assoc A B C ≡ mcl.
 Abort.
 Goal forall (f: Γ ~> A) (g: Δ ~> B) (h: A⊗(unit⊗B) ~> C), h ∘∘ f · g ≡ h ∘∘ ((f · idmap) ∘ (idmap · g)).
 Abort.
-Fail Goal (mcl: Γ++Δ ~> Γ⊗Δ) ≡ acast (mcl: Γ++Δ ~> Γ⊗unit⊗Δ). (* solved later in gmclane *)
+Fail Goal (mcl: Γ++Δ ~> Γ⊗Δ) ≡ acast (mcl: Γ++Δ ~> Γ⊗unit⊗Δ). (* solved later in gmaclane *)
 
 Check A: A ~> A.
 End test. 
 
 
-(** ** McLane coherence theorem  *)
+(** ** MacLane coherence theorem  *)
 
 Section s.
   
@@ -324,17 +324,17 @@ Lemma triangle_alt A B:
       ≡ unitr A · idmap B ∘ assoc' A unit B.
 Proof. rewrite iso_src. exact/triangle. Qed.
 
-(** Kelly'64 + McLane 1971 second edition p165 exercise 1
+(** Kelly'64 + MacLane 1971 second edition p165 exercise 1
    (careful: there, assoc = α⁻¹, unitl = λ, unitr = ρ) *)
 Lemma triangle': forall A B,
     unitl (A⊗B) ∘ assoc unit A B
       ≡ unitl A · idmap B.
 Proof.
   move=>C D.
-  apply: (@iso_ntx_eqv _ _ _ _ (@unitl_ 𝐂) (tt,(unit⊗C)⊗D) (tt,C⊗D) (tt,_) (tt,_)).
   set A := unit. 
-  change (idmap A · (unitl (C⊗D) ∘ assoc unit C D)
-    ≡ idmap A · (unitl C · idmap D)).
+  suff: (idmap A · (unitl (C⊗D) ∘ assoc unit C D)
+             ≡ idmap A · (unitl C · idmap D)).
+  rewrite 2!tensorUl. by apply: (proj1 (cast_eqv_iff _ _)). 
   clearbody A.
   rewrite tensor_comp_r_src.
 
@@ -345,7 +345,7 @@ Proof.
   rewrite !compoA id_tensor 2!ntx_assoc'. 
 
   rewrite -2!compoA (compoA _ _ (assoc' _ _ _)) -pentagon_inv.
-  rewrite -!compoA. rewrite (isoK (idmap · assoc' unit C D)). (* TOFIX: looong if we use isoK' directly *)
+  rewrite -!compoA isoK'.
   rewrite !cats. apply: comp_eqv=>//.
   rewrite -triangle.
   rewrite tensor_comp_l_src.
@@ -357,7 +357,7 @@ Qed.
     (we could also have worked directly with [Norm21'])
  *)
 
-Lemma Norm21'_comp a b c (f: mclane a b) (g: mclane b c) n:
+Lemma Norm21'_comp a b c (f: maclane a b) (g: maclane b c) n:
   Norm21' (mcl_comp f g) n ≡ Norm21' g n ∘ Norm21' f n.
 Proof.
   rewrite /Norm21'/=.
@@ -366,14 +366,14 @@ Proof.
   cat.
 Qed.  
 
-Lemma Norm21'_inv a b (f: mclane a b) n:
-  Norm21' (mcl_inv f) n ≡ eval_mclane_inv (Norm21' f n).
+Lemma Norm21'_inv a b (f: maclane a b) n:
+  Norm21' (mcl_inv f) n ≡ eval_maclane_inv (Norm21' f n).
 Proof.
   rewrite /Norm21'/=.
   by case (Norm_eq f n).
 Qed.  
 
-Lemma Norm12_eqv a: forall n m (h k: mclane n m), h ≡ k -> Norm12 a h ≡ Norm12 a k.
+Lemma Norm12_eqv a: forall n m (h k: maclane n m), h ≡ k -> Norm12 a h ≡ Norm12 a k.
 Proof.
   induction a=>//=n m h k E.
   - exact: tensor_eqv. 
@@ -387,7 +387,7 @@ Proof.
   - rewrite -IHa. exact: Norm12_eqv. 
 Qed.
 
-Lemma Norm21'_tensor a b c d (f: mclane a b) (g: mclane c d) n:
+Lemma Norm21'_tensor a b c d (f: maclane a b) (g: maclane c d) n:
   Norm21' (mcl_tensor f g) n ≡ Norm12 _ (Norm21' g _) ∘ Norm21' f _.
 Proof.
   rewrite /Norm21'/=. 
@@ -395,7 +395,7 @@ Proof.
   rewrite Norm12_id; cbn. cat. 
 Qed.
 
-Lemma Norm21E a b (f: mclane a b): forall n, Norm21 f n ≡ Norm21' f n.
+Lemma Norm21E a b (f: maclane a b): forall n, Norm21 f n ≡ Norm21' f n.
 Proof.
   induction f=>//=n.
   - rewrite Norm21'_comp; exact/comp_eqv.
@@ -403,15 +403,15 @@ Proof.
   - rewrite Norm21'_inv. exact/inv_inj. 
 Qed.
 
-Lemma Norm_eq_unique a b (f g: mclane a b) n: Norm_eq f n = Norm_eq g n.
+Lemma Norm_eq_unique a b (f g: maclane a b) n: Norm_eq f n = Norm_eq g n.
 Proof. exact: UIP_ob_list. Qed.
 
 (** by UIP, it follows that the morphism returned by [Norm21 f n] does not depend on [f] *)
-Proposition Norm21_unique a b (f g: mclane a b) n: Norm21 f n ≡ Norm21 g n.
+Proposition Norm21_unique a b (f g: maclane a b) n: Norm21 f n ≡ Norm21 g n.
 Proof. by rewrite 2!Norm21E/Norm21' (Norm_eq_unique f g). Qed.
 
 (** naturality of [ξ] in its second argument *)
-Lemma ntx_ξ2 a: forall n m (k: mclane n m),
+Lemma ntx_ξ2 a: forall n m (k: maclane n m),
     ξ a m  ∘  idmap · k ≡ Norm12 a k  ∘  ξ a n.
 Proof.
   induction a as [x| |a IHa b IHb]=>n m k/=;
@@ -424,7 +424,7 @@ Proof.
 Qed.
 
 (** naturality of [ξ] in its first argument *)
-Lemma ntx_ξ1 a b (h: mclane a b):
+Lemma ntx_ξ1 a b (h: maclane a b):
   forall n, ξ b n  ∘  h · idmap ≡ Norm21 h n  ∘  ξ a n.
 Proof.
   induction h as [a|a b c f IHf g IHg|a a' b b' f IHf g IHg|a b f IHf| | | ]=>/=n; simpl. 
@@ -448,7 +448,7 @@ Proof.
 Qed.
 
 (** naturality of [φ] *)
-Lemma ntx_φ a b (h: mclane a b):
+Lemma ntx_φ a b (h: maclane a b):
   φ b  ∘  h ≡ Norm21 h _ ∘  φ a.
 Proof.
   rewrite /Norm/= compoA.
@@ -457,14 +457,14 @@ Proof.
 Qed.
 
 (** soundness of canonization *)
-Proposition canonizeE a b (f: mclane a b): f ≡ canonize f.
+Proposition canonizeE a b (f: maclane a b): f ≡ canonize f.
 Proof.
   rewrite /canonize/=.
   rewrite -compoA -ntx_φ compoA isoK'. cat.
 Qed.
 
-(** McLane's coherence theorem follows *)
-Theorem McLane a b (f g: mclane a b): f ≡ g.
+(** MacLane's coherence theorem follows *)
+Theorem MacLane a b (f g: maclane a b): f ≡ g.
 Proof.
   rewrite (canonizeE f) (canonizeE g) /=.
   repeat apply: comp_eqv=>//.
@@ -473,6 +473,8 @@ Qed.
 
 End s.
 
+
+(** preliminary [MacLane] tactic (superseded by the one defined in [monoidal_gmaclane])  *)
 
 Ltac reify_mcl f :=
   lazymatch f with
@@ -517,29 +519,29 @@ Ltac reify_mcl f :=
       let a := reify_ob A in
       constr:(mcl_inv (mcl_unitr a))
   | mcl ?f => reify_mcl f
-  | iso_mclane ?m => constr:(m)
-  | eval_mclane ?m => constr:(m)
-  | eval_mclane_inv ?m => constr:(mcl_inv m)
+  | iso_maclane ?m => constr:(m)
+  | eval_maclane ?m => constr:(m)
+  | eval_maclane_inv ?m => constr:(mcl_inv m)
   end.
 
 
-Ltac McLane_debug :=
+Ltac MacLane_debug :=
   lazymatch goal with
     |- ?f ≡ ?g =>
       let u := reify_mcl f in
       let v := reify_mcl g in
-      move:(McLane u v)
+      move:(MacLane u v)
   end.
 
-Ltac McLane :=
+Ltac MacLane :=
   (try reflexivity);
   match goal with
-  | |- comp _ _ ≡ comp _  _ => apply: comp_eqv; McLane
-  | |- bcomp _ _ _ ≡ bcomp _ _ _ => apply: bcomp_eqv; McLane
-  | |- tensor22 _ _ ≡ tensor22 _ _ => apply: tensor_eqv; McLane
-  | |- hcast _ ≡ hcast _ => apply: hcast_eqv'; McLane
-  | |- cast _ ≡ cast _ => apply: cast_eqv; McLane
-  | |- _ => by McLane_debug
+  | |- comp _ _ ≡ comp _  _ => apply: comp_eqv; MacLane
+  | |- bcomp _ _ _ ≡ bcomp _ _ _ => apply: bcomp_eqv; MacLane
+  | |- tensor22 _ _ ≡ tensor22 _ _ => apply: tensor_eqv; MacLane
+  | |- hcast _ ≡ hcast _ => apply: hcast_eqv'; MacLane
+  | |- cast _ ≡ cast _ => apply: cast_eqv; MacLane
+  | |- _ => by MacLane_debug
   end.
 
 Section tests'.
@@ -549,37 +551,37 @@ Variables A B C D: 𝐂.
 Variables h: arity 𝐂.
 
 Goal A ≡ A.
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 Goal A·B ≡ A·B.
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 Goal unitl A \; unitl' A ≡ idmap.
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 Goal assoc A B C ≡ assoc A B C.
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 Goal A · assoc B C D ∘ assoc A (B⊗C) D ∘ assoc A B C · D
      ≡ assoc A B (C⊗D) ∘ assoc (A⊗B) C D.
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 
 Goal A · unitl B ∘ assoc A unit B ≡ unitr A · B.
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 
 Goal A · unitl (B⊗C) ∘ assoc A unit (B⊗C) ≡ unitr A · (B⊗C).
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 
 Goal A · unitl (B⊗C) ∘ assoc A unit (B⊗C) ≡ mcl.
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 
 Goal A · unitl h ∘ assoc A unit h ≡ unitr A · eval_arity h.
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 
 Goal unitl unit ≡[𝐂 _ _] unitr unit. 
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 
 Goal unitl' A ≡ inv (unitl A). 
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 
 Goal inv (unitl A ∘ idmap) ≡ mcl. 
-Proof. McLane. Qed.
+Proof. MacLane. Qed.
 
 End tests'.
 

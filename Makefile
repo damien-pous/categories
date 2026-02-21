@@ -1,4 +1,4 @@
-KNOWNTARGETS := RocqMakefile sanity justlib
+KNOWNTARGETS := RocqMakefile archive
 KNOWNFILES   := Makefile _RocqProject
 
 .DEFAULT_GOAL := invoke-rocqmakefile
@@ -14,9 +14,8 @@ invoke-rocqmakefile: RocqMakefile
 cleanall:: clean
 	rm -f RocqMakefile* *.d *.log */*.glob */.*.aux */*.vo*
 
-justlib: theories/gfp.vo theories/instances.vo
-
-sanity: tests/sanity.vo
+archive:
+	git archive --prefix monoidal-categories/ main | bzip2 > monoidal-categories.tar.bz2
 
 # This should be the last rule, to handle any targets not declared above
 %: invoke-rocqmakefile

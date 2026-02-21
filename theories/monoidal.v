@@ -1,5 +1,5 @@
 Require Export monoidal_def.
-Require Import monoidal_mclane monoidal_gmclane monoidal_tactic.
+Require Import monoidal_maclane monoidal_gmaclane monoidal_tactic.
 
 Local Open Scope cat_scope.
 
@@ -17,9 +17,9 @@ Proof. move=>->. symmetry. exact/cast_switch. Qed.
 Ltac mcat := by (rewrite /box; M.mcat).
 Ltac mcat_debug := rewrite /box; M.mcat'.
 
-Ltac McLane := gMcLane.
-#[export] Hint Extern 0 (Bridge _ _) => find_gmclane: typeclass_instances.
-#[export] Hint Extern 0 (auto_eqv _ _) => gMcLane: typeclass_instances.
+Ltac MacLane := gMacLane.
+#[export] Hint Extern 0 (Bridge _ _) => find_gmaclane: typeclass_instances.
+#[export] Hint Extern 0 (auto_eqv _ _) => gMacLane: typeclass_instances.
 
 Tactic Notation "transitivity'" constr(g) :=
   lazymatch goal with
@@ -60,14 +60,14 @@ Lemma tensor_comm A B (f: A ~> unit) (g: unit ~> B): f·g ≡ acast (g·f).
 Proof.
   rewrite tensor_lr tensorUl tensorUr.
   rewrite tensor_rl tensorUl tensorUr.
-  rewrite cast_comp 2!castI. McLane. 
+  rewrite cast_comp 2!castI. MacLane. 
 Qed.
 
 Lemma tensor_comm' (f g: unit ~>_𝐂 unit): f·g ≡ g·f.
 Proof.
   rewrite tensor_lr tensorUl tensorUr.
   rewrite tensor_rl tensorUl tensorUr.
-  McLane. 
+  MacLane. 
 Qed.
 
 End more_theory.

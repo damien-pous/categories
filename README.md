@@ -1,9 +1,8 @@
-A Rocq library about (E-)category theory
-and then monoidal categories
+A Rocq library about (E-)category theory and monoidal categories
 
 # REQUIREMENTS
 
-- rocq-prover 9.0 or above
+- rocq-prover 9.1
 - rocq-partial-orders (https://github.com/damien-pous/partial-orders) 
 
 # AUTHORS
@@ -17,6 +16,16 @@ Based on work with
 - Russ Harmer (CNRS, Plume team, LIP, ENS de Lyon) 
 
 (cf. https://gitlab.com/SamuelArsac/graph-rewriting , and the category theory example of hierarchy-builder, written by Cyril)
+
+# COMPILING
+
+make
+
+(compilation of theories/monoidal_tactic.v takes long)
+
+# FILES
+
+see file _RocqProject, which is documented
 
 # LICENSE
 

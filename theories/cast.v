@@ -107,7 +107,7 @@ Definition blocked_inv {A B} (f: A≃B): B≃A := f⁻¹.
 
 End s. 
 
-(** class for automatic inferrence of isomorphism equalities (later, for McLane isomoprhisms) *)
+(** class for automatic inferrence of isomorphism equalities (later, for MacLane isomoprhisms) *)
 
 Class auto_eqv {𝐂: PreCat} (A B: 𝐂) (f g: A ≃ B) := aeqv: iso.sort f ≡ g. 
 
@@ -238,12 +238,9 @@ End s.
 Arguments eqv_trans_cast {_ _ _ _ _} [_] _ [_]&_ _. 
 Arguments eqv_trans_cast' {_ _ _ _ _ _ _} [_] _ [_ _ _]&_ _. 
 
-(** * categories with unicity of identity proofs between objects (and lists of objects) *)
+(** * categories with unicity of identity proofs between lists of objects (and thus also objects) *)
 
 #[primitive] HB.mixin Record HasUIP X := {
-    #[canonical=no] UIP_ob: forall A B: X,
-      forall p q: A = B, p = q;
-    (* derivable? *)
     #[canonical=no] UIP_ob_list: forall n m: list X,
       forall p q: n = m, p = q;
   }.
@@ -252,23 +249,33 @@ HB.structure Definition uip := { X of HasUIP X }.
 #[short(type="PreCatUIP")]
 HB.structure Definition precat_uip := { 𝐂 of uip 𝐂 & precat 𝐂 }.
 
+Lemma UIP_ob (X: UIP): forall A B: X, forall p q: A = B, p = q.
+Proof.
+  have L: forall A B: X, forall p: A=B,
+      f_equal (fun h => match h with cons B _ => B | _ => A end)
+        (f_equal (cons^~ nil) p) = p.
+  by destruct p. 
+  move=>A B p q.
+  rewrite -(L _ _ p) -(L _ _ q). f_equal. exact/UIP_ob_list.
+Qed.
+
 Section s.
   
 Context {𝐂: PreCatUIP}.
 Implicit Types A B C D: 𝐂.
 
 Lemma hcastK A B (f: A ~> B) (a: A=A) (b: B=B): hcast' f a b = f. 
-Proof. by rewrite (UIP_ob _ _ a erefl) (UIP_ob _ _ b erefl). Qed.
+Proof. by rewrite (UIP_ob a erefl) (UIP_ob b erefl). Qed.
 Lemma hcast_eqv' A A' B B' (a a': A=A') (b b': B=B') (f g: A ~> B):
   f ≡ g -> hcast' f a b ≡ hcast' g a' b'.
-Proof. rewrite (UIP_ob _ _ a a') (UIP_ob _ _ b b'). exact/hcast_eqv. Qed.
+Proof. rewrite (UIP_ob a a') (UIP_ob b b'). exact/hcast_eqv. Qed.
 Lemma hcast_inj' A A' B B' (a a': A=A') (b b': B=B') (f g: A ~> B): 
   hcast' f a b ≡ hcast' g a b -> f ≡ g.
-Proof. rewrite (UIP_ob _ _ a a') (UIP_ob _ _ b b'). exact/hcast_inj. Qed.
+Proof. rewrite (UIP_ob a a') (UIP_ob b b'). exact/hcast_inj. Qed.
 Lemma hcast_id' A A' (a a': A=A'): hcast' idmap a a' = idmap.
-Proof. rewrite (UIP_ob _ _ a a'). exact/hcast_id. Qed.
+Proof. rewrite (UIP_ob a a'). exact/hcast_id. Qed.
 Lemma hcast_comp' A A' B B' C C' (f: A ~> B) (g: B ~> C) (a: A=A') (b b': B=B') (c: C=C'):
   hcast' f a b \; hcast' g b' c = hcast' (f \; g) a c.
-Proof. rewrite (UIP_ob _ _ b b'). exact/hcast_comp. Qed.
+Proof. rewrite (UIP_ob b b'). exact/hcast_comp. Qed.
 
 End s. 

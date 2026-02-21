@@ -1,7 +1,7 @@
 -native-compiler no
--arg -type-in-type
 -arg -w -arg -undo-batch-mode
 -arg -w -arg -notation-overridden          # temporary, for mathcomp
+-arg -w -arg -uniform-inheritance
 -arg -w -arg +HB.no-new-instance
 
 -R theories/ Categories
@@ -11,11 +11,12 @@ theories/cast.v                            # casting operations
 theories/functor.v                         # functors
 theories/span.v                            # spans
 theories/product.v                         # products
+theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
 theories/adjunction.v                      # adjunctions
 theories/monoidal_def.v                    # definition of monoidal categories
-theories/monoidal_mclane.v                 # McLane theorem for monoidal categories
-theories/monoidal_gmclane.v                # extended McLane theorem + inferrence of McLane isomorphisms
+theories/monoidal_maclane.v                # MacLane theorem for monoidal categories
+theories/monoidal_gmaclane.v               # extended MacLane theorem + inferrence of MacLane isomorphisms
 theories/monoidal_tactic.v                 # decision procedure for monoidal cats
 theories/monoidal.v                        # user-end module for monoidal cats
 theories/monoidal_examples.v               # example: composing monoids
-theories/endo.v                            # the (strict) monoidal category f endofuntcors
+theories/endo.v                            # the (strict) monoidal category of endofuntcors

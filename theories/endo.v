@@ -7,9 +7,10 @@ Local Open Scope cat_scope.
 
 Section s.
 Context {𝐂: Cat}.
-Notation Endo := (𝐂 ~> 𝐂).
+Notation Endo := (𝐂 ≈> 𝐂).
 
-Definition COMP (FG: Endo*Endo): Endo := FG.1 ∘ FG.2.
+(*TMP-UNIV: functor_comp -> ∘ *)
+Definition COMP (FG: Endo*Endo): Endo := functor_comp FG.2 FG.1.
 
 HB.instance Definition _ :=
   IsPreFunctor.Build (Endo*Endo)%type Endo COMP
@@ -30,27 +31,19 @@ Next Obligation.
 Qed.
 HB.instance Definition _ := _COMP_functor.
 
-
 HB.instance Definition _endofunctor_UIP :=
-  HasUIP.Build (Functor 𝐂 𝐂) (fun _ _ => proof_irrelevance _) (fun _ _ => proof_irrelevance _). 
+  HasUIP.Build (Functor 𝐂 𝐂) (fun _ _ => proof_irrelevance _). 
 
+HB.instance Definition _ := 
+  @HasMonoidalOps.Build (Functor 𝐂 𝐂) functor_id COMP.  
 Program Definition _endofunctor_premonoidal :=
-  @IsPreMonoidal.Build (Functor 𝐂 𝐂) functor_id COMP _ _ _.  
-Next Obligation.
-  unshelve apply: iso_ntx.
-  - move=>[[X Y] Z]/=. apply: same_functor. done. 
-  - move=>[[F G] H] [[F' G'] H'] [[f g] h] X. abstract (cbn; cat).
-Defined.
-Next Obligation.
-  unshelve apply: iso_ntx.
-  - move=>[[] Z]/=. apply: same_functor. done. 
-  - move=>[[] H] [[] H'] [[] h] X. abstract (cbn; cat). 
-Defined.
-Next Obligation.
-  unshelve apply: iso_ntx.
-  - move=>[Z []]/=. apply: same_functor. done. 
-  - move=>[H []] [H' []] [h []] X. abstract (cbn; cat). 
-Defined.
+  @IsPreMonoidal.Build (Functor 𝐂 𝐂) _ _ _ _ _ _.  
+Next Obligation. move=>F G H. by apply: same_functor. Defined.
+Next Obligation. move=>F. by apply: same_functor. Defined.
+Next Obligation. move=>F. by apply: same_functor. Defined.
+Next Obligation. cbn; intros. cat. Qed.
+Next Obligation. cbn; intros. cat. Qed.
+Next Obligation. cbn; intros. cat. Qed.
 HB.instance Definition _ := _endofunctor_premonoidal.
 
 Program Definition _endofunctor_monoidal :=

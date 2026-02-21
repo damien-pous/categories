@@ -218,28 +218,35 @@ Proof.
 Qed.
 HB.instance Definition _ {𝐂 𝐃: Cat} := isSetoid.Build (Functor 𝐂 𝐃) _.
 
-HB.instance Definition _ := IsQuiver.Build Cat Functor.
-Definition functor_id {𝐂: Cat}: 𝐂 ~> 𝐂 := idfun: Functor 𝐂 𝐂.
-Definition functor_comp {𝐂 𝐃 𝐄: Cat} (F: 𝐂 ~> 𝐃) (G: 𝐃 ~> 𝐄): 𝐂 ~> 𝐄 := types_comp G F: Functor _ _.
-Definition functor_cst {𝐂 𝐃: Cat} (D: 𝐃): 𝐂 ~> 𝐃 := cst D: Functor _ _.
-HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp).
+(* waiting for universe polymorphism, we cannot declare the following instance *)
+(*TMP-UNIV
+HB.instance Definition _ := IsQuiver.Build Cat Functor. 
+*)
+(* meanwhile, we use the following notation for functors; later we will replace it with "~>" *)
+Notation "F ≈> G" := (Functor F G) (at level 99, G at level 200, format "F  ≈>  G"): cat_scope.
+Definition functor_id {𝐂: Cat}: 𝐂 ≈> 𝐂 := idfun: Functor 𝐂 𝐂.
+Definition functor_comp {𝐂 𝐃 𝐄: Cat} (F: 𝐂 ≈> 𝐃) (G: 𝐃 ≈> 𝐄): 𝐂 ≈> 𝐄 := types_comp G F: Functor _ _.
+Definition functor_cst {𝐂 𝐃: Cat} (D: 𝐃): 𝐂 ≈> 𝐃 := cst D: Functor _ _.
+(*TMP-UNIV
+HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp). 
+*)
 
 
-Lemma iso_ntx_alt (𝐂 𝐃: Cat) (F G: 𝐂 ~> 𝐃) (i: F ≈ G) A B (f: A ~> B):
+Lemma iso_ntx_alt (𝐂 𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) A B (f: A ~> B):
   Fhom G f ≡ i B ∘ Fhom F f ∘ (i A)⁻¹.
 Proof. rewrite natural -compoA isoK. cat. Qed.
 
-Lemma iso_ntx_eqv (𝐂 𝐃: Cat) (F G: 𝐂 ~> 𝐃) (i: F ≈ G) A B (f g: A ~> B):
+Lemma iso_ntx_eqv (𝐂 𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) A B (f g: A ~> B):
   Fhom F f ≡ Fhom F g -> Fhom G f ≡ Fhom G g.
 Proof. rewrite 2!(iso_ntx_alt i). by move=>->. Qed.
 
-(* Check fun {𝐂 𝐃: Cat} (F G: 𝐂 ~> 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹. *)
+(* Check fun {𝐂 𝐃: Cat} (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹. *)
 
 Definition ntx_comp'_ {𝐂 𝐃 𝐄: PreCat} {F G: PreFunctor 𝐂 𝐃} {F' G': PreFunctor 𝐃 𝐄}
   (k: forall X, F X ~> G X) (h: forall X, F' X ~> G' X): forall X, (types_comp F' F) X ~> (types_comp G' G) X :=
   (fun X => h _ ∘ Fhom _ (k _)).
 Arguments ntx_comp'_ {_ _ _ _ _ _ _} _ _ _/. 
-Program Definition _ntx_comp'_natural {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}
+Program Definition _ntx_comp'_natural {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}
   (k: F ~> G) (h: F' ~> G') := IsNatural.Build 𝐂 𝐄 (types_comp F' F) (types_comp G' G) (ntx_comp'_ k h) _.
 Next Obligation.
   intros. cbn. 
@@ -248,14 +255,15 @@ Next Obligation.
   by cat.
 Qed.
 HB.instance Definition _ 𝐂 𝐃 𝐄 F G F' G' k h := @_ntx_comp'_natural 𝐂 𝐃 𝐄 F G F' G' k h.
-Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}
-  (n: F ~> G) (m: F' ~> G'): (F' ∘ F) ~> (G' ∘ G) :=
+Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}
+  (*TMP-UNIV: functor_comp -> ∘ once we have Cat:Cat  *)
+  (n: F ~> G) (m: F' ~> G'): (functor_comp F F') ~> (functor_comp G G') :=
   (ntx_comp'_ n m: NTX _ _). 
 Notation "h ⊚ k" := (ntx_comp' k h): cat_scope.
 
 Section strict.
 Context {𝐂 𝐃 𝐄: Cat}.
-Lemma endo_exchange {F G H: 𝐂 ~> 𝐃} {F' G' H': 𝐃 ~> 𝐄}
+Lemma endo_exchange {F G H: 𝐂 ≈> 𝐃} {F' G' H': 𝐃 ≈> 𝐄}
   (i: F ~> G) (j: G ~> H)
   (i': F' ~> G') (j': G' ~> H'):
   (j'⊚j) ∘ (i'⊚i) ≡ (j'∘i') ⊚ (j∘i).
@@ -265,11 +273,12 @@ Proof.
   normalise. by rewrite natural.
 Qed.
 
-Lemma ntx_id_comp {F: 𝐂 ~> 𝐃} {G: 𝐃 ~> 𝐄}:
-  idmap (G ∘ F) ≡ idmap G ⊚ idmap F.
+Lemma ntx_id_comp {F: 𝐂 ≈> 𝐃} {G: 𝐃 ≈> 𝐄}:
+  (*TMP-UNIV: functor_comp -> ∘ once we have Cat:Cat  *)
+  idmap (functor_comp F G) ≡ idmap G ⊚ idmap F.
 Proof. intro X; cbn. by rewrite !cats. Qed.
 
-Lemma ntx_comp'_eqv {F G: 𝐂 ~> 𝐃} {F' G': 𝐃 ~> 𝐄}:
+Lemma ntx_comp'_eqv {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}:
   Proper (eqv ==> eqv ==> eqv) (@ntx_comp' _ _ _ F G F' G').
 Proof. intros i i' ii j j' jj X. by rewrite /= (ii _) (jj _). Qed.
 
@@ -285,9 +294,11 @@ Proof.
 Qed.
 End strict.
 
+(*TMP-UNIV 
 Program Definition _cat_cat := IsCat.Build Cat _ _ _ _.
 Next Obligation. split. exact: same_functor. Qed.
 Next Obligation. split. exact: same_functor. Qed.
 Next Obligation. split. exact: same_functor. Qed.
 Next Obligation. intros. exact: functor_comp_eqv. Qed.
 HB.instance Definition _ := _cat_cat.
+*)

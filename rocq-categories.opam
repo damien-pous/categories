@@ -19,13 +19,16 @@ build: [
 ]
 install: [make "install"]
 depends: [
-  "rocq-core" {>= "9.0"}
+  "rocq-core" {>= "9.1"}
   "rocq-partial-orders"
 ]
 
 tags: [
   "keyword:category theory"
-  "keyword:setoid"
+  "keyword:monoidal categories"
+  "keyword:MacLane's coherence theorem"
+  "keyword:string diagrams"
+  "keyword:setoid"  
 ]
 authors: [
   "Damien Pous"
