@@ -1,11 +1,11 @@
 opam-version: "2.0"
-maintainer: "damien.pous@ens-lyon.fr"
+maintainer: "Damien Pous <Damien.Pous@ens-lyon.fr>"
 version: "dev"
 
 homepage: "https://github.com/damien-pous/categories"
 dev-repo: "git+https://github.com/damien-pous/categories.git"
 bug-reports: "https://github.com/damien-pous/categories/issues"
-license: "GNU LGPL"
+license: "LGPL-3.0-or-later"
 
 synopsis: "A library for category theory"
 description: """
@@ -30,7 +30,8 @@ tags: [
   "keyword:MacLane's coherence theorem"
   "keyword:string diagrams"
   "keyword:setoid"  
+  "date:2026-05-07"
 ]
 authors: [
-  "Damien Pous"
+  "Damien Pous <Damien.Pous@ens-lyon.fr>"
 ]
