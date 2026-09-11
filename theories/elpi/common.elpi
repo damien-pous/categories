@@ -1,0 +1,66 @@
+% Elpi code shared between the modulo AU/G tactics
+
+func to-eqv term -> term.
+to-eqv Proof {{ @eq_eqv lp:X lp:LHS lp:RHS lp:Proof }} :-
+  coq.typecheck Proof {{ @eq (Setoid.sort lp:X) lp:LHS lp:RHS }} ok, !.
+to-eqv Proof Proof :- !.
+
+func app-dir string, term -> term.
+app-dir "lr" Proof Proof :- !.
+app-dir "rl" Proof {{ @eqv_sym _ _ _ lp:Proof }} :- !.
+
+% a list-like representation of "paths" in a category, produced by [quote] below
+kind path type.
+% [nilp] is the empty path (= identity)
+type nilp path.
+% [consp M Y P] is the cons cell (composition) of a morphism [M : X -> Y] and
+% a path [P : Y -> Z].
+type consp term -> term -> path -> path.
+% [catp P Y Q] is the concatenation (composition) of two paths [P : X -> Y] and
+% [Q : Y -> Z]. Unlike [consp], [catp] is used for representing open terms, and
+% [P] must be a unification variable.
+type catp path -> term -> path -> path.
+
+% [path.cat P Q PQ] concatenates two paths [P] and [Q] into [PQ].
+func path.cat path, path -> path.
+path.cat nilp P P :- !.
+path.cat (consp M X P) Q (consp M X PQ) :- !, path.cat P Q PQ.
+path.cat (catp Pl X Pr) Q (catp Pl X PrQ) :- !, path.cat Pr Q PrQ.
+
+% [path.split-at X P Y Pl Pr] splits a path [P] (with no unification variable)
+% from [X] into [Pl] from [X] to [Y] and the rest [Pr]. This predicate
+% enumerates all such solutions.
+pred path.split-at i:term, i:path, i:term, o:path, o:path.
+path.split-at X P Y nilp P :- coq.unify-eq X Y ok.
+path.split-at _ (consp M X P) Y (consp M X Pl) Pr :-
+  path.split-at X P Y Pl Pr.
+
+% [quote C X Y In Out OutP] takes an arrow [In] from [X] to [Y] in PreCat [C],
+% reifies it to [Out] and flattens it to a path [OutP].
+func quote term, term, term, term -> term, path.
+quote C X Y In Out (OutP nilp) :- !, quote-rec C X Y In Out OutP.
+
+func quote-rec term, term, term, term -> term, (path -> path).
+quote-rec C X Y In Out (catp OutP Y) :-
+  % when the input is a unification variable, suspend the reification process.
+  % It will later be resumed by [path.quote] when [OutP] get instantiated.
+  var In, !, declare_constraint (path.quote C X Y OutP In Out) [OutP].
+quote-rec C X _ {{ @idmap lp:C' _ }} {{ @ae_id lp:C lp:X }} (p\ p) :-
+  coq.unify-eq C C' ok, !.
+quote-rec C X Z {{ @comp lp:C' _ lp:Y _ lp:In1 lp:In2 }}
+    {{ @ae_comp lp:C lp:X lp:Y lp:Z lp:Out1 lp:Out2 }} (p\ OutP1 (OutP2 p)) :-
+  coq.unify-eq C C' ok, !,
+  quote-rec M X Y In1 Out1 OutP1, quote-rec M Y Z In2 Out2 OutP2.
+quote-rec C X Y In {{ @ae_var lp:C lp:X lp:Y lp:In }} (consp In Y).
+
+func path.quote term, term, term, path -> term, term.
+path.quote C X Y P Out OutQ :-
+  var P, !, declare_constraint (path.quote C X Y P Out OutQ) [P].
+path.quote C X _ nilp {{ @idmap lp:C lp:X }} {{ @ae_id lp:C lp:X }} :- !.
+path.quote C X Y (consp _ _ P' as P) Out OutQ :-
+  var P', !, declare_constraint (path.quote C X Y P Out OutQ) [P'].
+path.quote C X Y (consp M _ nilp) M {{ @ae_var lp:C lp:X lp:Y lp:M }} :- !.
+path.quote C X Z (consp M Y P)
+    {{ @comp lp:C lp:X lp:Y lp:Z lp:M lp:Out }}
+    {{ @ae_cons lp:C lp:X lp:Y lp:Z lp:M lp:OutQ }} :-
+  path.quote C Y Z P Out OutQ.

@@ -1,0 +1,18 @@
+% Elpi code for aireflexivity: the reflexivity tactic modulo G
+
+solve (goal _ _ Type _ _ as G) [] :- @ltacfail! 0 => std.do! [
+  std.assert-ok! (coq.unify-eq Type {{ @eqv lp:Setoid lp:LHS lp:RHS }})
+    "The goal is not a setoid equivalence",
+  std.assert-ok! (coq.unify-eq Setoid {{ @hom lp:Quiver lp:Src lp:Tgt }})
+    "The setoid is not a hom-set",
+  std.assert-ok! (coq.unify-eq Quiver {{ (quiver_of_precat lp:PreCat) }})
+    "The quiver is not a precat",
+  std.assert-ok! (coq.unify-eq Quiver {{ (quiver_of_cat lp:Cat) }})
+    "The quiver is not a cat",
+  path.match PreCat Src Tgt
+    {quote PreCat Src Tgt LHS LHSQ} {quote PreCat Src Tgt RHS RHSQ} CE,
+  (refine {{ @aireflexivity_correct lp:Cat lp:Src lp:Tgt
+               lp:LHSQ lp:RHSQ lp:CE erefl erefl }} G []% ;
+   % coq.ltac.fail 0 "Not a valid equivalence"
+   )
+].

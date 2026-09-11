@@ -1,0 +1,40 @@
+% Elpi code for arewrite: the rewrite tactic modulo AU
+
+% [path.match X P Q] unifies two paths [P] and [Q] from [X]. [P] corresponds to
+% the selected subterm and must be a ground term. [Q] corresponds to the LHS and
+% may contain unification variables.
+pred path.match i:term, i:path, o:path.
+path.match _ nilp nilp :- !.
+path.match _ (consp M X P) (consp M' X' P') :- !,
+  coq.unify-eq X X' ok, coq.unify-eq M M' ok, path.match X P P'.
+path.match X P (catp Pl Y Pr') :-
+  path.split-at X P Y Pl Pr, % resume [path.quote] here
+  path.match Y Pr Pr'.
+
+solve (goal _ _ _ _ [str Dir, trm Scr, trm Proof] as G) GS :-
+  @ltacfail! 0 => std.do! [
+    std.assert-ok!
+      (coq.typecheck Scr {{ Setoid.sort (@hom lp:Quiver lp:Src lp:Tgt) }})
+      "The given subterm is not an arrow",
+    std.assert-ok! (coq.elaborate-skeleton Proof ProofTy Proof')
+      "The given proof does not typecheck",
+    app-dir Dir { to-eqv { coq.saturate ProofTy Proof' } } Proof'',
+    Proof''' = {{ @add_prepost _ _ _ _ _ _ _ _ _ lp:Proof'' }},
+    std.assert-ok!
+      (coq.typecheck Proof'''
+        {{ @eqv (@hom lp:Quiver lp:Src lp:Tgt) lp:LHS lp:RHS }})
+      "The given proof is not a setoid equivalence on arrows",
+    std.assert-ok! (coq.unify-eq Quiver {{ quiver_of_precat lp:PreCat }})
+      "The quiver is not a precat",
+    std.assert-ok! (coq.unify-eq Quiver {{ quiver_of_cat lp:Cat }})
+      "The quiver is not a cat",
+    path.match Src
+      {quote PreCat Src Tgt Scr ScrQ} {quote PreCat Src Tgt LHS LHSQ},
+    std.assert-ok! (coq.typecheck ScrQ _) "ScrQ does not type-check",
+    std.assert-ok! (coq.typecheck LHSQ _) "LHSQ does not type-check",
+    std.assert-ok! (coq.typecheck RHS _) "RHS does not type-check",
+    std.assert-ok! (coq.typecheck Proof''' _) "Proof''' does not type-check",
+    (refine {{ @arewrite_correct lp:Cat lp:Src lp:Tgt
+                 lp:ScrQ lp:LHSQ lp:RHS erefl lp:Proof''' }} G GS;
+     coq.ltac.fail 0 "arewrite_proofgen failed")
+  ].

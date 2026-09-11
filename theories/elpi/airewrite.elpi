@@ -1,0 +1,29 @@
+% Elpi code for airewrite: the rewrite tactic modulo G
+
+solve (goal _ _ _ _ [str Dir, trm Scr, trm Proof] as G) GS :-
+  @ltacfail! 0 => std.do! [
+    std.assert-ok!
+      (coq.typecheck Scr {{ Setoid.sort (@hom lp:Quiver lp:Src lp:Tgt) }})
+      "The given subterm is not an arrow",
+    std.assert-ok! (coq.elaborate-skeleton Proof ProofTy Proof')
+      "The given proof does not typecheck",
+    app-dir Dir { to-eqv { coq.saturate ProofTy Proof' } } Proof'',
+    Proof''' = {{ @add_prepost _ _ _ _ _ _ _ _ _ lp:Proof'' }},
+    std.assert-ok!
+      (coq.typecheck Proof'''
+        {{ @eqv (@hom lp:Quiver lp:Src lp:Tgt) lp:LHS lp:RHS }})
+      "The given proof is not a setoid equivalence on arrows",
+    std.assert-ok! (coq.unify-eq Quiver {{ quiver_of_precat lp:PreCat }})
+      "The quiver is not a precat",
+    std.assert-ok! (coq.unify-eq Quiver {{ quiver_of_cat lp:Cat }})
+      "The quiver is not a cat",
+    path.match PreCat Src Tgt
+      {quote PreCat Src Tgt Scr ScrQ} {quote PreCat Src Tgt LHS LHSQ} CE,
+    std.assert-ok! (coq.typecheck ScrQ _) "ScrQ does not type-check",
+    std.assert-ok! (coq.typecheck LHSQ _) "LHSQ does not type-check",
+    std.assert-ok! (coq.typecheck RHS _) "RHS does not type-check",
+    std.assert-ok! (coq.typecheck Proof''' _) "Proof''' does not type-check",
+    (refine {{ @airewrite_correct lp:Cat lp:Src lp:Tgt
+                 lp:ScrQ lp:LHSQ lp:RHS lp:CE erefl erefl lp:Proof''' }} G GS;
+     coq.ltac.fail 0 "arewrite_proofgen failed")
+  ].

@@ -47,7 +47,8 @@ HB.instance Definition _ (𝐂: Cat) (A B C: 𝐂) (f: A ↪ B) (g: B ↪ C) :=
   IsMono.Build _ _ _ (f \; g) (@comp_is_mono _ _ _ _ f g). 
 
 
-HB.mixin Record HasInverseOp (𝐂: Quiver) (A B: 𝐂) (f: A ~> B) := {
+(* TOFIX: could be defined in [Quiver], but breaks [airewrite/aireflexivity] tactics for now *)
+HB.mixin Record HasInverseOp (𝐂: PreCat) (A B: 𝐂) (f: A ~> B) := {
     #[canonical=no] inv: B ~> A;
 }.
 #[short(type="Invertible")]
@@ -56,9 +57,10 @@ Arguments inv {_ _ _}.
 Notation "f ⁻¹" := (inv f): cat_scope.
 Notation "f ¹" := (bare f): cat_scope.
 
-HB.instance Definition _ (𝐂: Quiver) (A B: 𝐂) (f: Invertible A B) :=
+(* TOFIX: idem, those two instance should lie [Quiver] *)
+HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) (f: Invertible A B) :=
   HasInverseOp.Build 𝐂 B A (f⁻¹) f. 
-HB.instance Definition _ (𝐂: Quiver) (A B: 𝐂) (f: Invertible A B) :=
+HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) (f: Invertible A B) :=
   HasInverseOp.Build (𝐂^op) B A (morphop f) (f⁻¹). 
 
 HB.instance Definition _ (𝐂: PreCat) (A: 𝐂) :=

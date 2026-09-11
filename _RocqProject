@@ -6,7 +6,9 @@
 
 -R theories/ Categories
 theories/cat.v                             # quivers, categories, basic infrastructure
+theories/arewrite.v			   # rewriting/reflexivity modulo associativity
 theories/morphisms.v                       # hierarchy of morphisms
+theories/airewrite.v			   # rewriting/reflexivity modulo associativity and inverses
 theories/arity.v                           # lists of objects
 theories/cast.v                            # casting operations
 theories/functor.v                         # functors
@@ -15,9 +17,13 @@ theories/product.v                         # products
 theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
 theories/adjunction.v                      # adjunctions
 theories/monoidal_def.v                    # definition of monoidal categories
+theories/endo.v                            # the (strict) monoidal category of endofuntcors
 theories/monoidal_maclane.v                # MacLane theorem for monoidal categories
 theories/monoidal_gmaclane.v               # extended MacLane theorem + inferrence of MacLane isomorphisms
 theories/monoidal_tactic.v                 # decision procedure for monoidal cats
 theories/monoidal.v                        # user-end module for monoidal cats
 theories/monoidal_examples.v               # example: composing monoids
-theories/endo.v                            # the (strict) monoidal category of endofuntcors
+
+-R tests/ CategoriesTests
+tests/arewrite_tests.v			   # tests for the arewrite/areflexivity tactics
+tests/airewrite_tests.v	 	   	   # tests for the airewrite/aireflexivity tactics

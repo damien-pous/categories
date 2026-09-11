@@ -1,0 +1,135 @@
+% Elpi code shared between the modulo G tactics
+
+% [mono->epi C X Y M Mono E] takes a monomorphism [M] from [X] to [Y] in PreCat
+% [C], and returns its monomorphism instance [Mono] and the inverse [E].
+func mono->epi term, term, term, term -> term, term.
+mono->epi C X Y M {{ mono_of_epi lp:C lp:Y lp:X lp:Epi }}
+                  {{ @splitepi.sort lp:C lp:Y lp:X lp:Epi }} :-
+  coq.unify-eq M {{ inverse_of_epi lp:C lp:Y lp:X lp:Epi }} ok, !.
+mono->epi C X Y M Mono {{ inverse_of_mono lp:C lp:X lp:Y lp:Mono }} :-
+  coq.unify-eq M {{ @splitmono.sort lp:C lp:X lp:Y lp:Mono }} ok, !.
+
+% [epi->mono C X Y E Mono M] takes a epimorphism [E] from [X] to [Y] in PreCat
+% [C], and returns its inverse monomorphism instance [Mono] and the inverse [M].
+func epi->mono term, term, term, term -> term, term.
+epi->mono C X Y E Mono {{ @splitmono.sort lp:C lp:Y lp:X lp:Mono }} :-
+  coq.unify-eq E {{ inverse_of_mono lp:C lp:Y lp:X lp:Mono }} ok, !.
+epi->mono C X Y E {{ mono_of_epi lp:C lp:X lp:Y lp:Epi }}
+                  {{ inverse_of_epi lp:C lp:X lp:Y lp:Epi }} :-
+  coq.unify-eq E {{ @splitepi.sort lp:C lp:X lp:Y lp:Epi }} ok, !.
+
+% [mkrocqlist T In Out] takes an (Elpi) list [In] of terms of type [T], and
+% turns it into a (Rocq) list [Out] of type [list T].
+func mkrocqlist term, list term -> term.
+mkrocqlist T In Out :-
+  std.fold-right In {{ @nil lp:T }}
+    (o\ t\ t'\ t' = {{ @cons lp:T lp:o lp:t }}) Out.
+
+% [iexprs->cexpr C X Y B IES Acc Out] takes
+% - [B]: a term of type [bool],
+% - [IES]: an (Elpi) list of terms of type [@iexpr C X], and
+% - [Acc]: a term of type [@cexpr C X Y],
+% and returns a term [Out] of type [@iexpr C X], prepending [IES] to [Acc] using
+% the [@ce_icons C B X Y] constructor.
+func iexprs->cexpr term, term, term, term, list term, term -> term.
+iexprs->cexpr C X Y B IES Acc Out :-
+  std.fold-right IES Acc
+    (o\ t\ t'\ t' = {{ @ce_icons lp:C lp:B lp:X lp:Y lp:o lp:t }}) Out.
+
+% [path->cexpr C X Z P Acc Out] prepends a path [P] from [X] to [Y] in PreCat
+% [C] with [Acc] of type [cexpr Y Z], returns [Out] of type [cexpr X Z].
+func path->cexpr term, term, term, path, term -> term.
+path->cexpr _ _ _ nilp Acc Acc :- !.
+path->cexpr C X Z (consp M Y P) Acc
+    {{ @ce_cons lp:C lp:X lp:Y lp:Z lp:M lp:Out }} :- !,
+  path->cexpr C Y Z P Acc Out.
+
+% [skip-idmap C X P Q Out] takes a path [P] from [X] in PreCat [C], and splits
+% it into:
+% - the shortest nonempty prefix that is [idmap] modulo cancellation,
+%   represented as the reified term [Out] of type [iexpr X], and
+% - the rest of the path (suffix) [Q].
+%
+% FIXME: [skip-idmap] should probably be considered deterministic, but Elpi
+% cannot treat it as a function because [P] is an output parameter?
+pred skip-idmap i:term, i:term, o:path, o:path, o:term.
+skip-idmap C X (consp M Y P) P''
+           {{ @can_mono lp:C lp:X lp:Y lp:Mono lp:Out }} :- !,
+  % Check if [M] is a monomorphism
+  mono->epi C X Y M Mono MV, !,
+  % [skip-idmaps] below may return several solutions (from short to long)
+  skip-idmaps C Y P P' OutL,
+  % if [P'] is [consp], check if its head is [MV]
+  (std.do! [ P' = consp MV' X' P'',
+             coq.unify-eq X X' ok, coq.unify-eq MV MV' ok ];
+  % if [P'] is [catp], instantiate its head with [MV] and partially resume
+  % [path.quote]
+   std.do! [ P' = catp (consp MV X Pl) Z Pr, P'' = catp Pl Z Pr]),
+  % commit to the first (thus shortest) solution
+  !,
+  % turning a list [OutL] in Elpi into a list [Out] in Rocq
+  mkrocqlist {{ @iexpr lp:C lp:Y }} OutL Out.
+
+% [skip-idmaps C X P Q Out] takes a path [P] from [X] in PreCat [C], and splits
+% it into:
+% - a prefix that is [idmap] modulo cancellation, represented as a list [Out] of
+%   reified terms of type [iexpr X], and
+% - the rest of the path (suffix) [Q].
+% [skip-idmaps] is non-deterministic, i.e., may have several solutions. It
+% enumerates from shorter to longer solutions.
+pred skip-idmaps i:term, i:term, o:path, o:path, o:list term.
+skip-idmaps _ _ P P [].
+skip-idmaps C X P P2 [Out1|Out2] :-
+  skip-idmap C X P P1 Out1, !, skip-idmaps C X P1 P2 Out2.
+
+% [skip-idmap_catp C X P Acc Y Q PV Acc'] takes a path [P] from [X] in PreCat
+% [C], recognizes a prefix of the form:
+%   (idmap modulo cancellation)^* : x1 -> x1
+%   f1^-1 : x1 -> x2 (which has the left inverse f1 s.t. f1 \; f1^-1 = idmap)
+%   ...
+%   (idmap modulo cancellation)^* : xn -> xn
+%   fn^-1 : xn -> xn' (which has the left inverse fn s.t. fn \; fn^-1 = idmap)
+% and returns
+%   [Y]: xn',
+%   [Q]: the rest of the path from xn',
+%   [PV]: the path fn, ..., f1, and
+%   [Acc']: the list of witnesses of type [iexpr xn'] that the composition of
+%           [PV] and the prefix is idmap modulo cancellation
+pred skip-idmap_catp
+    i:term, i:term, i:path, i:list term, o:term, o:path, o:path, o:list term.
+skip-idmap_catp _ X P Acc X P nilp Acc.
+skip-idmap_catp C X P Acc Z Q (consp EV X PV) Acc''' :-
+  skip-idmaps C X P (consp E Y P') Acc',
+  epi->mono C X Y E Mono EV,
+  mkrocqlist {{ @iexpr lp:C lp:X }} {std.append Acc Acc'} Acc'',
+  skip-idmap_catp C Y P' [{{ @can_mono lp:C lp:Y lp:X lp:Mono lp:Acc'' }}]
+                  Z Q PV Acc'''.
+
+% [path.match(') C Src Tgt P Q Out] unifies two paths [P] and [Q] from [Src] to
+% [Tgt] in PreCat [C] modulo cancellation, and produces a witness [Out] of type
+% [cexpr Src Tgt] that [P] and [Q] are equal modulo cancellation.
+% [P] corresponds to the selected subterm and must be a ground term.
+% [Q] corresponds to the LHS and may contain unification variables.
+% [path.match] and [path.match'] are mutually recursive. The former first skips
+% the prefixes of [P] and [Q] that are [idmap] modulo cancellation, while the
+% latter does not.
+pred path.match i:term, i:term, i:term, i:path, o:path, o:term.
+path.match C Src Tgt P Q Out' :-
+  % again, [skip-idmaps] below may return several solutions (from short to long)
+  skip-idmaps C Src P P' OutP,
+  skip-idmaps C Src Q Q' OutQ,
+  path.match' C Src Tgt P' Q' Out,
+  iexprs->cexpr C Src Tgt {{ true }} OutQ
+    {iexprs->cexpr C Src Tgt {{ false }} OutP Out} Out'.
+
+pred path.match' i:term, i:term, i:term, i:path, o:path, o:term.
+path.match' C Src _Src nilp nilp {{ @ce_id lp:C lp:Src }} :- !.
+path.match' C Src Tgt (consp M X P) (consp M' X' Q)
+            {{ @ce_cons lp:C lp:Src lp:X lp:Tgt lp:M lp:Out }} :- !,
+  coq.unify-eq X X' ok, coq.unify-eq M M' ok, path.match C X Tgt P Q Out.
+path.match' C Src Tgt P (catp QVar X Q) Out :-
+  skip-idmap_catp C X Q [] Y Qr QlV QlW,
+  path.split-at Src P Y Pl Pr,
+  path.cat Pl QlV QVar, % resume [path.quote] here
+  path->cexpr C Src Tgt Pl
+    { iexprs->cexpr C Y Tgt {{ true }} QlW { path.match C Y Tgt Pr Qr } } Out.
