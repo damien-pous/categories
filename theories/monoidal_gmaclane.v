@@ -350,8 +350,8 @@ HB.mixin Record isMacLane (𝐂: PreMonoidalCat) (A B: 𝐂) (f: A ~> B) := {
 HB.builders Context 𝐂 a b f of isMacLane 𝐂 a b f.
   Definition f': b ~> a := hcast' (rmcl⁻¹) tgtE srcE.
   Program Definition _iso := @IsIso.Build 𝐂 _ _ f f' _ _.
-  Next Obligation. by rewrite rmorE/f' hcast_comp isoK hcast_id. Qed.
-  Next Obligation. by rewrite rmorE/f' hcast_comp isoK' hcast_id. Qed.
+  Next Obligation. by rewrite rmorE/f' hcast_comp invKl hcast_id. Qed.
+  Next Obligation. by rewrite rmorE/f' hcast_comp invKr hcast_id. Qed.
   HB.instance Definition _ := _iso.
 HB.end.
 

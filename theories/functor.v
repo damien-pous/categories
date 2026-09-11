@@ -197,7 +197,7 @@ Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X :=
 
 (* Definition iso_ntx_pw_ (i: functor_equiv): forall X, F X ~> G X := fun X => (i¹ X). *)
 (* HB.instance Definition _ (i: functor_equiv) X := *)
-(*   IsIso.Build _ _ _ (iso_ntx_pw_ i X) (isoK i X) (isoK' i X). *)
+(*   IsIso.Build _ _ _ (iso_ntx_pw_ i X) (invKl i X) (invKr i X). *)
 (* Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X := iso_ntx_pw_ i X.  *)
 
 End s.
@@ -234,7 +234,7 @@ HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp).
 
 Lemma iso_ntx_alt (𝐂 𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) A B (f: A ~> B):
   Fhom G f ≡ i B ∘ Fhom F f ∘ (i A)⁻¹.
-Proof. rewrite natural -compoA isoK. cat. Qed.
+Proof. rewrite natural -compoA invKl. cat. Qed.
 
 Lemma iso_ntx_eqv (𝐂 𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) A B (f g: A ~> B):
   Fhom F f ≡ Fhom F g -> Fhom G f ≡ Fhom G g.
@@ -288,9 +288,9 @@ Proof.
   intros F G [i] F' G' [j]. split.  
   apply: (mk_iso' (j¹⊚ i¹) (j⁻¹⊚i⁻¹) _ _).
   rewrite endo_exchange.
-  etransitivity. exact: (ntx_comp'_eqv (isoK i) (isoK j)). by rewrite -ntx_id_comp. 
+  etransitivity. exact: (ntx_comp'_eqv (invKl i) (invKl j)). by rewrite -ntx_id_comp. 
   rewrite endo_exchange.
-  etransitivity. exact: (ntx_comp'_eqv (isoK' i) (isoK' j)). by rewrite -ntx_id_comp. 
+  etransitivity. exact: (ntx_comp'_eqv (invKr i) (invKr j)). by rewrite -ntx_id_comp. 
 Qed.
 End strict.
 

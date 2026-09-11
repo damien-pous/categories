@@ -1,6 +1,7 @@
 (** * terminal objects, products, cartesian (monoidal) categories *)
 
 Require Export span functor.
+Require Export morphisms.
 
 Local Open Scope cat_scope.
 
@@ -103,7 +104,7 @@ Section prod.
    apply: (mk_iso (pair' i j) (pair' i⁻¹ j⁻¹));
      abstract by apply: prod_ext; rewrite compoA ?(fst_pair,snd_pair)
                                   -compoA ?(fst_pair,snd_pair)
-                                     compoA ?(isoK,isoK'); cat.
+                                     compoA ?(invKl,invKr); cat.
   Defined.
     
   Definition prod_sym X Y: X×Y ≃ Y×X.
@@ -205,11 +206,11 @@ Definition types_pair'_iso {C A B: Cat} (F F': C ≈> A) (G G': C ≈> B)
   (f: F ≃ F') (g: G ≃ G'): (types_pair' F G: Functor _ _) ≃ (types_pair' F' G': Functor _ _).
   apply: (mk_iso (types_pair'_ntx f¹ g¹) (types_pair'_ntx f⁻¹ g⁻¹)).
   { split.
-    - exact: isoK (iso_ntx_pw f _).
-    - exact: isoK (iso_ntx_pw g _). }
+    - exact: (invKl (iso_ntx_pw f _)).
+    - exact: (invKl (iso_ntx_pw g _)). }
   { split.
-    - exact: isoK' (iso_ntx_pw f _).
-    - exact: isoK' (iso_ntx_pw g _). }
+    - exact: (invKr (iso_ntx_pw f _)).
+    - exact: (invKr (iso_ntx_pw g _)). }
 Defined.
 
 (*TMP-UNIV

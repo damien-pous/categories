@@ -213,29 +213,29 @@ with eval_maclane_inv a b (h: maclane a b): b ~> a :=
   | mcl_unitr a => unitr' a
   end.
 
-Lemma mcl_isoK a b (h: maclane a b): eval_maclane h ∘ eval_maclane_inv h ≡ idmap
-with mcl_isoK' a b (h: maclane a b): eval_maclane_inv h ∘ eval_maclane h ≡ idmap.
+Lemma mcl_invKl a b (h: maclane a b): eval_maclane h ∘ eval_maclane_inv h ≡ idmap
+with mcl_invKr a b (h: maclane a b): eval_maclane_inv h ∘ eval_maclane h ≡ idmap.
 Proof.
   - destruct h=>//=.
     -- cat.
-    -- by rewrite compoA -(compoA _ (eval_maclane h1)) mcl_isoK cats mcl_isoK.
-    -- by rewrite exchange 2!mcl_isoK tensor_id.
-    -- exact: isoK.
-    -- exact: isoK.
-    -- exact: isoK.
+    -- by rewrite compoA -(compoA _ (eval_maclane h1)) mcl_invKl cats mcl_invKl.
+    -- by rewrite exchange 2!mcl_invKl tensor_id.
+    -- exact: invKl.
+    -- exact: invKl.
+    -- exact: invKl.
   - destruct h=>//=.
     -- cat.
-    -- by rewrite compoA -(compoA _ (eval_maclane_inv h2)) mcl_isoK' cats mcl_isoK'.
-    -- by rewrite exchange 2!mcl_isoK' tensor_id.
-    -- exact: isoK'. 
-    -- exact: isoK'.
-    -- exact: isoK'.
+    -- by rewrite compoA -(compoA _ (eval_maclane_inv h2)) mcl_invKr cats mcl_invKr.
+    -- by rewrite exchange 2!mcl_invKr tensor_id.
+    -- exact: invKr. 
+    -- exact: invKr.
+    -- exact: invKr.
 Qed.
 
 HB.instance Definition _ a b (h: maclane a b) :=
-  @IsIso.Build _ _ _ (eval_maclane h) (eval_maclane_inv h) (mcl_isoK h) (mcl_isoK' h).
+  @IsIso.Build _ _ _ (eval_maclane h) (eval_maclane_inv h) (mcl_invKl h) (mcl_invKr h).
 HB.instance Definition _ a b (h: maclane a b) :=
-  @IsIso.Build _ _ _ (eval_maclane_inv h) (eval_maclane h) (mcl_isoK' h) (mcl_isoK h).
+  @IsIso.Build _ _ _ (eval_maclane_inv h) (eval_maclane h) (mcl_invKr h) (mcl_invKl h).
 
 (* TOTHINK: remove? *)
 Coercion eval_maclane: maclane >-> Setoid.sort.
@@ -345,11 +345,11 @@ Proof.
   rewrite !compoA id_tensor 2!ntx_assoc'. 
 
   rewrite -2!compoA (compoA _ _ (assoc' _ _ _)) -pentagon_inv.
-  rewrite -!compoA isoK'.
+  rewrite -!compoA invKr.
   rewrite !cats. apply: comp_eqv=>//.
   rewrite -triangle.
   rewrite tensor_comp_l_src.
-  rewrite -compoA isoK'. cat. 
+  rewrite -compoA invKr. cat. 
 Qed.
 
 
@@ -437,7 +437,7 @@ Proof.
     rewrite (compoA (assoc _ _ _)) exchange -IHg.
     rewrite -exchange -compoA -ntx_assoc. cat.
   - rewrite iso_tgt_r/= compoA -IHf -compoA exchange.
-    rewrite (isoK f) cats tensor_id. cat.
+    rewrite (invKl f) cats tensor_id. cat.
   - rewrite cats.
     rewrite -tensor_id.
     rewrite -!compoA (compoA _ _ (assoc _ _ _)) ntx_assoc.
@@ -460,7 +460,7 @@ Qed.
 Proposition canonizeE a b (f: maclane a b): f ≡ canonize f.
 Proof.
   rewrite /canonize/=.
-  rewrite -compoA -ntx_φ compoA isoK'. cat.
+  rewrite -compoA -ntx_φ compoA invKr. cat.
 Qed.
 
 (** MacLane's coherence theorem follows *)
