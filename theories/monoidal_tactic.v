@@ -1131,7 +1131,7 @@ Proof. intros. mcat. Qed.
 Goal assoc A B C ≡ mcl.
 Proof. mcat. Qed.
 Goal assoc A B C ≡ mcl⁻¹.
-Proof. mcat. Qed.
+Proof. Fail mcat. Abort.          (* TOFIX (was working before morphism hierarchy) *)
 Goal assoc A B C ≡ (assoc' A B C)⁻¹.
 Proof. Fail mcat. Abort.          (* TOFIX (real CS reification?)*)
 

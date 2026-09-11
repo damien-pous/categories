@@ -36,8 +36,8 @@ Export SEEOBJ.
 Notation "x ≡' y" := (x ≡ acast y) (at level 70, only parsing): cat_scope.
 Notation "x ≡' y" := (x ≡ cast y) (at level 70, only printing): cat_scope.
 Notation "f  \; g" := (comp f g): cat_scope. 
-Notation "f  ;; g" := (bcomp f g mcl) (at level 39, right associativity, only parsing): cat_scope. 
-Notation "f  ;; g" := (bcomp f g _) (at level 39, right associativity, only printing): cat_scope. 
+Notation "f  ;; g" := (bcomp f g mcl) (only parsing): cat_scope. 
+Notation "f  ;; g" := (bcomp f g _) (only printing): cat_scope. 
 Notation "f" := (cast f) (at level 1, only printing): cat_scope.
 Notation "[ f ]" := (box f): cat_scope. 
 End Notations. 

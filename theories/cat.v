@@ -33,8 +33,15 @@ Reserved Notation "a ⥲_ 𝐂 b" (at level 99, 𝐂 at level 0).
 Reserved Notation "F ≈ G" (at level 70).
 
 (** composition *)
+Reserved Notation "f \; g" (at level 60, right associativity). 
+Reserved Notation "f \;_ 𝐂 g" (at level 60, 𝐂 at level 0).
+Reserved Notation "f  ;; g" (at level 60).
 Reserved Notation "f ∘ g" (at level 40, left associativity). 
-Reserved Notation "f ∘[ 𝐂 ] g" (at level 40). (* TOTHINK: change for ∘_ ? *)
+Reserved Notation "f ∘_ 𝐂 g" (at level 40, 𝐂 at level 0).
+
+(** inverse *)
+Reserved Notation "f '⁻¹'" (at level 1, format "f '⁻¹'").
+Reserved Notation "f '¹'" (at level 1, format "f '¹'").
 
 (** tensor (in monoidal categories) *)
 Reserved Notation "X ⊗ Y" (at level 31, right associativity). (* objects *)
@@ -80,9 +87,10 @@ Arguments idmap {_ _}, {_}.
 Arguments comp {_ _ _ _}.
 Bind Scope cat_scope with PreCat.
 (* Notation "\idmap A" := (@idmap _ A) (only parsing, at level 0) : cat_scope. *)
-Notation "f ∘ g" := (comp g f) : cat_scope.
-Notation "f ∘[ 𝐂 ] g" := (@comp _ 𝐂 _ _ _ g f) (only parsing): cat_scope.
-Notation "f \; g" := (comp f g) (only parsing): cat_scope.
+Notation "f \; g" := (comp f g): cat_scope.
+Notation "f \;_ 𝐂 g" := (@comp _ 𝐂 _ _ _ f g) (only parsing): cat_scope.
+Notation "f ∘ g" := (comp g f) (only parsing): cat_scope.
+Notation "f ∘_ 𝐂 g" := (@comp _ 𝐂 _ _ _ g f) (only parsing): cat_scope.
 
 (** categories: precategories + laws *)
 #[primitive] HB.mixin Record IsCat 𝐂 of precat 𝐂 := {
@@ -200,114 +208,6 @@ Proof.
   move=>PQ p q. apply: Unicity. eassumption.
   apply: PQ. all: exact: unique_prop.
 Qed.
-
-(** * Isomorphisms *)
-
-HB.mixin Record IsIso (𝐂: PreCat) A B (f: 𝐂 A B) := {
-    #[canonical=no] inv: 𝐂 B A;
-    #[canonical=no] isoK: f ∘ inv ≡ idmap;
-    #[canonical=no] isoK': inv ∘ f ≡ idmap }.
-#[short(type="Iso")]
-HB.structure Definition iso 𝐂 A B := { f of @IsIso 𝐂 A B f }.
-Arguments inv {_ _ _}.
-Arguments isoK {_ _ _}.
-Arguments isoK' {_ _ _}.
-Notation "A ≃_ 𝐂 B" := (@iso.type 𝐂 A B) (only parsing): cat_scope.
-Notation "A ≃ B" := (Iso A B): cat_scope.
-
-Definition mk_iso {𝐂: PreCat} {X Y: 𝐂} (i: X ~> Y) (j: Y ~> X): i ∘ j ≡ idmap -> j ∘ i ≡ idmap -> X ≃ Y.
-Proof. move=>ij ji. exists i. split. by exists j. Defined. 
-Arguments mk_iso {_ _ _}. 
-
-(** forward and backward components *)
-(* Definition forward {𝐂: PreCat} [A B: 𝐂] (i: Iso A B) := bare i. *)
-Notation "f '¹'" := (iso.sort f) (only parsing, at level 9(* , format "f '¹'" *)): cat_scope.
-Notation "f '⁻¹'" := (inv f) (at level 9, format "f '⁻¹'"): cat_scope.
-
-Section s.
-Context {𝐂: Cat}.
-Implicit Types A B C: 𝐂.
-
-(** isomorphisms form a groupoid *)
-Lemma _iso_id A: IsIso _ A A idmap.
-Proof. exists idmap. exact: compo1. exact: comp1o. Defined.
-Lemma _iso_comp A B C (f: A ≃ B) (g: B ≃ C): IsIso _ A C (g ∘ f).
-Proof.
-  exists (f⁻¹ ∘ g⁻¹).
-  abstract (by rewrite compoA -(compoA f⁻¹) isoK comp1o isoK).
-  abstract (by rewrite -compoA (compoA f) isoK' compo1 isoK').
-Defined.
-
-HB.instance Definition _ A := _iso_id A. 
-HB.instance Definition _ A B C (f: A ≃ B) (g: B ≃ C) := _iso_comp f g. 
-HB.instance Definition _ A B (i: A ≃ B) := @IsIso.Build _ B A (i⁻¹) (i¹) (isoK' i) (isoK i). 
-
-Definition iso_refl A: A ≃ A := idmap.
-Definition iso_trans A B C (i: A ≃ B) (j: B ≃ C): A ≃ C := j ∘ i.
-Definition iso_sym A B (i: A ≃ B): B ≃ A := i⁻¹. 
-
-Lemma invI A B (i: A ≃ B): i⁻¹⁻¹ ≡ i.
-Proof. done. Qed.
-Lemma inv_id A: (idmap A)⁻¹ ≡ idmap.
-Proof. done. Qed.
-Lemma inv_comp A B C (i: A ≃ B) (j: B ≃ C): (j∘i)⁻¹ ≡ i⁻¹∘j⁻¹.
-Proof. done. Qed.
-
-Lemma iso_src_r A A' B (f: A ~> B) (g: A' ~> B) (i: A ≃ A'): f ≡ g ∘ i <-> f ∘ i⁻¹ ≡ g.
-Proof.
-  split.
-  - move=>->. by rewrite -compoA isoK cats.
-  - move=><-. by rewrite -compoA isoK' cats.
-Qed.
-
-Lemma iso_src_l A A' B (f: A ~> B) (g: A' ~> B) (i: A' ≃ A): f ∘ i ≡ g <-> f ≡ g ∘ i⁻¹.
-Proof. split=>H; exact/eqv_sym/iso_src_r/eqv_sym. Qed.
-
-(* TODO: generalize to epis / turn into an equivalence? *)
-Lemma epi A B (i: A ≃ B) C (f g: B ~> C): f ∘ i ≡ g ∘ i -> f ≡ g.
-Proof. by rewrite iso_src_r -compoA isoK cats. Qed.
-
-Lemma inv_eqv A B (i j: A ≃ B): i ≡[𝐂 A B] j -> i⁻¹ ≡ j⁻¹.
-Proof. move=>ij. apply: (epi (i:=i)). by rewrite isoK' ij isoK'. Qed.
-
-Lemma inv_inj A B (i j: A ≃ B): i⁻¹ ≡ j⁻¹ -> i ≡ j.
-Proof. by move=>/inv_eqv. Qed.
-
-End s. 
-Arguments epi {_ _ _} _ {_}.
-Definition iso_src := (@iso_src_l, @iso_src_r)%core.
-
-(** isomorphisms in the opposite category *)
-Definition iso_op {𝐂: Cat} (A B: 𝐂) (i: A ≃ B): B ≃_(𝐂^op) A :=
-  @mk_iso 𝐂^op B A i¹ i⁻¹ (isoK' i) (isoK i).
-
-(** dual lemmas *)
-Lemma iso_tgt_r {𝐂: Cat} (A B B': 𝐂) (f: A ~> B) (g: A ~> B') (i: B' ≃ B): f ≡ i ∘ g <-> i⁻¹ ∘ f  ≡ g.
-Proof. exact: (iso_src_r _ _ (iso_op i)). Qed.
-Lemma iso_tgt_l {𝐂: Cat} (A B B': 𝐂) (f: A ~> B) (g: A ~> B') (i: B ≃ B'): i ∘ f ≡ g <-> f  ≡ i⁻¹ ∘ g.
-Proof. exact: (iso_src_l _ _ (iso_op i)). Qed.
-Definition iso_tgt := (@iso_tgt_l, @iso_tgt_r)%core.
-
-(* TODO: generalize to monos / turn into an equivalence? *)
-Lemma mono {𝐂: Cat} (A B: 𝐂) (i: A ≃ B) C (f g: C ~> A): i ∘ f ≡ i ∘ g -> f ≡ g.
-Proof. exact: (epi (iso_op i)). Qed.
-Arguments mono {_ _ _} _ {_}.
-
-
-(** isomorphisms in product categories *)
-Lemma _iso_pair {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B'):
-   IsIso (𝐂*𝐃)%type (A,B) (A',B') (bare i,bare j).
-Proof.
-  exists (i⁻¹, j⁻¹).
-  abstract (split; exact: isoK).
-  abstract (split; exact: isoK').
-Defined.
-(* TOFIX: why is this failing? *)
-Fail HB.instance Definition _ 𝐂 𝐃 A A' B B' i j := @_iso_pair 𝐂 𝐃 A A' B B' i j. 
-(* meanwhile, we use the following explicit pair constructor for isos *)
-Definition pair_iso {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B') :=
-  (* (A,B) ≃_((𝐂*𝐃)%type) (A',B') := *)
-  HB.pack_for ((A,B) ≃_((𝐂*𝐃)%type) (A',B')) (bare i,bare j) (@_iso_pair 𝐂 𝐃 A A' B B' i j).
 
 
 

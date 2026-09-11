@@ -5,7 +5,8 @@
 -arg -w -arg +HB.no-new-instance
 
 -R theories/ Categories
-theories/cat.v                             # quivers, categories, isomorphisms
+theories/cat.v                             # quivers, categories, basic infrastructure
+theories/morphisms.v                       # hierarchy of morphisms
 theories/arity.v                           # lists of objects
 theories/cast.v                            # casting operations
 theories/functor.v                         # functors

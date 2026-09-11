@@ -469,7 +469,7 @@ Next Obligation.
 Qed.
 HB.instance Definition _ A B f := @_mcl_inv A B f.
 Definition maclane_inv A B (f: maclane A B):
-  maclane _ _ := inv f.
+  maclane _ _ := f⁻¹.
 
 Program Definition _mcl_assoc a b c :=
   @isMacLane.Build _ ((a ⊗ b) ⊗ c) (a ⊗ b ⊗ c) (assoc a b c)
@@ -576,7 +576,7 @@ Ltac reify_gmcl f :=
       let v := reify_gmcl g in
       uconstr:(maclane_comp u v _)
   | inv ?f =>
-      let f := (eval simpl in (iso.sort f)) in
+      let f := (eval simpl in (bare f)) in
       let u := reify_gmcl f in
       uconstr:(maclane_inv u)
   | ?f · ?g =>
@@ -623,7 +623,7 @@ Ltac reify_gmcl f :=
       let v := reify_gmcl g in
       uconstr:(maclane_comp u v _)
   | blocked_inv ?f =>
-      let f := (eval simpl in (iso.sort f)) in
+      let f := (eval simpl in (bare f)) in
       let u := reify_gmcl f in
       uconstr:(maclane_inv u)
   | blocked_tens ?f ?g =>
@@ -740,17 +740,17 @@ Proof. gMacLane. Qed.
 Goal unitl unit ≡[𝐂 _ _] unitr unit. 
 Proof. gMacLane. Qed.
 
-Goal unitl A ≡ inv (unitl' A). 
+Goal unitl A ≡ (unitl' A)⁻¹. 
 Proof. gMacLane. Qed.
 
-Goal inv (unitl (A⊗B)) ≡ mcl. 
+Goal (unitl (A⊗B))⁻¹ ≡ mcl. 
 Proof. gMacLane. Qed.
 
-Goal forall (s t: gtree 𝐂) (i: maclane s t), i ∘ inv i ≡ idmap. 
+Goal forall (s t: gtree 𝐂) (i: maclane s t), i ∘ i⁻¹ ≡ idmap. 
 Proof. intros. gMacLane_try. unfold compatible. cbn. Abort.
 
 (* Notation test_maclane f := (f ≡ idmap ∘ f) (only parsing). *)
-Notation test_maclane f := (f ∘ inv f ≡ idmap) (only parsing).
+Notation test_maclane f := (f ∘ f⁻¹ ≡ idmap) (only parsing).
 
 Goal test_maclane (mcl: h⊗unit ≃ h).
 Proof. gMacLane. Qed.

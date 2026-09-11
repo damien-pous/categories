@@ -1,6 +1,6 @@
 (** * casting operation for homsets *)
 
-Require Import cat.
+Require Import cat morphisms.
 
 Local Open Scope cat_scope.
 

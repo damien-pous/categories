@@ -339,7 +339,7 @@ Proof.
   rewrite tensor_comp_r_src.
 
   rewrite triangle_alt. 
-  apply: (mono (assoc' A C D)).
+  apply: (mono_prop (assoc' A C D)).
   change (  assoc' A C D ∘ (unitr A · idmap ∘ assoc' A unit (C ⊗ D) ∘ idmap · assoc unit C D)
   ≡ assoc' A C D ∘ idmap · unitl C · idmap).
   rewrite !compoA id_tensor 2!ntx_assoc'. 
@@ -486,7 +486,7 @@ Ltac reify_mcl f :=
       let v := reify_mcl g in
       constr:(mcl_comp u v)
   | inv ?f =>
-      let f := (eval simpl in (iso.sort f)) in
+      let f := (eval simpl in (bare f)) in
       let u := reify_mcl f in
       constr:(mcl_inv u)
   | iso.sort ?f =>
@@ -580,7 +580,7 @@ Proof. MacLane. Qed.
 Goal unitl' A ≡ inv (unitl A). 
 Proof. MacLane. Qed.
 
-Goal inv (unitl A ∘ idmap) ≡ mcl. 
+Goal (unitl A ∘ idmap)⁻¹ ≡ mcl. 
 Proof. MacLane. Qed.
 
 End tests'.

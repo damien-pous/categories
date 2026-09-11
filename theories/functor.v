@@ -1,6 +1,6 @@
 (** * Functors and natural transformations *)
 
-Require Export cat.
+Require Export morphisms.
 Require Import cast.
 
 Local Open Scope cat_scope.
@@ -84,8 +84,8 @@ HB.instance Definition _ {𝐂 𝐃: Cat} (D: 𝐃) :=
 Section s.
   Context {𝐂 𝐃: Cat} (F: Functor 𝐂 𝐃) (A B: 𝐂) (i: A ≃ B).
   Program Definition _functor_iso := @IsIso.Build _ _ _ (Fhom F i) (Fhom F i⁻¹) _ _.
-  Next Obligation. intros. by rewrite -Fcomp isoK Fidmap. Qed.
-  Next Obligation. intros. by rewrite -Fcomp isoK' Fidmap. Qed.
+  Next Obligation. intros. by rewrite -Fcomp invKl Fidmap. Qed.
+  Next Obligation. intros. by rewrite -Fcomp invKr Fidmap. Qed.
   (* forgetful inheritance: why?? *)
   (* HB.instance Definition _ := _functor_iso. *)
   Definition Fiso: F A ≃ F B := HB.pack_for (F A ≃ F B) (Fhom F i: F A ~> F B) _functor_iso.
@@ -167,10 +167,10 @@ Next Obligation.
   (* TOFIX: ugly term here, why do we need cbn? *)
   cbn.
   rewrite -H -compoA -natural.
-  by rewrite compoA H isoK' cats. 
+  by rewrite compoA H invKr cats. 
 Qed.
-Next Obligation. move=>i n H A/=. by rewrite H isoK. Qed.
-Next Obligation. move=>i n H A/=. by rewrite H isoK'. Qed.
+Next Obligation. move=>i n H A/=. by rewrite H invKl. Qed.
+Next Obligation. move=>i n H A/=. by rewrite H invKr. Qed.
 
 (** via natural tranformations which are pointwise isomorphisms *)
 Definition iso_ntx
@@ -193,7 +193,7 @@ Defined.
 
 (** natural isomorphisms pointwise yield isomorphisms *)
 Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X :=
-  mk_iso (i¹ X) (i⁻¹ X) (isoK i X) (isoK' i X). 
+  mk_iso (i¹ X) (i⁻¹ X) (invKl i X) (invKr i X). 
 
 (* Definition iso_ntx_pw_ (i: functor_equiv): forall X, F X ~> G X := fun X => (i¹ X). *)
 (* HB.instance Definition _ (i: functor_equiv) X := *)
@@ -285,8 +285,8 @@ Proof. intros i i' ii j j' jj X. by rewrite /= (ii _) (jj _). Qed.
 Lemma functor_comp_eqv:
   Proper (eqv ==> eqv ==> eqv) (@functor_comp 𝐂 𝐃 𝐄).
 Proof.
-  intros F G [i] F' G' [j]. split.
-  apply: (mk_iso (j¹⊚ i¹) (j⁻¹⊚i⁻¹)).
+  intros F G [i] F' G' [j]. split.  
+  apply: (mk_iso' (j¹⊚ i¹) (j⁻¹⊚i⁻¹) _ _).
   rewrite endo_exchange.
   etransitivity. exact: (ntx_comp'_eqv (isoK i) (isoK j)). by rewrite -ntx_id_comp. 
   rewrite endo_exchange.
