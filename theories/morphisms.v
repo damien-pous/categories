@@ -1,6 +1,11 @@
+(** hierarchy of morphisms: (split) {mono,epi}morphisms and isomorphisms *)
+
 Require Export cat.
+Require Import arewrite.
 
 Local Open Scope cat_scope.
+
+(** * epi/mono *)
 
 Definition is_epi (𝐂: PreCat) (A B: 𝐂) (e: A ~> B) := forall C (f g: B ~> C), f ∘ e ≡ g ∘ e -> f ≡ g.
 Definition is_mono (𝐂: PreCat) (A B: 𝐂) (m: A ~> B) := forall C (f g: C ~> A), m ∘ f ≡ m ∘ g -> f ≡ g.
@@ -46,6 +51,7 @@ HB.instance Definition _ (𝐂: Cat) (A B C: 𝐂) (f: A ↠ B) (g: B ↠ C) :=
 HB.instance Definition _ (𝐂: Cat) (A B C: 𝐂) (f: A ↪ B) (g: B ↪ C) :=
   IsMono.Build _ _ _ (f \; g) (@comp_is_mono _ _ _ _ f g). 
 
+(** * morphisms with an unspecified inverse *)
 
 (* TOFIX: could be defined in [Quiver], but breaks [airewrite/aireflexivity] tactics for now *)
 HB.mixin Record HasInverseOp (𝐂: PreCat) (A B: 𝐂) (f: A ~> B) := {
@@ -69,13 +75,15 @@ HB.instance Definition _ (𝐂: PreCat) (A B C: 𝐂) (f: Invertible A B) (g: In
   HasInverseOp.Build 𝐂 A C (f \; g) (g⁻¹ \; f⁻¹). 
 
 
+(** * split epi/mono, i.e., morphisms with left/right inverses *)
+
 Definition has_left_inverse (𝐂: PreCat) (A B: 𝐂) (f: Invertible A B) := f⁻¹ \; f ≡ idmap. 
 Definition has_right_inverse (𝐂: PreCat) (A B: 𝐂) (f: Invertible A B) := f \; f⁻¹ ≡ idmap.
 Arguments has_left_inverse {_ _ _} _/. 
 Arguments has_right_inverse {_ _ _} _/. 
 
 Lemma left_inverse_epi (𝐂: Cat) (A B: 𝐂) (f: Invertible A B): has_left_inverse f -> is_epi f.
-Proof. move=>K C i j H. by rewrite -(comp1o i) -K compoA H -compoA K cats. Qed.
+Proof. move=>K C i j H. rewrite -(comp1o i) -K. arewrite H. arewrite K. cat. Qed.
 Lemma right_inverse_mono (𝐂: Cat) (A B: 𝐂) (f: Invertible A B): has_right_inverse f -> is_mono f.
 Proof. exact: (@left_inverse_epi (𝐂^op) _ _ (morphop f)). Qed.
 
@@ -149,7 +157,7 @@ HB.instance Definition _ (𝐂: Cat) (A: 𝐂) :=
   _HasRightInverse.Build _ _ _ idmap (id_has_right_inverse A). 
 
 Lemma comp_has_left_inverse (𝐂: Cat) (A B C: 𝐂) (f: SplitEpi A B) (g: SplitEpi B C): has_left_inverse (f \; g). 
-Proof. by rewrite /= compoA -(compoA _ _ g) invKl cats invKl. Qed.
+Proof. rewrite /=/inv/=. arewrite invKl. exact/invKl. Qed.
 Lemma comp_has_right_inverse (𝐂: Cat) (A B C: 𝐂) (f: SplitMono A B) (g: SplitMono B C): has_right_inverse (f \; g). 
 Proof. exact: (@comp_has_left_inverse (𝐂^op) _ _ _ (morphop g) (morphop f)). Qed.
 
@@ -158,6 +166,7 @@ HB.instance Definition _ (𝐂: Cat) (A B C: 𝐂) (f: SplitEpi A B) (g: SplitEp
 HB.instance Definition _ (𝐂: Cat) (A B C: 𝐂) (f: SplitMono A B) (g: SplitMono B C) :=
   _HasRightInverse.Build _ _ _ (f \; g) (comp_has_right_inverse f g). 
 
+(** * isomorphisms *)
 
 #[short(type="Iso")]
   HB.structure Definition iso (𝐂: PreCat) (A B: 𝐂) := { f of @splitepi 𝐂 A B f & splitmono _ f }.
@@ -193,6 +202,7 @@ HB.saturate inv.
 HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) (i: A ≃ B) :=
   _HasLeftInverse.Build (𝐂^op) B A (morphop i) invKr.
 
+(** * additional properties *)
 
 Lemma epiP {𝐂: Cat} {A B: 𝐂} (e: A ↠ B) C (f g: B ~> C): e \; f ≡ e \; g <-> f ≡ g.
 Proof. split. exact/epi_prop. exact/comp_eqv. Qed.
@@ -206,10 +216,11 @@ Proof. exact: (@epi_compK (𝐂^op) _ _ _ (morphop g) (morphop f)). Qed.
 
 
 Lemma split_epi_mono {𝐂: Cat} {A B: 𝐂} (f: SplitEpi A B): is_mono f -> has_right_inverse f.
-Proof. move=>M/=. apply/M. rewrite compoA invKl. cat. Qed.
+Proof. move=>M/=. apply/M. arewrite invKl. cat. Qed.
 Lemma split_mono_epi {𝐂: Cat} {A B: 𝐂} (f: SplitMono A B): is_epi f -> has_left_inverse f.
 Proof. exact: (@split_epi_mono (𝐂^op) _ _ (morphop f)). Qed.
 
+(* TODO refine with regular epis/monos *)
 HB.factory Record SplitEpi_Mono_isIso (𝐂: Cat) (A B: 𝐂) f of @splitepi _ A B f & mono _ f := {}.
 HB.builders Context (𝐂: Cat) (A B: 𝐂) f of SplitEpi_Mono_isIso 𝐂 A B f.
 HB.instance Definition _ := _HasRightInverse.Build _ _ _ f (split_epi_mono (mono_prop f)).
