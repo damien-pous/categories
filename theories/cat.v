@@ -199,7 +199,7 @@ End s.
 Arguments unique_morph {_ _ _ _}.
 Arguments Unicity {_ _ _ _}.
 
-Notation "∃! x .. y , P" := (Unique_morph (fun x => .. (Unique_morph (fun y => P)) ..))
+Notation "Σ! x .. y , P" := (Unique_morph (fun x => .. (Unique_morph (fun y => P)) ..))
   (at level 200, x binder, y binder, right associativity): cat_scope.
 
 Lemma unique_morph_eqv {𝐂: Quiver} [A B: 𝐂] (P Q: (A ~> B) -> Type):
