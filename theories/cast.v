@@ -8,20 +8,20 @@ Local Open Scope cat_scope.
 Definition cast2' {A} {T: A -> A -> Type} [a b a' b'] (x: T a b) (aa: a = a') (bb: b = b'): T a' b' :=
   eq_rect _ (fun a => T a b') (eq_rect _ _ x _ bb) _ aa.
 Arguments cast2' {_ _} [_ _ _ _] _ & !_ !_.
-Notation cast2 a' b' f := (@cast2' _ _ _ _ a' b' f _ _).
+Abbreviation cast2 a' b' f := (@cast2' _ _ _ _ a' b' f _ _).
 
 
 (** casting homomorphisms (in quivers) *)
 Definition hcast {𝐂: Quiver} A B A' B' a b (f: A ~> B): A' ~> B' :=
   @cast2' _ (@hom 𝐂) A B A' B' f a b.
 Arguments hcast {_ _ _ _ _ !_ !_} _.
-Notation hcast' f i j := (@hcast _ _ _ _ _ i j f) (only parsing).
+Abbreviation hcast' f i j := (@hcast _ _ _ _ _ i j f) (only parsing).
 
 (** casting isomorphisms *)
 Definition icast {𝐂: PreCat} A B A' B' a b (f: A ≃ B): A' ≃ B' :=
   @cast2' _ (@Iso 𝐂) A B A' B' f a b.
 Arguments icast {_ _ _ _ _ !_ !_} _.
-Notation icast' f i j := (@icast _ _ _ _ _ i j f) (only parsing).
+Abbreviation icast' f i j := (@icast _ _ _ _ _ i j f) (only parsing).
 
 Section s.
   
@@ -84,7 +84,7 @@ End s.
 
 Arguments bcomp {_ _ _ _ _} _ _ & {_}, {_ _ _ _ _}.
 Arguments cast {_ _ _ _ _} _ & {_ _}, {_} _ {_ _} _ _ {_ _}.
-Notation cast' i j f := (@cast _ _ _ _ _ f i j) (only parsing).
+Abbreviation cast' i j f := (@cast _ _ _ _ _ f i j) (only parsing).
 
 
 Section s.

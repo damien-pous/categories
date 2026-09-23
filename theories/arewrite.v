@@ -74,8 +74,8 @@ End correct.
 
 End Internals.
 
-Local Notation quiver_of_precat := cat_precat__to__cat_quiver.
-Local Notation quiver_of_cat := cat_cat__to__cat_quiver.
+Local Abbreviation quiver_of_precat := cat_precat__to__cat_quiver.
+Local Abbreviation quiver_of_cat := cat_cat__to__cat_quiver.
 
 (* Elpi code for areflexivity *)
 

@@ -63,7 +63,7 @@ Proof. by rewrite 2!rar_E. Defined. (* idem *)
 End s.
 Arguments rarity: clear implicits.
 Arguments eq_arity [_ _ _]&_. 
-Notation find_eq_arity := (eq_arity eq_refl).
+Abbreviation find_eq_arity := (eq_arity eq_refl).
 
 Section tests.
 

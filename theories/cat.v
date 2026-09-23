@@ -74,7 +74,7 @@ Arguments hom {_}.
 Coercion hom: Quiver >-> Funclass.
 Notation "a ~> b" := (hom a b): cat_scope.
 Notation "a ~>_ 𝐂 b" := (@hom 𝐂 a b) (only parsing): cat_scope.
-Notation bare f := (f: hom _ _). 
+Abbreviation bare f := (f: hom _ _). 
 
 (** precategories: quivers + id and comp *)
 #[primitive] HB.mixin Record IsPreCat 𝐂 of quiver 𝐂 := {
@@ -110,9 +110,9 @@ Arguments comp_eqv {_ _ _ _}.
 Existing Instance comp_eqv.
 
 (** tweaking coercions so that objects can always be seen as identity morphisms *)
-Elpi Accumulate coercion.db lp:"
+Elpi Accumulate coercion.db lp:{{ 
 coercion _ V T E R :- coq.unify-eq T {{precat.sort _}} ok, coq.unify-eq E {{Setoid.sort _}} ok, !, R = {{@idmap _ lp:V}}.
-".
+}}.
 (* Check fun C: Cat => fun A: C => A: A ~> A. *)
 
 (** (locally) import this module to get the underlying object printed instead of [idmap] *)
@@ -219,7 +219,7 @@ Implicit Types A B C: 𝐂.
 Inductive hom_list_ C: 𝐂 -> Type :=
 | nil: hom_list_ C C
 | cons: forall {A B}, (A ~> B) -> hom_list_ C B -> hom_list_ C A.
-Notation hom_list A B := (hom_list_ B A).
+Abbreviation hom_list A B := (hom_list_ B A).
 Arguments nil {_}. 
 Definition single {A B} (f: A ~> B) := cons f nil. 
 Fixpoint eval {B C} (u: hom_list B C): B ~> C :=
@@ -270,7 +270,7 @@ Lemma normalise {A B} (u v: reified A B): eval (norm u) ≡ eval (norm v) -> u �
 Proof. apply cats'. Qed.
 
 End s.
-Notation hom_list A B := (hom_list_ B A).
+Abbreviation hom_list A B := (hom_list_ B A).
 Arguments nil {_ _}.
 Arguments reify {_ _ _}.
 

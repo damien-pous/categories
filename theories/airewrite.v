@@ -15,7 +15,7 @@ From Categories.elpi Extra Dependency "airewrite.elpi" as airewrite.
 Local Open Scope cat_scope.
 
 Module Import Internals.
-Import arewrite.Internals.
+Export arewrite.Internals.
 Section syntax.
 
 Context (C : PreCat).
@@ -90,18 +90,18 @@ End correct.
 
 End Internals.
 
-Local Notation quiver_of_precat := cat_precat__to__cat_quiver.
-Local Notation quiver_of_cat := cat_cat__to__cat_quiver.
+Local Abbreviation quiver_of_precat := cat_precat__to__cat_quiver.
+Local Abbreviation quiver_of_cat := cat_cat__to__cat_quiver.
 
-Local Notation inverse_of_mono C a b mono :=
+Local Abbreviation inverse_of_mono C a b mono :=
   (@inv C a b
      (@morphisms_splitmono__to__morphisms_invertible C a b mono)).
-Local Notation inverse_of_epi C a b epi :=
+Local Abbreviation inverse_of_epi C a b epi :=
   (@inv C a b
      (@morphisms_splitepi__to__morphisms_invertible C a b epi)).
-(* Local Notation epi_of_mono C a b mono := *)
+(* Local Abbreviation epi_of_mono C a b mono := *)
 (*   (@morphisms_inv__canonical__morphisms_splitepi C a b mono). *)
-Local Notation mono_of_epi C a b epi :=
+Local Abbreviation mono_of_epi C a b epi :=
   (@morphisms_inv__canonical__morphisms_splitmono C a b epi).
 
 
