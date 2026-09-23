@@ -2,6 +2,7 @@
 
 Require Export cat.
 Require Import arewrite.
+From elpi Require Import elpi coercion.
 
 Local Open Scope cat_scope.
 
@@ -32,11 +33,32 @@ HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) (f: A ↪ B) :=
   IsEpi.Build 𝐂^op B A (morphop f) (mono_prop f).
 HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) (f: A ↠ B) :=
   IsMono.Build 𝐂^op B A (morphop f) (epi_prop f).
-  
+
+Elpi Accumulate coercion.db lp:{{ 
+      coercion _ V T E R :- 
+      coq.unify-eq T {{Setoid.sort _}} ok, 
+      coq.unify-eq E {{@epi.type lp:C _ _}} ok, 
+      !,
+      coq.unify-eq V {{@epi.sort lp:C _ _ lp:W}} ok,
+      R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}.
+      coercion _ V T E R :- 
+      coq.unify-eq T {{Setoid.sort _}} ok, 
+      coq.unify-eq E {{@mono.type lp:C _ _}} ok, 
+      !,
+      coq.unify-eq V {{@mono.sort lp:C _ _ lp:W}} ok,
+      R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}.
+      }}.
+(* TODO: move to tests *)
+Check fun (C: Cat) (a b: C) (i: Mono a b) => morphop i: Epi _ _.
+Check fun (C: Cat) (a b: C) (i: Epi a b) => morphop i: Mono _ _.
+
+(* TODO: move to cat *)
+Definition obop (C: Quiver) (A: C): C^op := A. 
+
 Lemma id_is_epi (𝐂: Cat) (A: 𝐂): is_epi A. 
 Proof. move=>B f g. by rewrite !cats. Qed.
 Lemma id_is_mono (𝐂: Cat) (A: 𝐂): is_mono A. 
-Proof. exact: (@id_is_epi 𝐂^op). Qed.
+Proof. exact: (id_is_epi (A:=obop A)). Qed.
 
 HB.instance Definition _ (𝐂: Cat) (A: 𝐂) := IsEpi.Build _ _ _ idmap (@id_is_epi _ A). 
 HB.instance Definition _ (𝐂: Cat) (A: 𝐂) := IsMono.Build _ _ _ idmap (@id_is_mono _ A). 
@@ -44,7 +66,7 @@ HB.instance Definition _ (𝐂: Cat) (A: 𝐂) := IsMono.Build _ _ _ idmap (@id_
 Lemma comp_is_epi (𝐂: Cat) (A B C: 𝐂) (f: A ↠ B) (g: B ↠ C): is_epi (f \; g). 
 Proof. move=>D i j. rewrite !cats=>H. exact/(epi_prop g)/(epi_prop f). Qed.
 Lemma comp_is_mono (𝐂: Cat) (A B C: 𝐂) (f: A ↪ B) (g: B ↪ C): is_mono (f \; g). 
-Proof. exact: (@comp_is_epi (𝐂^op) _ _ _ (morphop g) (morphop f)). Qed.
+Proof. exact: (comp_is_epi (f:=morphop g) (g:=morphop f)). Qed.
 
 HB.instance Definition _ (𝐂: Cat) (A B C: 𝐂) (f: A ↠ B) (g: B ↠ C) :=
   IsEpi.Build _ _ _ (f \; g) (@comp_is_epi _ _ _ _ f g). 
@@ -88,6 +110,21 @@ HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) (f: RegMono A B) :=
 HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) (f: RegEpi A B) :=
   _IsRegMono.Build 𝐂^op B A (morphop f) (regepi_prop f).
 
+Elpi Accumulate coercion.db lp:{{ 
+      coercion _ V T E R :- 
+      coq.unify-eq T {{Setoid.sort _}} ok, 
+      coq.unify-eq E {{@regepi.type lp:C _ _}} ok, 
+      !,
+      coq.unify-eq V {{@regepi.sort lp:C _ _ lp:W}} ok,
+      R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}.
+      coercion _ V T E R :- 
+      coq.unify-eq T {{Setoid.sort _}} ok, 
+      coq.unify-eq E {{@regmono.type lp:C _ _}} ok, 
+      !,
+      coq.unify-eq V {{@regmono.sort lp:C _ _ lp:W}} ok,
+      R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}.
+      }}.
+
 Lemma regepi_epi (𝐂: Cat) (A B: 𝐂) (f: A ~> B): is_regepi f -> is_epi f.
 Proof.
   move=>[D [a [b [P U]]]] C i j H.
@@ -95,7 +132,7 @@ Proof.
   arewrite P; cat. 
 Qed.
 Lemma regmono_mono (𝐂: Cat) (A B: 𝐂) (f: A ~> B): is_regmono f -> is_mono f.
-Proof. exact: (@regepi_epi (𝐂^op) _ _ (morphop f)). Qed.
+Proof. exact: (regepi_epi (f:=morphop f)). Qed.
 
 HB.factory Record IsRegEpi (𝐂: Cat) (A B: 𝐂) (f: A ~> B) := {
     regepi_prop: is_regepi f;
@@ -121,7 +158,7 @@ Proof.
   move=>h. rewrite cats. exact/eqv_sym. 
 Qed.
 Lemma id_is_regmono (𝐂: Cat) (A: 𝐂): is_regmono A. 
-Proof. exact: (@id_is_regepi 𝐂^op). Qed.
+Proof. exact: (id_is_regepi (obop A)). Qed.
 
 HB.instance Definition _ (𝐂: Cat) (A: 𝐂) := _IsRegEpi.Build _ _ _ idmap (@id_is_regepi _ A). 
 HB.instance Definition _ (𝐂: Cat) (A: 𝐂) := _IsRegMono.Build _ _ _ idmap (@id_is_regmono _ A). 
@@ -152,6 +189,16 @@ HB.instance Definition _ (𝐂: PreCat) (A: 𝐂) :=
 HB.instance Definition _ (𝐂: PreCat) (A B C: 𝐂) (f: Invertible A B) (g: Invertible B C) :=
   HasInverseOp.Build 𝐂 A C (f \; g) (g⁻¹ \; f⁻¹). 
 
+Elpi Accumulate coercion.db lp:{{ 
+      coercion _ V T E R :- 
+      coq.unify-eq T {{Setoid.sort _}} ok, 
+      coq.unify-eq E {{@invertible.type lp:C _ _}} ok, 
+      !,
+      coq.unify-eq V {{@invertible.sort lp:C _ _ lp:W}} ok,
+      R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}.
+}}.
+
+
 
 (** * split epi/mono, i.e., morphisms with left/right inverses *)
 
@@ -173,7 +220,7 @@ Proof.
   move=>h <-. arewrite K. cat.
 Qed.
 Lemma right_inverse_regmono (𝐂: Cat) (A B: 𝐂) (f: Invertible A B): has_right_inverse f -> is_regmono f.
-Proof. exact: (@left_inverse_regepi (𝐂^op) _ _ (morphop f)). Qed.
+Proof. exact: (left_inverse_regepi (𝐂:=𝐂^op) (f:=morphop f)). Qed. (* TOFIX: need for C^op *)
 
 HB.mixin Record _HasLeftInverse (𝐂: PreCat) (A B: 𝐂) f of HasInverseOp _ A B f := {
     #[canonical=no] invKl: has_left_inverse f;
@@ -234,10 +281,29 @@ HB.instance Definition _ (𝐂: Cat) (A B: 𝐂) (f: SplitMono A B) :=
 HB.instance Definition _ (𝐂: Cat) (A B: 𝐂) (f: SplitEpi A B) :=
   HasRightInverse.Build 𝐂 B A (f⁻¹) invKl.
 
+Elpi Accumulate coercion.db lp:{{ 
+      coercion _ V T E R :- 
+      coq.unify-eq T {{Setoid.sort _}} ok, 
+      coq.unify-eq E {{@splitepi.type lp:C _ _}} ok, 
+      !,
+      coq.unify-eq V {{@splitepi.sort lp:C _ _ lp:W}} ok,
+      R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}.
+      coercion _ V T E R :- 
+      coq.unify-eq T {{Setoid.sort _}} ok, 
+      coq.unify-eq E {{@splitmono.type lp:C _ _}} ok, 
+      !,
+      coq.unify-eq V {{@splitmono.sort lp:C _ _ lp:W}} ok,
+      R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}.
+      }}.
+(* TODO: move to tests *)
+Check fun (C: Cat) (a b: C) (i: SplitMono a b) => morphop i: SplitEpi _ _.
+Check fun (C: Cat) (a b: C) (i: SplitEpi a b) => morphop i: SplitMono _ _.
+
+
 Lemma id_has_left_inverse (𝐂: Cat) (A: 𝐂): has_left_inverse (idmap A).
 Proof. by rewrite /= cats. Qed.
 Lemma id_has_right_inverse (𝐂: Cat) (A: 𝐂): has_right_inverse (idmap A).
-Proof. exact: (@id_has_left_inverse (𝐂^op)). Qed.
+Proof. exact: (id_has_left_inverse (obop A)). Qed.
 
 HB.instance Definition _ (𝐂: Cat) (A: 𝐂) :=
   _HasLeftInverse.Build _ _ _ idmap (id_has_left_inverse A). 
@@ -247,7 +313,7 @@ HB.instance Definition _ (𝐂: Cat) (A: 𝐂) :=
 Lemma comp_has_left_inverse (𝐂: Cat) (A B C: 𝐂) (f: SplitEpi A B) (g: SplitEpi B C): has_left_inverse (f \; g). 
 Proof. rewrite /=/inv/=. arewrite invKl. exact/invKl. Qed.
 Lemma comp_has_right_inverse (𝐂: Cat) (A B C: 𝐂) (f: SplitMono A B) (g: SplitMono B C): has_right_inverse (f \; g). 
-Proof. exact: (@comp_has_left_inverse (𝐂^op) _ _ _ (morphop g) (morphop f)). Qed.
+Proof. exact: (comp_has_left_inverse (morphop g) (morphop f)). Qed.
 
 HB.instance Definition _ (𝐂: Cat) (A B C: 𝐂) (f: SplitEpi A B) (g: SplitEpi B C) :=
   HasLeftInverse.Build _ _ _ (f \; g) (comp_has_left_inverse f g). 
@@ -284,33 +350,50 @@ HB.end.
 HB.saturate idmap.
 HB.saturate comp.
 HB.saturate inv.
-(* Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: @SplitEpi (C^op) b a.  *)
-(* Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: @SplitMono (C^op) b a.  *)
-(* Fail Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: b≃_(C^op)a.  *)
+(* Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: @SplitEpi (C^op) b a. *)
+(* Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: @SplitMono (C^op) b a. *)
+(* Fail Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: b≃_(C^op)a. *)
 (* TOREPORT: following line should equip [morphop] with a canonical Iso structure *)
 (* HB.saturate morphop. *)
 (* asymmetric & strange workaround below *)
 HB.instance Definition _ (𝐂: Cat) (A B: 𝐂) (i: A ≃ B) :=
   _HasLeftInverse.Build (𝐂^op) B A (morphop i) invKr.
+(* Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: b≃_(C^op)a. *)
+
+Check fun (C: Cat) (a b: C) (i: Iso a b) => morphop i: Iso _ _. (* should rather not work *)
+Elpi Accumulate coercion.db lp:{{ 
+      coercion _ V T E R :- 
+      coq.unify-eq T {{Setoid.sort _}} ok, 
+      coq.unify-eq E {{@iso.type lp:C _ _}} ok, 
+      !,
+      coq.unify-eq V {{@iso.sort lp:C _ _ lp:W}} ok,
+      R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}.
+      }}.
+(* TODO: move to tests *)
+Check fun (C: Cat) (a b: C) (i: Iso a b) => morphop i: Iso _ _.  (* should infer as below *)
+Fail Check fun (C: Cat) (a b: C) (i: Iso a b) => morphop i: Iso b a. (* could work but strange *)
+Check fun (C: Cat) (a b: C) (i: Iso a b) => morphop i: @Iso (C^op) b a.
+Check fun (C: Cat) (a b: C) (i: Iso a b) => morphop i: Iso (obop b) (obop a).
+Check fun (C: Cat) (a b: C) (i: Iso a b) => morphop i: @Iso (C^op) (obop b) (obop a).
 
 (** * additional properties *)
 
 Lemma epiP {𝐂: Cat} {A B: 𝐂} (e: A ↠ B) C (f g: B ~> C): e \; f ≡ e \; g <-> f ≡ g.
 Proof. split. exact/epi_prop. exact/comp_eqv. Qed.
 Lemma monoP {𝐂: Cat} {A B: 𝐂} (m: A ↪ B) C (f g: C ~> A): f \; m ≡ g \; m <-> f ≡ g.
-Proof. exact: (@epiP (𝐂^op) _ _ (morphop m)). Qed.
+Proof. exact: (epiP (morphop m)). Qed.
 
 Lemma epi_compK {𝐂: Cat} {A B C: 𝐂} (f: A ~> B) (g: B ~> C): is_epi (f \; g) -> is_epi g.
 Proof. move=>E D i j H. apply/E. by rewrite !cats H. Qed.
 Lemma mono_compK {𝐂: Cat} {A B C: 𝐂} (f: A ~> B) (g: B ~> C): is_mono (f \; g) -> is_mono f.
-Proof. exact: (@epi_compK (𝐂^op) _ _ _ (morphop g) (morphop f)). Qed.
+Proof. exact: (epi_compK (f:=morphop g) (g:=morphop f)). Qed.
 
 
 (* subsumed by the regular version below *)
 Lemma splitepi_mono_right_inverse {𝐂: Cat} {A B: 𝐂} (f: SplitEpi A B): is_mono f -> has_right_inverse f.
 Proof. move=>M/=. apply/M. arewrite invKl. cat. Qed.
 Lemma splitmono_epi_left_inverse {𝐂: Cat} {A B: 𝐂} (f: SplitMono A B): is_epi f -> has_left_inverse f.
-Proof. exact: (@splitepi_mono_right_inverse (𝐂^op) _ _ (morphop f)). Qed.
+Proof. exact: (splitepi_mono_right_inverse (f:=morphop f)). Qed.
 
 HB.factory Record SplitEpi_Mono_isIso (𝐂: Cat) (A B: 𝐂) f of @splitepi _ A B f & mono _ f := {}.
 HB.builders Context (𝐂: Cat) (A B: 𝐂) f of SplitEpi_Mono_isIso 𝐂 A B f.
@@ -330,7 +413,7 @@ Proof.
   by exists g.
 Qed.
 Lemma regmono_epi_left_inverse {𝐂: Cat} {A B: 𝐂} (f: RegMono A B): is_epi f -> { g & g \; f ≡ idmap }.
-Proof. exact: (@regepi_mono_right_inverse (𝐂^op) _ _ (morphop f)). Qed.
+Proof. exact: (regepi_mono_right_inverse (f:=morphop f)). Qed.
 
 HB.factory Record RegEpi_Mono_isIso (𝐂: Cat) (A B: 𝐂) f of @regepi _ A B f & mono _ f := {}.
 HB.builders Context (𝐂: Cat) (A B: 𝐂) f of RegEpi_Mono_isIso 𝐂 A B f.
