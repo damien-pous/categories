@@ -12,6 +12,7 @@ theories/airewrite.v			   # rewriting/reflexivity modulo associativity and inver
 theories/arity.v                           # lists of objects
 theories/cast.v                            # casting operations
 theories/functor.v                         # functors
+theories/objects.v                         # hierarchy of objects
 theories/span.v                            # spans
 theories/product.v                         # products
 theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
