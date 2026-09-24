@@ -1,13 +1,14 @@
+Require Import prelim.
 From Stdlib Require Import List.
 From mathcomp Require Import ssreflect.
 
-Definition arity X := list X.
+Definition arity X := list (ob X).
 Infix "++" := app. 
 Infix "::" := cons. 
 
 Section s.
 Context {X: Type}.
-Implicit Types A B C D: X.
+Implicit Types A B C D: ob X.
 Implicit Types a b c d Γ Δ Θ: arity X.
 
 (** reified arities: lists of (abstract) objects and abstract arities *)
@@ -68,7 +69,7 @@ Abbreviation find_eq_arity := (eq_arity eq_refl).
 Section tests.
 
 Context {X: Type}.
-Variables A B C: X.
+Variables A B C: ob X.
 Variables Γ Δ Θ: arity X.
 
 Check find_eq_arity: Γ++(Δ++Θ)++(Γ++Δ)++Θ = (Γ++Δ)++(Θ++Γ)++(Δ++Θ). 

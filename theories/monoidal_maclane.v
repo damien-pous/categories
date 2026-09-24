@@ -10,7 +10,6 @@
  *)
 
 Require Import arity monoidal_def.
-From elpi Require Import elpi coercion.
 
 Local Open Scope cat_scope.
 
@@ -21,7 +20,7 @@ Variable X: Type.
 (** tensor-unit expressions, i.e., trees of objects,
     (the type [M] in Ilya Beylin and Peter Dybjer's paper) *)
 Inductive tree :=
-| t_ob: X -> tree
+| t_ob: ob X -> tree
 | t_unit: tree
 | t_tensor: tree -> tree -> tree.
 Implicit Types a b c: tree.
@@ -141,7 +140,7 @@ Definition canonize a b (h: maclane a b): maclane a b :=
 (** additional properties *)
 
 Lemma Norm_arity n m: n ⊙ m = n++m.
-Proof. elim:n=>//=. congruence. Qed. 
+Proof. elim:n=>//=*. by f_equal. Qed. 
 
 Lemma Nf_arity n: Nf n = n.
 Proof. by rewrite /Nf Norm_arity List.app_nil_r. Qed. 
@@ -160,36 +159,19 @@ Arguments n_id {_} _/.
 Arguments n_tensor {_} _ _ _/.
 
 (** evaluation of tensor-unit expressions *)
-Fixpoint eval_tree {𝐂: PreMonoidalCat} (a: tree 𝐂): 𝐂 :=
+Fixpoint eval_tree {𝐂: PreMonoidalCat} (a: tree 𝐂): ob 𝐂 :=
   match a with
   | t_ob A => A
   | t_unit => unit 
   | t_tensor a b => eval_tree a ⊗ eval_tree b
   end.
-
-(** tweaking coercions to use [eval_tree] from [tree] also to classes before [premonoidalcat.sort]
-(i.e., cat, precat, quiver) *)
-(* Coercion eval_tree: tree >-> premonoidalcat.sort. *)
-Notation "t" := (eval_tree t) (only printing, at level 1).
-Elpi Accumulate coercion.db lp:"
-coercion _ V T E R :- coq.unify-eq T {{tree _}} ok, coq.unify-eq E {{quiver.sort _}} ok, !, R = {{eval_tree lp:V}}.
-".
-
-Definition eval_arity {𝐂: PreMonoidalCat} (n: arity 𝐂) := eval_tree (arity_tree n).
-
-(** tweaking coercions to use [eval_arity] from [arity] also to classes before [premonoidalcat.sort]
-(i.e., cat, precat, quiver) *)
-(* Coercion eval_arity: arity >-> premonoidalcat.sort. *)
-Notation "t" := (eval_arity t) (only printing, at level 1).
-Elpi Accumulate coercion.db lp:"
-coercion _ V T E R :- coq.unify-eq T {{arity _}} ok, coq.unify-eq E {{quiver.sort _}} ok, !, R = {{eval_arity lp:V}}.
-".
+Coercion eval_tree: tree >-> ob.
 
 
 Section s.
 
 Context {𝐂: PreMonoidalCat}.
-Implicit Types a b c d: tree 𝐂.  
+Implicit Types a b c d: tree 𝐂.
 
 (** evaluation of MacLane expressions *)
 Fixpoint eval_maclane a b (h: maclane a b): a ~> b := 
@@ -276,7 +258,7 @@ Local Hint Extern 0 (Bridge _ _) => find_maclane: typeclass_instances.
 
 Section test.
 Context {𝐂: PreMonoidalCat}.
-Variables A B C: 𝐂.
+Variables A B C: ob 𝐂.
 Variables a b c: tree 𝐂.
 Variables h k l Γ Δ: arity 𝐂.
 Check mcl: A⊗unit ~> A. 
@@ -307,7 +289,7 @@ End test.
 Section s.
   
 Context {𝐂: MonoidalCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 Implicit Types a b c d: tree 𝐂.
 Implicit Types n m: arity 𝐂.
 Notation "1" := t_unit.
@@ -427,7 +409,7 @@ Qed.
 Lemma ntx_ξ1 a b (h: maclane a b):
   forall n, ξ b n  ∘  h · idmap ≡ Norm21 h n  ∘  ξ a n.
 Proof.
-  induction h as [a|a b c f IHf g IHg|a a' b b' f IHf g IHg|a b f IHf| | | ]=>/=n; simpl. 
+  induction h as [a|a b c f IHf g IHg|a a' b b' f IHf g IHg|a b f IHf| | | ]=>/=n; 
     rewrite -/eval_tree.        (* TOFIX: /eval_tree *)
   - rewrite tensor_id. cat.
   - rewrite tensor_comp_l_tgt compoA IHg -compoA IHf. cat.
@@ -547,7 +529,7 @@ Ltac MacLane :=
 Section tests'.
 
 Context {𝐂: MonoidalCat}.
-Variables A B C D: 𝐂.
+Variables A B C D: ob 𝐂.
 Variables h: arity 𝐂.
 
 Goal A ≡ A.
@@ -571,7 +553,7 @@ Proof. MacLane. Qed.
 Goal A · unitl (B⊗C) ∘ assoc A unit (B⊗C) ≡ mcl.
 Proof. MacLane. Qed.
 
-Goal A · unitl h ∘ assoc A unit h ≡ unitr A · eval_arity h.
+Goal A · unitl h ∘ assoc A unit h ≡ unitr A · h.
 Proof. MacLane. Qed.
 
 Goal unitl unit ≡[𝐂 _ _] unitr unit. 

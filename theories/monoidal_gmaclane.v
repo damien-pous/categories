@@ -11,7 +11,7 @@ Context {X: Type}.
 
 (** generalised tensor-tree expressions *)
 Inductive gtree :=
-| gt_ob(x: X)
+| gt_ob(x: ob X)
 | gt_tree(t: tree X)           (* remove? *)
 | gt_unit
 | gt_tensor(s t: gtree)
@@ -83,16 +83,16 @@ Arguments gtrees: clear implicits.
 Section s.
 Context {𝐂: PreMonoidalCat}.
 
-Lemma eval_arityE (l: arity 𝐂): eval_arity l = eval_tree (tensor_arity l t_unit).
-Proof. rewrite /eval_arity. elim: l=>//=. congruence. Defined.
+Lemma eval_arityE (l: arity (ob 𝐂)): eval_tree l = eval_tree (tensor_arity l t_unit).
+Proof. elim: l=>//=. congruence. Defined.
 
-Fixpoint eval_gtree a: 𝐂 :=
+Fixpoint eval_gtree a: ob 𝐂 :=
   match a with
   | gt_ob x => x
   | gt_tree t => t
   | gt_unit => unit
   | gt_tensor a b => eval_gtree a ⊗ eval_gtree b
-  | gt_trees t => eval_arity (eval_gtrees t)
+  | gt_trees t => eval_gtrees t
   end
 with eval_gtrees t: arity 𝐂 :=
   match t with
@@ -257,6 +257,8 @@ End s.
 
 (** reification of generalised tensor tree expressions *)
 
+Coercion eval_arity {𝐂: PreMonoidalCat} (l: list (ob 𝐂)): ob 𝐂 := arity_tree l. 
+
 Ltac reify_ob A :=
   lazymatch A with
   | @unit ?𝐂 => constr:(@gt_unit 𝐂)
@@ -264,9 +266,12 @@ Ltac reify_ob A :=
       let a := reify_ob A in
       let b := reify_ob B in
       constr:(gt_tensor a b)
+  | eval_tree (arity_tree ?L) => 
+      let l := reify_ar L in
+      constr:(gt_trees l)
   | eval_tree ?t => constr:(gt_tree t) (* tree_gtree ? *)
   | eval_gtree ?t => constr:(t)
-  | eval_arity ?L =>
+  | eval_arity ?L => 
       let l := reify_ar L in
       constr:(gt_trees l)
   | ?A => constr:(gt_ob A)
@@ -308,7 +313,7 @@ Ltac find_gmaclane := by find_gmaclane'.
 
 Section test_find_gmaclane.
 Context {𝐂: PreMonoidalCat}.
-Variables A B C: 𝐂.
+Variables A B C: ob 𝐂.
 Variables a b c: tree 𝐂.
 Variables g: gtree 𝐂.
 Variables h k l Γ Δ: arity 𝐂.
@@ -339,7 +344,7 @@ Proof. rewrite !eval_gmaclaneE. apply: hcast_eqv. exact/MacLane. Qed.
 
 (** MacLane (iso)morphisms *)
 
-HB.mixin Record isMacLane (𝐂: PreMonoidalCat) (A B: 𝐂) (f: A ~> B) := {
+HB.mixin Record isMacLane (𝐂: PreMonoidalCat) (A B: ob 𝐂) (f: A ~> B) := {
     #[canonical=no] src_gtree: gtree 𝐂; 
     #[canonical=no] tgt_gtree: gtree 𝐂; 
     #[canonical=no] srcE: eval_gtree src_gtree = A; 
@@ -362,13 +367,13 @@ Arguments src_gtree {_ _ _}.
 Arguments tgt_gtree {_ _ _}.
 Arguments rmcl {_ _ _}.
 
-Definition src_tree {𝐂: PreMonoidalCat} (A B: 𝐂) (f: maclane A B) := gtree_tree (src_gtree f).
-Definition tgt_tree {𝐂: PreMonoidalCat} (A B: 𝐂) (f: maclane A B) := gtree_tree (tgt_gtree f).
+Definition src_tree {𝐂: PreMonoidalCat} (A B: ob 𝐂) (f: maclane A B) := gtree_tree (src_gtree f).
+Definition tgt_tree {𝐂: PreMonoidalCat} (A B: ob 𝐂) (f: maclane A B) := gtree_tree (tgt_gtree f).
 
-Definition compatible {𝐂: PreMonoidalCat} {A B: 𝐂} (f g: maclane A B) :=
+Definition compatible {𝐂: PreMonoidalCat} {A B: ob 𝐂} (f g: maclane A B) :=
   src_tree f = src_tree g /\ tgt_tree f = tgt_tree g.
   
-Lemma MacLane_cs {𝐂: MonoidalCat} {A B: 𝐂} (f g: maclane A B):
+Lemma MacLane_cs {𝐂: MonoidalCat} {A B: ob 𝐂} (f g: maclane A B):
   compatible f g -> f ≡ g.
 Proof.
   move=>[e e']. rewrite 2!rmorE.
@@ -381,19 +386,11 @@ Proof.
 Qed.
 Arguments MacLane_cs {_ _ _} _ _ & _. 
 
-
-(** tweaking coercions to use [eval_gtree] from [gtree] also to classes before [premonoidalcat.sort]
-(i.e., cat, precat, quiver) *)
-(* Coercion eval_gtree: reified_ob >-> premonoidalcat.sort. *)
-Notation "a" := (eval_gtree a) (only printing, at level 1).
-Elpi Accumulate coercion.db lp:"
-coercion _ V T E R :- coq.unify-eq T {{gtree _}} ok, coq.unify-eq E {{quiver.sort _}} ok, !, R = {{eval_gtree lp:V}}.
-".
-
+Coercion eval_gtree: gtree >-> ob.
 
 Section s.
 Context {𝐂: PreMonoidalCat}.  
-Implicit Types A B C D: 𝐂.  
+Implicit Types A B C D: ob 𝐂.  
 Implicit Types a b c d: gtree 𝐂.  
 
 Program Definition _mcl_id a :=
@@ -697,7 +694,7 @@ Arguments eval_gmaclane: simpl never.
 Section tests_gMacLane.
   
 Context {𝐂: MonoidalCat}.
-Variables A B C D: 𝐂.
+Variables A B C D: ob 𝐂.
 Variables a b c d: tree 𝐂.
 Variables h k l Γ Δ: arity 𝐂.
 
@@ -750,7 +747,7 @@ Goal forall (s t: gtree 𝐂) (i: maclane s t), i ∘ i⁻¹ ≡ idmap.
 Proof. intros. gMacLane_try. unfold compatible. cbn. Abort.
 
 (* Notation test_maclane f := (f ≡ idmap ∘ f) (only parsing). *)
-Notation test_maclane f := (f ∘ f⁻¹ ≡ idmap) (only parsing).
+Abbreviation test_maclane f := (f ∘ f⁻¹ ≡ idmap) (only parsing).
 
 Goal test_maclane (mcl: h⊗unit ≃ h).
 Proof. gMacLane. Qed.

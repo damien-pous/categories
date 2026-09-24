@@ -7,7 +7,7 @@ Local Open Scope cat_scope.
 
 Section warmup.
 
-Context {𝐂: MonoidalCat} (A B C: 𝐂).
+Context {𝐂: MonoidalCat} (A B C: ob 𝐂).
 
 Goal forall f: A ⊗ A ~> B, forall g: B ~> C, forall h: B ~> C ⊗ C, (f;g) · h ≡ f·h ; g·C·C.
 Proof. intros. mcat. Qed.
@@ -21,7 +21,7 @@ End warmup.
 (** ** composing two monoids *)
 Section two.
 
-Context {𝐂: MonoidalCat} (M N: 𝐂).
+Context {𝐂: MonoidalCat} (M N: ob 𝐂).
 
 Check mcl: (M⊗N)⊗(M⊗N) ~> M⊗(N⊗M)⊗N.
 
@@ -98,7 +98,7 @@ Print Assumptions mnA.
 (** ** composing three monoids (only multiplication here) *)
 Section three.
 
-Context {𝐂: MonoidalCat} (M N O: 𝐂).
+Context {𝐂: MonoidalCat} (M N O: ob 𝐂).
 
 Variable m: M⊗M ~> M.
 Hypothesis mA: m·M ; m ≡' M·m ; m.

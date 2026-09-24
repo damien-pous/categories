@@ -22,6 +22,7 @@ Context (C : PreCat).
 Implicit Type (a b c : C).
 
 (* syntax trees for reasoning modulo cancellation (of mono, epi, and iso) *)
+Scheme All for list.
 Inductive iexpr : C -> Type :=
   | can_mono (a b : C) : SplitMono a b -> list (iexpr b) -> iexpr a.
 

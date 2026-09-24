@@ -32,19 +32,15 @@ Tactic Notation "brewrite" "-" constr(H) := rewrite (box_rl H).
 Tactic Notation "brewrite" constr(H) := rewrite (box_lr H).
 
 Module Notations.
-Export SEEOBJ.
 Notation "x ≡' y" := (x ≡ acast y) (at level 70, only parsing): cat_scope.
 Notation "x ≡' y" := (x ≡ cast y) (at level 70, only printing): cat_scope.
-Notation "f  \; g" := (comp f g): cat_scope. 
-Notation "f  ;; g" := (bcomp f g mcl) (only parsing): cat_scope. 
-Notation "f  ;; g" := (bcomp f g _) (only printing): cat_scope. 
 Notation "f" := (cast f) (at level 1, only printing): cat_scope.
-Notation "[ f ]" := (box f): cat_scope. 
+Notation "[ f ]" := (box f): cat_scope.
 End Notations. 
 
 Module NiceNotations.
 Export Notations.
-Notation "f  ; g" := (comp f g) (at level 39, right associativity): cat_scope. 
+Notation "f ; g" := (comp f g) (at level 39, right associativity): cat_scope. 
 Tactic Notation "transitivity" constr(g) := transitivity' g.
 Tactic Notation "rewrite" "-" constr(H) := brewrite -H.
 Tactic Notation "rewrite" constr(H) := brewrite H.
@@ -54,7 +50,7 @@ End NiceNotations.
 Section more_theory.
 
 Context {𝐂: MonoidalCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 
 Lemma tensor_comm A B (f: A ~> unit) (g: unit ~> B): f·g ≡ acast (g·f).
 Proof.

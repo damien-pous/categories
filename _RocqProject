@@ -5,6 +5,7 @@
 -arg -w -arg +HB.no-new-instance
 
 -R theories/ Categories
+theories/prelim.v                          # preliminaries, reserved notations
 theories/cat.v                             # quivers, categories, basic infrastructure
 theories/arewrite.v			   # rewriting/reflexivity modulo associativity
 theories/morphisms.v                       # hierarchy of morphisms

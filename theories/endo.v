@@ -7,17 +7,13 @@ Local Open Scope cat_scope.
 
 Section s.
 Context {𝐂: Cat}.
-Notation Endo := (𝐂 ≈> 𝐂).
+Abbreviation Endo := (𝐂 ≈> 𝐂).
 
 (*TMP-UNIV: functor_comp -> ∘ *)
 Definition COMP (FG: Endo*Endo): Endo := functor_comp FG.2 FG.1.
 
-HB.instance Definition _ :=
-  IsPreFunctor.Build (Endo*Endo)%type Endo COMP
-    (fun FG FG' (fg: FG ~> FG') => ntx_comp' fg.2 fg.1).
-
 Program Definition _COMP_functor :=
-  IsFunctor.Build _ _ COMP _ _ _.
+  @IsFunctor'.Build _ _ COMP (fun FG FG' (fg: FG ~> FG') => ntx_comp' fg.2 fg.1) _ _ _.
 Next Obligation.
   move=>FG FG' fg fg' [ff gg].
   exact: ntx_comp'_eqv.
@@ -49,7 +45,7 @@ HB.instance Definition _ := _endofunctor_premonoidal.
 Program Definition _endofunctor_monoidal :=
   @IsMonoidal.Build (Functor 𝐂 𝐂) _ _.
 Next Obligation. intros F G H I A. cbn. normalise. cat. Qed.
-Next Obligation. intros F G A. cbn. normalise. cat. Qed.
+Next Obligation. intros F G A. cbn. normalise. rewrite /types_id. cat. Qed.
 HB.instance Definition _ := _endofunctor_monoidal.
 
 End s.

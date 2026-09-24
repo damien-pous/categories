@@ -9,7 +9,7 @@ Local Open Scope cat_scope.
 (** morphism expressions *)
 Section s.
   Context {𝐂: PreMonoidalCat}.
-  Implicit Types A B C D: 𝐂.
+  Implicit Types A B C D: ob 𝐂.
   Implicit Types a b c d: gtree 𝐂.
   Implicit Types n m p q: arity 𝐂.
 
@@ -64,7 +64,7 @@ Arguments t_mcl {_ _ _}&_.
 
 Section s.
 Context {𝐂: MonoidalCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 Implicit Types a b c d: gtree 𝐂.
 Implicit Types n m p q: arity 𝐂.
 
@@ -102,7 +102,7 @@ Module M.
 (** * reified terms and decision tactic *)
 Section s.
 Context {𝐂: PreMonoidalCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 Implicit Types a b c d: arity 𝐂.
 
 (** normalised terms *)
@@ -134,8 +134,8 @@ Coercion eval_nmor: nmor >-> Setoid.sort.
 
 (** casting operations on terms *)
 
-Notation rcast f := (cast2' (T:=row) f find_eq_arity find_eq_arity).
-Notation ncast f := (cast2' (T:=nmor) f find_eq_arity find_eq_arity).
+Abbreviation rcast f := (cast2' (T:=row) f find_eq_arity find_eq_arity).
+Abbreviation ncast f := (cast2' (T:=nmor) f find_eq_arity find_eq_arity).
 
 (** ** normalisation helpers *)
 
@@ -364,12 +364,12 @@ Fixpoint norm a b (u: amor a b): nmor a b :=
 End s.
 Arguments rtwo {_} _ {_ _ _ _}.
 
-Notation rcast f := (cast2' (T:=row) f find_eq_arity find_eq_arity). 
-Notation ncast f := (cast2' (T:=nmor) f find_eq_arity find_eq_arity). 
+Abbreviation rcast f := (cast2' (T:=row) f find_eq_arity find_eq_arity). 
+Abbreviation ncast f := (cast2' (T:=nmor) f find_eq_arity find_eq_arity). 
 
 Section s.
 Context {𝐂: MonoidalCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 Implicit Types a b c d: arity 𝐂.
 
 Definition gmcl_eq_ar a b (e: a=b): gmaclane (gt_trees (gt_ar a)) (gt_trees (gt_ar b)).
@@ -507,8 +507,8 @@ Lemma castK' A' A B B' (i: A'≃A) (j: B≃B') f: f ≡ cast' (blocked_inv i) (b
 Proof. exact/cast_switch. Qed.
 
 Tactic Notation "recast" hyp(f) constr(A') constr(B') constr(E) :=
-  let a' := reify_ob (A': 𝐂) in
-  let b' := reify_ob (B': 𝐂) in
+  let a' := reify_ob (A': ob 𝐂) in
+  let b' := reify_ob (B': ob 𝐂) in
   match type of (f: _~> _) with
   | Setoid.sort (?A ~> ?B) =>
       let a := reify_ob A in
@@ -575,9 +575,8 @@ Lemma rcons_rtwo_eqv_r z [a c]
 Proof.
   (* note: dual to [rcons_rtwo_eqv_l] *)
   cbn in F, F'. move=>S +/=.
-  generalize (eval_arity h · u)=>{}u.
+  set u':=(_·u). clearbody u'. move:u'=>{}u.
   case: z=>[|z|z]/= in S E E' *.
-  Import SEEOBJ.
   -- destruct E, E'.
      rewrite (id_cast_eq S).
      rewrite 2!comp_cast_r !bcompK cast_eqv_iff=>H.
@@ -670,15 +669,15 @@ Proof.
         rewrite 2!castI 2!comp_cast tensorA bcomp_cast_l 2!bcompK castI cast_eqv_iff=>E.
         rewrite (id_cast_eq D).
         rewrite (id_app _ d) id_app'.
-        generalize (eval_arity a·u)=>au.        
+        set au := _·u. clearbody au. 
         set ax' := a⊗x' in au *. 
         set ax_ := a⊗x in au *. 
         rewrite !(castI,tensorA). clear -E. 
         rewrite !(tensor_cast_l, tensor_cast_r, tensorA, castI).
         rewrite 2!comp_cast. 
         subst ax_ ax'. 
-        unshelve rewrite bexchange. find_gmaclane. find_gmaclane. 2: gMacLane.
-        unshelve rewrite bexchange. find_gmaclane. find_gmaclane. 2: gMacLane.
+        unshelve rewrite bexchange. find_gmaclane. find_gmaclane. gMacLane.
+        unshelve rewrite bexchange. find_gmaclane. find_gmaclane. gMacLane.
         rewrite !bcompK. apply: cast_eqv.
         rewrite E. cat.
       }
@@ -689,7 +688,7 @@ Proof.
         move: E. clear. 
         rewrite (id_cast_eq D).
         rewrite (id_app _ d) 2!id_app'.
-        generalize (eval_arity b·v)=>bv.        
+        set bv := (_·v). clearbody bv.        
         set by' := b⊗y' in bv *. 
         set by_ := b⊗y in bv *.
         rewrite !(castI,tensorA).
@@ -699,8 +698,8 @@ Proof.
         rewrite 2!comp_cast !(tensor_cast_l, tensor_cast_r, tensorA).
         rewrite !(castI,bcomp_cast,castI,bcomp_cast_r).
         subst by_ by'. 
-        unshelve rewrite bexchange. find_gmaclane. find_gmaclane. 2: gMacLane.
-        unshelve rewrite bexchange. find_gmaclane. find_gmaclane. 2: gMacLane.
+        unshelve rewrite bexchange. find_gmaclane. find_gmaclane. gMacLane.
+        unshelve rewrite bexchange. find_gmaclane. find_gmaclane. gMacLane.
         rewrite !bcompK. apply: cast_eqv.
         rewrite E. cat. 
       }
@@ -807,7 +806,7 @@ Arguments reify_mcl {_}.
 
 Section s.
 Context {𝐂: MonoidalCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 Implicit Types a b c d: gtree 𝐂.
 
 Corollary normalise_rmor (a b: gtree 𝐂) (u v: reified_mor a b):
@@ -816,7 +815,7 @@ Proof.
   intro E. rewrite 2!rtE. apply: normalise_tmor. by rewrite E. 
 Qed.
 
-Notation MacLane := (MacLane_cs _ _ (conj erefl erefl)).
+Abbreviation MacLane := (MacLane_cs _ _ (conj erefl erefl)).
 
 Canonical r_var a b (f: a ~> b) :=
   reify_mor a b f (t_var f) eqv_refl.
@@ -1105,7 +1104,7 @@ Ltac mcat' :=
 
 Section tests.
 Context {𝐂: MonoidalCat}.
-Variables A B C D: 𝐂.
+Variables A B C D: ob 𝐂.
 Variables Γ Δ Θ: arity 𝐂.
 
 Goal A ≡ idmap.

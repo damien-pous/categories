@@ -2,17 +2,15 @@
 
 Require Export functor.
 Require Import arewrite.
-From elpi Require Import elpi coercion.
+From Stdlib Require Import CMorphisms.
 
 Local Open Scope cat_scope.
 
-Definition ob (C: Type) := C.
-
 (** * initial/terminal objects *)
 
-Definition is_initial {𝐂: Quiver} (A: 𝐂) :=
+Definition is_initial {𝐂: Quiver} (A: ob 𝐂) :=
   forall X, Σ!_: A~>X, True.
-Definition is_terminal {𝐂: Quiver} (A: 𝐂) :=
+Definition is_terminal {𝐂: Quiver} (A: ob 𝐂) :=
   forall X, Σ!_: X~>A, True.
 
 #[primitive]
@@ -33,8 +31,6 @@ Check fun (C: Quiver) (A: Initial C) => A: ob C.
 Check fun (C: PreCat) (A: Initial C) => A: ob C.
 Check fun (C: Cat) (A: Initial C) => A: ob C.
 
-Definition obop (𝐂: Quiver) (A: ob 𝐂): ob 𝐂^op := A. 
-
 HB.instance Definition _ (𝐂: Quiver) (A: Initial 𝐂) :=
   IsTerminal.Build 𝐂^op (obop A) (@initial_prop _ A).
 HB.instance Definition _ (𝐂: Quiver) (A: Terminal 𝐂) :=
@@ -44,41 +40,13 @@ Check fun (C: Quiver) (A: Initial C) => obop A: Terminal (C^op).
 Check fun (C: PreCat) (A: Initial C) => obop A: Terminal (C^op).
 Check fun (C: Cat) (A: Initial C) => obop A: Terminal (C^op).
 
-
-(* Elpi Accumulate coercion.db lp:{{  *)
-(*       coercion _ V T E R :-  *)
-(*       coq.unify-eq T {{quiver.sort _}} ok,  *)
-(*       coq.unify-eq E {{@initial_ob.type lp:C}} ok,  *)
-(*       !, *)
-(*       coq.unify-eq V {{@initial_ob.sort lp:C lp:W}} ok, *)
-(*       R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}. *)
-(*       coercion _ V T E R :-  *)
-(*       coq.unify-eq T {{quiver.sort _}} ok,  *)
-(*       coq.unify-eq E {{@terminal_ob.type lp:C}} ok,  *)
-(*       !, *)
-(*       coq.unify-eq V {{@terminal_ob.sort lp:C lp:W}} ok, *)
-(*       R = {{ @reverse_coercion lp:E lp:T lp:W lp:V }}. *)
-(*       }}. *)
-    
-(* (* TODO: move to tests *) *)
-(*     Check fun (C: Quiver) (A: Initial C) => A: C. (* reversible coercion *) *)
-(* Check fun (C: PreCat) (A: Initial C) => A: C. *)
-(* Fail Check fun (C: PreCat) (A: Initial C) => initial_ob.sort A: C. *)
-(* Fail Check fun (C: Cat) (A: Initial C) => A: C. *)
-(* Check fun (C: Quiver) (A: Initial C) => obop A: Terminal (C^op). *)
-(* Check fun (C: PreCat) (A: Initial C) => obop A: Terminal (C^op). *)
-(* Check fun (C: Cat) (A: Initial C) => obop A: Terminal (C^op). *)
-
 Definition initial (𝐂: Quiver) (A: Initial 𝐂) X: A ~> X := unique_morph (initial_prop X).
 Definition terminal (𝐂: Quiver) (A: Terminal 𝐂) X: X ~> A := unique_morph (terminal_prop X).
 
 Lemma initialU (𝐂: Quiver) (A: Initial 𝐂) X (f g: A ~> X): f ≡ g.
 Proof. apply: Unicity. exact: (initial_prop X). all: done. Qed.
 Lemma terminalU (𝐂: Quiver) (A: Terminal 𝐂) X (f g: X ~> A): f ≡ g.
-Proof.
-  move: (@initialU (𝐂^op) (obop A) (obop X) (morphop f) (morphop g)).
-  apply: Unicity. exact: (terminal_prop X). all: done. 
-Qed.
+Proof. exact: (initialU (morphop f) (morphop g)). Qed.
 
 Definition iso_Initial (𝐂: Cat) (A B: Initial 𝐂): initial_ob.sort A ≃_𝐂 initial_ob.sort B :=
   mk_iso (initial A B) (initial B A) (initialU _ _) (initialU _ _).
@@ -91,15 +59,16 @@ Proof. exact: initialU. Qed.
 Lemma TerminalU (𝐂: PreCat) (A B: Terminal 𝐂) (i j: terminal_ob.sort A ≃_𝐂 terminal_ob.sort B): i ≡ j.
 Proof. exact: terminalU. Qed.
 
+
 (** * squares *)
 
 (** the category of morphisms and squares *)
 
-Definition morphism (𝐂: Quiver) := { A: 𝐂 & {B: 𝐂 & A ~> B }}.
-Definition src {𝐂} (f: morphism 𝐂): 𝐂 := projT1 f. 
-Definition tgt {𝐂} (f: morphism 𝐂): 𝐂 := projT1 (projT2 f). 
+Definition morphism (𝐂: Quiver) := { A: ob 𝐂 & {B: ob 𝐂 & A ~> B }}.
+Definition src {𝐂} (f: morphism 𝐂): ob 𝐂 := projT1 f. 
+Definition tgt {𝐂} (f: morphism 𝐂): ob 𝐂 := projT1 (projT2 f). 
 Coercion mor {𝐂} (f: morphism 𝐂): src f ~> tgt f := projT2 (projT2 f).
-Definition Mor {𝐂: Quiver} {A B: 𝐂} (f: A ~> B): morphism 𝐂 := existT _ A (existT _ B f).
+Definition Mor {𝐂: Quiver} {A B: ob 𝐂} (f: A ~> B): morphism 𝐂 := existT _ A (existT _ B f).
 
 Definition square {𝐂: PreCat} (f g: morphism 𝐂) :=
   { i: src f ~> src g & { j: tgt f ~> tgt g | i \; g ≡ f \; j }}.
@@ -137,12 +106,35 @@ HB.instance Definition _ 𝐂 := _square_cat 𝐂.
 (** * (co)algebras *)
 
 #[primitive]
-HB.mixin Record IsAlgebra {𝐂: Quiver} (F: 𝐂 -> 𝐂) (A: 𝐂) := {
+HB.mixin Record IsAlgebra {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂) := {
     #[canonical=no] alg: F A ~> A;
   }.
 #[short(type="Algebra")]
 HB.structure Definition algebra 𝐂 F := { A of IsAlgebra 𝐂 F A }.
 Arguments alg {_ _ _}, {_ _}. 
+
+#[primitive]
+HB.mixin Record IsCoAlgebra {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂) := {
+    #[canonical=no] coalg: A ~> F A;
+  }.
+#[short(type="CoAlgebra")]
+HB.structure Definition coalgebra 𝐂 F := { A of IsCoAlgebra 𝐂 F A }.
+Arguments coalg {_ _ _}, {_ _}. 
+
+HB.instance Definition _ {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: Algebra F) :=
+  IsCoAlgebra.Build (𝐂^op) (funcop F) (obop A) (alg A).
+HB.instance Definition _ {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: CoAlgebra F) :=
+  IsAlgebra.Build (𝐂^op) (funcop F) (obop A) (coalg A).
+
+Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => C^op: Quiver.  
+Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => funcop F: C^op -> C^op.  
+Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: C^op.
+Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: Algebra _.  
+Check fun (C: Quiver) (F: ob C -> ob C) (A: Algebra F) => obop A: CoAlgebra _.  
+Check fun (C: PreCat) (F: PreFunctor C C) (A: CoAlgebra F) => obop A: Algebra _.  
+Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.  
+Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.  
+
 
 (* TOTHINK: do we really want to infer algebra homomorphisms, or just define them? *)
 #[primitive]
@@ -154,83 +146,6 @@ HB.structure Definition algebrahom 𝐂 F A B := { f of IsAlgebraHom 𝐂 F A B 
 Arguments alg_hom {_ _ _ _ _}, {_ _ _ _}. 
 Arguments AlgebraHom {_ _}, {_}. 
 
-HB.instance Definition _ 𝐂 F A B := Setoid.copy (AlgebraHom F A B) (kernel (@algebrahom.sort 𝐂 F A B)).
-HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (Algebra F) AlgebraHom.
-
-Lemma _algebrahom_idmap (𝐂: Cat) (F: Functor 𝐂 𝐂) (A: Algebra F): IsAlgebraHom _ F A A idmap.
-Proof. split. cat. Qed.
-HB.instance Definition _ 𝐂 F A := @_algebrahom_idmap 𝐂 F A.
-
-Lemma _algebrahom_comp (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: Algebra F) (f: A ~> B) (g: B ~> C): IsAlgebraHom _ F A C (f \; g).
-Proof. split. rewrite Fcomp. do 2 arewrite alg_hom. cat. Qed.
-HB.instance Definition _ 𝐂 F A B C f g := @_algebrahom_comp 𝐂 F A B C f g.
-
-(* TOTHINK: set arguments so that they always unfold? *)
-Definition alg_id {𝐂: Cat} {F: Functor 𝐂 𝐂} (A: Algebra F): A ~> A := idmap: AlgebraHom _ _. 
-Definition alg_comp {𝐂: Cat} {F: Functor 𝐂 𝐂} (A B C: Algebra F) (f: A ~> B) (g: B ~> C): A ~> C := f \; g: AlgebraHom _ _. 
-
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) := IsPreCat.Build (Algebra F) alg_id alg_comp.
-
-(* below: rather convoluted proof that Algebras form a category, by faithful embedding into the category of morphisms and squares... *)
-Definition _alg_morphism (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) (A: Algebra F): morphism 𝐂 := Mor (alg A).
-Arguments _alg_morphism {_}. 
-Program Definition _alg_morphism_prefunctor (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) :=
-  @IsFaithfulPreFunctor.Build (Algebra F) (morphism 𝐂)
-    (_alg_morphism F)
-    (fun A B f => @Square _ (Mor (alg A)) (Mor (alg B)) _ _ (alg_hom f)) _.
-Next Obligation. split. exact/snd. split=>//. exact/Fhom_eqv. Qed.
-HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := _alg_morphism_prefunctor F. 
-Program Definition _alg_morphism_functor (𝐂: Cat) (F: Functor 𝐂 𝐂) :=
-  IsFunctor.Build (Algebra F) (morphism 𝐂) (_alg_morphism F) _ _.
-Next Obligation. intros. split=>//=. cat. Qed.
-Next Obligation. intros. split=>//=. cat. Qed.
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) := _alg_morphism_functor F. 
-
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) :=
-  FaithfulSubCat.Build (morphism 𝐂) (Algebra F) (_alg_morphism F).
-
-Section s.
-  Context {𝐂: Quiver} (F: PreFunctor 𝐂 𝐂) (A: Algebra F).
-  Check A: 𝐂.
-End s.
-Section s.  
-  Context {𝐂: Cat} (F: Functor 𝐂 𝐂) (A: Algebra F).
-  Fail Check A: 𝐂.
-  Check algebra.sort A: 𝐂.
-  Check alg A: F A ~> A.
-  Check alg: F A ~> A.
-End s.
-
-
-Definition funcop {A B} (f: A -> B): A^op -> B^op := f. 
-HB.instance Definition _ 𝐂 𝐃 (F: PreFunctor 𝐂 𝐃) :=
-  @IsPreFunctor'.Build 𝐂^op 𝐃^op (funcop F) (fun _ _ f => Fhom F f)
-                                (fun A B f g fg => @Fhom_eqv _ _ F B A f g fg).
-HB.instance Definition _ 𝐂 𝐃 (F: Functor 𝐂 𝐃) :=
-  @IsFunctor.Build 𝐂^op 𝐃^op (funcop F) (fun _ => Fidmap _) (fun _ _ _ _ _ => Fcomp _ _ _ _ _). 
-
-#[primitive]
-HB.mixin Record IsCoAlgebra {𝐂: Quiver} (F: 𝐂 -> 𝐂) (A: 𝐂) := {
-    #[canonical=no] coalg: A ~> F A;
-  }.
-#[short(type="CoAlgebra")]
-HB.structure Definition coalgebra 𝐂 F := { A of IsCoAlgebra 𝐂 F A }.
-Arguments coalg {_ _ _}, {_ _}. 
-
-
-HB.instance Definition _ {𝐂: Quiver} (F: PreFunctor 𝐂 𝐂) (A: Algebra F) :=
-  IsCoAlgebra.Build (𝐂^op) (funcop F) (obop A) (alg A).
-HB.instance Definition _ {𝐂: Quiver} (F: PreFunctor 𝐂 𝐂) (A: CoAlgebra F) :=
-  IsAlgebra.Build (𝐂^op) (funcop F) (obop A) (coalg A).
-
-Check fun (C: Quiver) (F: C -> C) (A: CoAlgebra F) => C^op: Quiver.  
-Check fun (C: Quiver) (F: C -> C) (A: CoAlgebra F) => funcop F: C^op -> C^op.  
-Check fun (C: Quiver) (F: C -> C) (A: CoAlgebra F) => obop A: C^op.
-Check fun (C: Quiver) (F: C -> C) (A: CoAlgebra F) => obop A: Algebra _.  
-Check fun (C: Quiver) (F: C -> C) (A: CoAlgebra F) => obop A: @Algebra (C^op) (funcop F).  
-Fail Check fun (C: Quiver) (F: C -> C) (A: Algebra F) => obop A: CoAlgebra _.
-
-
 #[primitive]
 HB.mixin Record IsCoAlgebraHom {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: CoAlgebra F) (f: A ~> B) := {
     #[canonical=no] coalg_hom: coalg A \; Fhom F f ≡ f \; coalg B;
@@ -240,20 +155,39 @@ HB.structure Definition coalgebrahom 𝐂 F A B := { f of IsCoAlgebraHom 𝐂 F 
 Arguments coalg_hom {_ _ _ _ _}, {_ _ _ _}. 
 Arguments CoAlgebraHom {_ _}, {_}. 
 
-HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F) (f: A ~> B) :=
-  IsCoAlgebraHom.Build (𝐂^op) (funcop F) (obop B) (obop A) (morphop f) (alg_hom f).
-
+HB.instance Definition _ 𝐂 F A B := Setoid.copy (AlgebraHom F A B) (kernel (@algebrahom.sort 𝐂 F A B)).
+HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (Algebra F) AlgebraHom.
 
 HB.instance Definition _ 𝐂 F A B := Setoid.copy (CoAlgebraHom F A B) (kernel (@coalgebrahom.sort 𝐂 F A B)).
 HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (CoAlgebra F) CoAlgebraHom.
+(* with the above instances, obop A is seen as an object in the dual of the Coalgebra category *)
+Fail Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.  
+Fail Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.  
+Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: ob (CoAlgebra F)^op.  
+Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: ob (Algebra F)^op.  
+Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop (A: ob C): Algebra _.  
+Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop (A: ob C): CoAlgebra _.  
 
-Lemma _algebrahom_idmap (𝐂: Cat) (F: Functor 𝐂 𝐂) (A: Algebra F): IsAlgebraHom _ F A A idmap.
-Proof. split. cat. Qed.
-HB.instance Definition _ 𝐂 F A := @_algebrahom_idmap 𝐂 F A.
+HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F) (f: AlgebraHom A B) :=
+  IsCoAlgebraHom.Build (𝐂^op) (funcop F) _ _ (morphop f) (alg_hom f).
+HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: CoAlgebra F) (f: CoAlgebraHom A B) :=
+  IsAlgebraHom.Build (𝐂^op) (funcop F) _ _ (morphop f) (coalg_hom f).
 
-Lemma _algebrahom_comp (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: Algebra F) (f: A ~> B) (g: B ~> C): IsAlgebraHom _ F A C (f \; g).
-Proof. split. rewrite Fcomp. do 2 arewrite alg_hom. cat. Qed.
-HB.instance Definition _ 𝐂 F A B C f g := @_algebrahom_comp 𝐂 F A B C f g.
+Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: _ ~> _.
+Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: CoAlgebraHom _ _.
+Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: CoAlgebraHom _ _.
+Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: _ ~>_(CoAlgebra _) _.
+Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => (morphop f: CoAlgebraHom _ _): _ ~> _.
+
+Lemma alg_hom_idmap (𝐂: Cat) (F: Functor 𝐂 𝐂) (A: Algebra F): Fhom F A \; alg A ≡ alg A \; A. 
+Proof. cat. Qed.
+HB.instance Definition _ 𝐂 F A := IsAlgebraHom.Build _ _ A A idmap (@alg_hom_idmap 𝐂 F A).
+
+Lemma alg_hom_comp (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: Algebra F) (f: A ~> B) (g: B ~> C):
+  Fhom F (f \; g) \; alg C ≡ alg A \; (f \; g). 
+Proof. rewrite Fcomp. do 2 arewrite alg_hom. cat. Qed.
+HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: Algebra F) (f: A ~> B) (g: B ~> C) :=
+  IsAlgebraHom.Build _ _ A C (f \; g) (@alg_hom_comp 𝐂 F A B C f g).
 
 (* TOTHINK: set arguments so that they always unfold? *)
 Definition alg_id {𝐂: Cat} {F: Functor 𝐂 𝐂} (A: Algebra F): A ~> A := idmap: AlgebraHom _ _. 
@@ -261,25 +195,48 @@ Definition alg_comp {𝐂: Cat} {F: Functor 𝐂 𝐂} (A B C: Algebra F) (f: A 
 
 HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) := IsPreCat.Build (Algebra F) alg_id alg_comp.
 
-(* below: rather convoluted proof that Algebras form a category, by faithful embedding into the category of morphisms and squares... *)
-Definition _alg_morphism (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) (A: Algebra F): morphism 𝐂 := Mor (alg A).
-Arguments _alg_morphism {_}. 
-Program Definition _alg_morphism_prefunctor (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) :=
-  @IsFaithfulPreFunctor.Build (Algebra F) (morphism 𝐂)
-    (_alg_morphism F)
-    (fun A B f => @Square _ (Mor (alg A)) (Mor (alg B)) _ _ (alg_hom f)) _.
-Next Obligation. split. exact/snd. split=>//. exact/Fhom_eqv. Qed.
-HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := _alg_morphism_prefunctor F. 
-Program Definition _alg_morphism_functor (𝐂: Cat) (F: Functor 𝐂 𝐂) :=
-  IsFunctor.Build (Algebra F) (morphism 𝐂) (_alg_morphism F) _ _.
-Next Obligation. intros. split=>//=. cat. Qed.
-Next Obligation. intros. split=>//=. cat. Qed.
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) := _alg_morphism_functor F. 
+Lemma coalg_hom_idmap (𝐂: Cat) (F: Functor 𝐂 𝐂) (A: CoAlgebra F): coalg A \; Fhom F A ≡ A \; coalg A. 
+Proof. exact: (alg_hom_idmap (obop (A: ob 𝐂))). Qed.
+HB.instance Definition _ 𝐂 F A := IsCoAlgebraHom.Build _ _ A A idmap (@coalg_hom_idmap 𝐂 F A).
 
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) :=
-  FaithfulSubCat.Build (morphism 𝐂) (Algebra F) (_alg_morphism F).
+Lemma coalg_hom_comp (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: CoAlgebra F) (f: A ~> B) (g: B ~> C):
+  coalg A \; Fhom F (f \; g) ≡ (f \; g) \; coalg C. 
+Proof. exact: (alg_hom_comp (morphop (coalgebrahom.sort g): AlgebraHom _ _) (morphop (coalgebrahom.sort f): AlgebraHom _ _)). Qed.
+HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: CoAlgebra F) (f: A ~> B) (g: B ~> C) :=
+  IsCoAlgebraHom.Build _ _ A C (f \; g) (@coalg_hom_comp 𝐂 F A B C f g).
+
+(* TOTHINK: set arguments so that they always unfold? *)
+Definition coalg_id {𝐂: Cat} {F: Functor 𝐂 𝐂} (A: CoAlgebra F): A ~> A := idmap: CoAlgebraHom _ _. 
+Definition coalg_comp {𝐂: Cat} {F: Functor 𝐂 𝐂} (A B C: CoAlgebra F) (f: A ~> B) (g: B ~> C): A ~> C := f \; g: CoAlgebraHom _ _. 
+
+HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) := IsPreCat.Build (CoAlgebra F) coalg_id coalg_comp.
+
+Lemma _coalg_cat (𝐂: Cat) (F: Functor 𝐂 𝐂): IsCat (CoAlgebra F).
+Proof.
+  split; intros.
+  - exact/comp1o. 
+  - exact/compo1. 
+  - exact/compoA.
+  - exact/comp_eqv.
+Qed.
+HB.instance Definition _ 𝐂 F := @_coalg_cat 𝐂 F.
 
 
+Section s.
+  Context {𝐂: Cat} (F: Functor 𝐂 𝐂).
+  Check fun A: Algebra F => A: ob _. 
+  Check fun A: Algebra F => A: ob 𝐂. 
+  Check fun A: Algebra F => alg A. 
+  Check fun A: Algebra F => alg: F A ~> A. 
+
+  Check fun A: Initial (Algebra F) => A: ob _. 
+  Check fun A: Initial (Algebra F) => A: ob (Algebra _). 
+  Fail Check fun A: Initial (Algebra F) => A: Algebra _. 
+  Check fun A: Initial (Algebra F) => (A: ob (Algebra _)): ob 𝐂. 
+  Check fun A: Initial (Algebra F) => alg (A: ob (Algebra _)). 
+  Check fun A: Initial (Algebra F) => alg: F (A: ob (Algebra _)) ~> _.
+End s.
+    
 
 
 
@@ -288,7 +245,7 @@ HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) :=
 Section s.
   Context {𝐃: Quiver} {𝐂: PreCat} (F: PreFunctor 𝐃 𝐂).
   Definition cone := {C & {p: forall d, F d ~> C | forall d d' (f: d ~> d'), Fhom F f \; p d' ≡ p d }}.
-  Definition cone_ob (C: cone): 𝐂 := projT1 C. 
+  Definition cone_ob (C: cone): ob 𝐂 := projT1 C. 
   Definition cone_mor (C: cone): forall d, F d ~> cone_ob C := proj1_sig (projT2 C). 
   Lemma coneP (C: cone) d d' (f: d ~> d'): Fhom F f \; cone_mor C d' ≡ cone_mor C d.
   Proof. exact: (proj2_sig (projT2 C)). Qed.
@@ -317,12 +274,14 @@ Section s.
   HB.instance Definition _ := IsPreCat.Build (cone F) (@cone_id) (@cone_comp).
 
   (* TODO with a subcategory construction *)
-  Program Definition _cone_cat :=
-    IsCat.Build (cone F) _ _ _ _.
-  Next Obligation. move=>*. exact: comp1o. Qed.
-  Next Obligation. move=>*. exact: compo1. Qed.
-  Next Obligation. move=>*. exact: compoA. Qed.
-  Next Obligation. move=>C D E/=f f' ff g g' gg. exact: comp_eqv. Qed.  
+  Lemma _cone_cat: IsCat (cone F).
+  Proof.
+    split; intros. 
+    - exact: comp1o.
+    - exact: compo1.
+    - exact: compoA.
+    - move=>/=f f' ff g g' gg. exact/comp_eqv.
+  Qed.  
   HB.instance Definition _ := _cone_cat. 
 
 End s.
@@ -345,17 +304,16 @@ Module Shape.
 Definition DiscreteTwo := bool.
 HB.instance Definition _ := quiver.copy DiscreteTwo (EmptyQuiver _). 
 
-From Stdlib Require Export CMorphisms.
 
 Section s.
   Context {𝐂: Quiver}.
-  Variables A B: 𝐂.
+  Variables A B: ob 𝐂.
   Definition ob_pair (d: DiscreteTwo) := if d then B else A.
   HB.instance Definition _ := IsPreFunctor.Build _ _ ob_pair (fun _ _ => empty_fun).
 End s.
 Section s.
   Context {𝐂: PreCat}.
-  Variables A B: 𝐂.
+  Variables A B: ob 𝐂.
   Definition ob_pair_cone C (f: A ~> C) (g: B ~> C): cone (ob_pair A B).
     exists C. unshelve eexists. case=>/=. exact: g. exact: f.
     by case.
@@ -374,7 +332,7 @@ Section s.
     - move=> H [C' [p U]].       (* ok and boring *)
   Abort.
                     
-End s.. 
+End s. 
 
 Definition ParallelTwo := bool.
 Definition paralleltwo_hom (a b: ParallelTwo): StrictSetoid.type :=
@@ -387,7 +345,7 @@ HB.instance Definition _ := IsQuiver.Build ParallelTwo paralleltwo_hom.
 
 Section s.
   Context {𝐂: Quiver}.
-  Variables A B: 𝐂.
+  Variables A B: ob 𝐂.
   Definition parallel_pair (_ _: A ~> B) (d: ParallelTwo) := if d then B else A.
   Variables f g: A ~> B.
   Definition Fparallel_pair (d d': ParallelTwo): (d ~> d') -> parallel_pair f g d ~> parallel_pair f g d' :=
@@ -410,7 +368,7 @@ HB.instance Definition _ := IsQuiver.Build Span span_hom.
 
 Section s.
   Context {𝐂: Quiver}.
-  Variables A B C: 𝐂.
+  Variables A B C: ob 𝐂.
   Definition span (_: B ~> A) (_: B ~> C) (d: Span) :=
     match d with
     | None => B
@@ -431,3 +389,5 @@ End s.
 Definition CoSpan := Span^op.
 (* HB.instance Definition _ := quiver.on CoSpan.  *)
 Check CoSpan: Quiver.
+
+End Shape.

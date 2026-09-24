@@ -8,29 +8,29 @@ Local Open Scope cat_scope.
 
 (* we define them in several steps in order to setup notations along the way *)
 #[primitive] HB.mixin Record HasMonoidalOps 𝐂 of cat 𝐂 := {
-    #[canonical=no] unit: 𝐂;
+    #[canonical=no] unit: ob 𝐂;
     #[canonical=no] tensor: Functor (𝐂*𝐂)%type 𝐂;
   }.
 #[short(type="MonoidalOpsCat")]
 HB.structure Definition monoidalopscat := { 𝐂 of cat 𝐂 & HasMonoidalOps 𝐂 }.
 
-Definition tensor11 {𝐂: MonoidalOpsCat} (A B: 𝐂): 𝐂 := app11 tensor A B.
+Definition tensor11 {𝐂: MonoidalOpsCat} (A B: ob 𝐂): ob 𝐂 := app11 tensor A B.
 Infix "⊗" := tensor11: cat_scope.
-Definition tensor22 {𝐂: MonoidalOpsCat} {A B C D: 𝐂} (f: A~>B) (g: C~>D): A⊗C ~> B⊗D := app22 tensor f g.
+Definition tensor22 {𝐂: MonoidalOpsCat} {A B C D: ob 𝐂} (f: A~>B) (g: C~>D): A⊗C ~> B⊗D := app22 tensor f g.
 Infix "·" := tensor22: cat_scope.
 
 #[primitive] HB.mixin Record IsPreMonoidal 𝐂 of monoidalopscat 𝐂 := {
     (* w.r.t nlab: https://ncatlab.org/nlab/show/monoidal+category
        assoc = α, unitl = λ, unitr = ρ *)
-    #[canonical=no] assoc_: forall A B C: 𝐂, (A⊗B)⊗C ≃ A⊗(B⊗C);
-    #[canonical=no] unitl_: forall A: 𝐂, unit⊗A ≃ A;
-    #[canonical=no] unitr_: forall A: 𝐂, A⊗unit ≃ A;
+    #[canonical=no] assoc_: forall A B C: ob 𝐂, (A⊗B)⊗C ≃ A⊗(B⊗C);
+    #[canonical=no] unitl_: forall A: ob 𝐂, unit⊗A ≃ A;
+    #[canonical=no] unitr_: forall A: ob 𝐂, A⊗unit ≃ A;
 
-    #[canonical=no] ntx_assoc_: forall (A B C A' B' C': 𝐂) f g h,
+    #[canonical=no] ntx_assoc_: forall (A B C A' B' C': ob 𝐂) f g h,
       assoc_ A' B' C' ∘ (f · g) · h ≡ f · (g · h) ∘ assoc_ A B C;
-    #[canonical=no] ntx_unitl_: forall (A A': 𝐂) f,
+    #[canonical=no] ntx_unitl_: forall (A A': ob 𝐂) f,
       unitl_ A' ∘ unit · f ≡ f ∘ unitl_ A ;
-    #[canonical=no] ntx_unitr_: forall (A A': 𝐂) f,
+    #[canonical=no] ntx_unitr_: forall (A A': ob 𝐂) f,
       unitr_ A' ∘ f · unit ≡ f ∘ unitr_ A ;
   }.
 #[short(type="PreMonoidalCat")]
@@ -50,7 +50,7 @@ Canonical HL.r_tens.
 Section s.
   
 Context {𝐂: PreMonoidalCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 
 Lemma tensor_id {A B}: idmap A · idmap B ≡ idmap (A⊗B). 
 Proof. exact: (@Fidmap _ _ _ (A,B)). Qed.
@@ -213,20 +213,21 @@ Qed.
 (** * class for automatic inferrence of MacLane isomorphisms  *)
 
 Class Bridge A B := mcl: A ≃ B.
-Notation mcl_ b := (@mcl _ _ b) (only parsing).
+Abbreviation mcl_ b := (@mcl _ _ b) (only parsing).
 
 End s.
 Arguments mcl {_ _ _}&{_}, {_ _ _} _.
 
 (** association high-level notations *)
-Notation "g ∘∘ f" := (bcomp f g mcl) (at level 40, left associativity, only parsing): cat_scope. 
-Notation "g ∘∘ f" := (bcomp f g _) (only printing): cat_scope. 
-Notation acast f := (@cast _ _ _ _ _ f mcl mcl) (only parsing).
+Notation "f ;; g" := (bcomp f g mcl) (only parsing): cat_scope. 
+Notation "f ;; g" := (bcomp f g _) (only printing): cat_scope. 
+Notation "g ∘∘ f" := (bcomp f g mcl) (only parsing): cat_scope. 
+Abbreviation acast f := (@cast _ _ _ _ _ f mcl mcl) (only parsing).
 
 Section s.
   
 Context {𝐂: PreMonoidalCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 
 Definition blocked_tens {A B C D} (f: A≃B) (g: C≃D): _ ≃ _ := f · g.
 Definition blocked_assoc {A B C}: _ ≃ _ := assoc A B C.
@@ -316,11 +317,11 @@ End s.
 (** ** monoidal categories (i.e., with coherence laws) *)
 
 #[primitive] HB.mixin Record IsMonoidal 𝐂 of premonoidalcat 𝐂 := {
-    #[canonical=no] pentagon: forall A B C D: 𝐂,
+    #[canonical=no] pentagon: forall A B C D: ob 𝐂,
       A · assoc B C D ∘ assoc A (B⊗C) D ∘ assoc A B C · D
       ≡ assoc A B (C⊗D) ∘ assoc (A⊗B) C D;
 
-    #[canonical=no] triangle: forall A B: 𝐂,
+    #[canonical=no] triangle: forall A B: ob 𝐂,
       A · unitl B ∘ assoc A unit B
       ≡ unitr A · B;    
   }.

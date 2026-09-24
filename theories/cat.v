@@ -1,70 +1,16 @@
 (** * categories with hom-setoids *)
-
-From PartialOrders Require Export setoid.
-From elpi Require Import elpi coercion.
-
-#[export] Set Implicit Arguments.
-#[export] Unset Strict Implicit.
-#[export] Unset Printing Implicit Defensive.
-#[export] Unset Asymmetric Patterns.
-#[export] Obligation Tactic := idtac. 
-
-(** ** reserved notations *)
-
-(** morphisms, monos, epis, isos *)
-
-Reserved Notation "a ~> b" (at level 99, b at level 200, format "a  ~>  b").
-Reserved Notation "a ~>_ 𝐂 b" (at level 99, 𝐂 at level 0).
-
-Reserved Notation "a ↪ b" (at level 99, b at level 200, format "a  ↪  b").
-Reserved Notation "a ↪_ 𝐂 b" (at level 99, 𝐂 at level 0).
-
-Reserved Notation "a ↠ b" (at level 99, b at level 200, format "a  ↠  b").
-Reserved Notation "a ↠_ 𝐂 b" (at level 99, 𝐂 at level 0).
-
-Reserved Notation "A ≃ B" (at level 70, format "A  ≃  B").
-Reserved Notation "A ≃_ 𝐂 B" (at level 70, 𝐂 at level 0, format "A  ≃_ 𝐂  B").
-
-(* unused so far *)
-Reserved Notation "a ⥲ b" (at level 99, b at level 200, format "a  ⥲  b").
-Reserved Notation "a ⥲_ 𝐂 b" (at level 99, 𝐂 at level 0).
-
-(** natural isomorphisms *)
-Reserved Notation "F ≈ G" (at level 70).
-
-(** composition *)
-Reserved Notation "f \; g" (at level 60, right associativity). 
-Reserved Notation "f \;_ 𝐂 g" (at level 60, 𝐂 at level 0).
-Reserved Notation "f  ;; g" (at level 60).
-Reserved Notation "f ∘ g" (at level 40, left associativity). 
-Reserved Notation "f ∘_ 𝐂 g" (at level 40, 𝐂 at level 0).
-
-(** inverse *)
-Reserved Notation "f '⁻¹'" (at level 1, format "f '⁻¹'").
-Reserved Notation "f '¹'" (at level 1, format "f '¹'").
-
-(** tensor (in monoidal categories) *)
-Reserved Notation "X ⊗ Y" (at level 31, right associativity). (* objects *)
-Reserved Notation "f · g" (at level 30, right associativity). (* morphisms *)
-Reserved Notation "n ⊚ m" (at level 30, right associativity). (* natural transformations *)
-
-(** opposite category *)
-Reserved Notation "𝐂 ^op" (at level 1, format "𝐂 ^op").
+Require Export prelim.
 
 Declare Scope cat_scope.
 Delimit Scope cat_scope with cat.
 Local Open Scope cat_scope.
 
-
-(** for temporarily admitting things *)
-Axiom sorry: forall {A: Type}, A.
-Ltac sorry := exact: sorry. 
        
 (** * Categories *)
 
 (** quivers *)
 #[primitive] HB.mixin Record IsQuiver 𝐂 := {
-    #[canonical=no] hom : 𝐂 -> 𝐂 -> Setoid.type
+    #[canonical=no] hom : ob 𝐂 -> ob 𝐂 -> Setoid.type
   }.
 #[short(type="Quiver")]
 HB.structure Definition quiver := { 𝐂 of IsQuiver 𝐂 }.
@@ -78,15 +24,14 @@ Abbreviation bare f := (f: hom _ _).
 
 (** precategories: quivers + id and comp *)
 #[primitive] HB.mixin Record IsPreCat 𝐂 of quiver 𝐂 := {
-  #[canonical=no] idmap: forall {A: 𝐂}, A ~> A;
-  #[canonical=no] comp: forall {A B C: 𝐂}, (A ~> B) -> (B ~> C) -> (A ~> C);
+  #[canonical=no] idmap: forall {A: ob 𝐂}, A ~> A;
+  #[canonical=no] comp: forall {A B C: ob 𝐂}, (A ~> B) -> (B ~> C) -> (A ~> C);
 }.
 #[short(type="PreCat")]
 HB.structure Definition precat := { 𝐂 of IsPreCat 𝐂 & }.
 Arguments idmap {_ _}, {_}.
 Arguments comp {_ _ _ _}.
 Bind Scope cat_scope with PreCat.
-(* Notation "\idmap A" := (@idmap _ A) (only parsing, at level 0) : cat_scope. *)
 Notation "f \; g" := (comp f g): cat_scope.
 Notation "f \;_ 𝐂 g" := (@comp _ 𝐂 _ _ _ f g) (only parsing): cat_scope.
 Notation "f ∘ g" := (comp g f) (only parsing): cat_scope.
@@ -94,9 +39,9 @@ Notation "f ∘_ 𝐂 g" := (@comp _ 𝐂 _ _ _ g f) (only parsing): cat_scope.
 
 (** categories: precategories + laws *)
 #[primitive] HB.mixin Record IsCat 𝐂 of precat 𝐂 := {
-  #[canonical=no] comp1o: forall {A B: 𝐂} (f: A ~> B), f ∘ idmap ≡ f;
-  #[canonical=no] compo1: forall {A B: 𝐂} (f: A ~> B), idmap ∘ f ≡ f;
-  #[canonical=no] compoA: forall {A B C D: 𝐂} (f: A ~> B) (g: B ~> C) (h: C ~> D),
+  #[canonical=no] comp1o: forall {A B: ob 𝐂} (f: A ~> B), f ∘ idmap ≡ f;
+  #[canonical=no] compo1: forall {A B: ob 𝐂} (f: A ~> B), idmap ∘ f ≡ f;
+  #[canonical=no] compoA: forall {A B C D: ob 𝐂} (f: A ~> B) (g: B ~> C) (h: C ~> D),
       h ∘ (g ∘ f) ≡ (h ∘ g) ∘ f;
   #[canonical=no] comp_eqv: forall {A B C}, Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 A B C);
 }.
@@ -109,18 +54,13 @@ Arguments compoA {_ _ _ _ _}.
 Arguments comp_eqv {_ _ _ _}.
 Existing Instance comp_eqv.
 
-(** tweaking coercions so that objects can always be seen as identity morphisms *)
-Elpi Accumulate coercion.db lp:{{ 
-coercion _ V T E R :- coq.unify-eq T {{precat.sort _}} ok, coq.unify-eq E {{Setoid.sort _}} ok, !, R = {{@idmap _ lp:V}}.
-}}.
-(* Check fun C: Cat => fun A: C => A: A ~> A. *)
+Coercion idmap: ob >-> Setoid.sort.
+(* Check fun C: Cat => fun A: ob C => A: A ~> A. *)
+Module HIDEOBJ.
+  Abbreviation idmap := (@idmap _ _).
+  (* Check fun C: Cat => fun A: ob C => A: A ~> A. *)
+End HIDEOBJ.
 
-(** (locally) import this module to get the underlying object printed instead of [idmap] *)
-Module SEEOBJ.
-  Coercion idmap: precat.sort >-> Setoid.sort.
-End SEEOBJ.
-(* Import SEEOBJ. *)
-(* Check fun C: Cat => fun A: C => A: A ~> A. *)
 
 (** rewriting tuple *)
 Definition cats := (@compo1, @comp1o, @compoA)%core.
@@ -137,8 +77,10 @@ HB.instance Definition _ (𝐂: Cat) := IsCat.Build (𝐂^op)
   (fun _ _ => comp1o)
   (fun _ _ _ _ _ _ _ => eqv_sym _ _ (compoA _ _ _))
   (fun _ _ _ _ _ H _ _ H' => comp_eqv _ _ H' _ _ H).
+(** key for dual objects  *)
+Definition obop (𝐂: Quiver) (A: ob 𝐂): ob (𝐂^op) := A. 
 (** key for dual morphisms *)
-Definition morphop {𝐂: Quiver} [x y: 𝐂] (f: x ~> y): y ~>_(𝐂^op) x := f.
+Definition morphop {𝐂: Quiver} [x y: ob 𝐂] (f: x ~> y): obop y ~> obop x := f.
 
 (** unit (terminal) category *)
 Definition Cat1 := unit.
@@ -177,13 +119,10 @@ Arguments unique_elt {_ _}.
 Arguments unique_prop {_ _}.
 Arguments uniqueness {_ _}.
 
-Notation "' u" := (unique_prop u) (at level 100).
-Notation "'' u" := (uniqueness u) (at level 100).
-
 (** of morphisms *)
 
 Section s.
-Context {𝐂: Quiver} [A B: 𝐂] (P: (A ~> B) -> Type).
+Context {𝐂: Quiver} [A B: ob 𝐂] (P: (A ~> B) -> Type).
           
 Definition Unique_morph := Unique P.
 
@@ -202,7 +141,7 @@ Arguments Unicity {_ _ _ _}.
 Notation "Σ! x .. y , P" := (Unique_morph (fun x => .. (Unique_morph (fun y => P)) ..))
   (at level 200, x binder, y binder, right associativity): cat_scope.
 
-Lemma unique_morph_eqv {𝐂: Quiver} [A B: 𝐂] (P Q: (A ~> B) -> Type):
+Lemma unique_morph_eqv {𝐂: Quiver} [A B: ob 𝐂] (P Q: (A ~> B) -> Type):
   (forall f, P f -> Q f) -> forall p: Unique_morph P, forall q: Unique_morph Q, unique_morph p ≡ unique_morph q.
 Proof.
   move=>PQ p q. apply: Unicity. eassumption.
@@ -215,8 +154,8 @@ Qed.
 Module HL.
 Section s.
 Context {𝐂: Cat}.
-Implicit Types A B C: 𝐂.
-Inductive hom_list_ C: 𝐂 -> Type :=
+Implicit Types A B C: ob 𝐂.
+Inductive hom_list_ C: ob 𝐂 -> Type :=
 | nil: hom_list_ C C
 | cons: forall {A B}, (A ~> B) -> hom_list_ C B -> hom_list_ C A.
 Abbreviation hom_list A B := (hom_list_ B A).
@@ -275,13 +214,13 @@ Arguments nil {_ _}.
 Arguments reify {_ _ _}.
 
 (** helpers to declare additional symbols under which normalisation should occur *)
-Program Definition r_sym1 {𝐂 𝐃: Cat} {A B: 𝐂} {A' B': 𝐃}
+Program Definition r_sym1 {𝐂 𝐃: Cat} {A B: ob 𝐂} {A' B': ob 𝐃}
   (f: (A~>B) -> (A'~>B')) (Hf: Proper (eqv ==> eqv) f)
   (u: reified A B) := reify (f u) (single (f (eval (norm u)))) _.
 Next Obligation. intros. by rewrite eval_single normE. Qed.
-Definition r_ext {𝐂 𝐃: Cat} {A B: 𝐂} {A' B': 𝐃}
+Definition r_ext {𝐂 𝐃: Cat} {A B: ob 𝐂} {A' B': ob 𝐃}
   (f: (A~>B) -eqv-> (A'~>B')) := Eval hnf in r_sym1 (extensional f).
-Program Definition r_sym2 {𝐂 𝐃 𝐄: Cat} {A B: 𝐂} {A' B': 𝐃} {A'' B'': 𝐄}
+Program Definition r_sym2 {𝐂 𝐃 𝐄: Cat} {A B: ob 𝐂} {A' B': ob 𝐃} {A'' B'': ob 𝐄}
   (f: (A~>B) -> (A'~>B') -> (A''~>B'')) (Hf: Proper (eqv ==> eqv ==> eqv) f)
   (u: reified A B) (v: reified A' B') := reify (f u v) (single (f (eval (norm u)) (eval (norm v)))) _.
 Next Obligation. intros. by rewrite eval_single 2!normE. Qed.

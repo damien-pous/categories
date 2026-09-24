@@ -7,7 +7,7 @@ Local Open Scope cat_scope.
 
 (** Terminal objects *)
 
-Definition isTerminal {𝐂: Quiver} (Z: 𝐂) :=
+Definition isTerminal {𝐂: Quiver} (Z: ob 𝐂) :=
   forall X, Unique_morph (fun _: X~>Z => True).
 Structure Terminal (𝐂: Quiver) := {
     terminal:> 𝐂;
@@ -16,14 +16,14 @@ Structure Terminal (𝐂: Quiver) := {
 
 (** Products *)
 
-Definition isProduct {𝐂: PreCat} (A B: 𝐂) := @isTerminal (Span A B).
+Definition isProduct {𝐂: PreCat} (A B: ob 𝐂) := @isTerminal (Span A B).
 Arguments isProduct {_}. 
-Definition Product {𝐂: PreCat} (A B: 𝐂) := @Terminal (Span A B).
-Coercion ob_Product{𝐂: PreCat} (A B: 𝐂) (X: Product A B): 𝐂 := span_ob (terminal X). 
+Definition Product {𝐂: PreCat} (A B: ob 𝐂) := @Terminal (Span A B).
+Coercion ob_Product{𝐂: PreCat} (A B: ob 𝐂) (X: Product A B): 𝐂 := span_ob (terminal X). 
 
 Section PROD.
-Context {𝐂: Cat} {A B: 𝐂} {AB: Product A B}.
-Implicit Types X Y: 𝐂.
+Context {𝐂: Cat} {A B: ob 𝐂} {AB: Product A B}.
+Implicit Types X Y: ob 𝐂.
 Let AB' := ob_Product AB.
 Definition fst: AB' ~> A := spanl.
 Definition snd: AB' ~> B := spanr.
@@ -65,12 +65,12 @@ End PROD.
 
 #[primitive] HB.mixin Record IsCartesian 𝐂 of precat 𝐂 := {
     #[canonical=no] top_: Terminal 𝐂;
-    #[canonical=no] prod_: forall A B: 𝐂, Product A B;    
+    #[canonical=no] prod_: forall A B: ob 𝐂, Product A B;    
   }.
 #[short(type="PreCCat")]
 HB.structure Definition preccat := { 𝐂 of IsCartesian 𝐂 & }.
-Definition top {𝐂: PreCCat}: 𝐂 := terminal top_.
-Definition prod {𝐂: PreCCat} (A B: 𝐂): 𝐂 := span_ob (terminal (prod_ A B)).
+Definition top {𝐂: PreCCat}: ob 𝐂 := terminal top_.
+Definition prod {𝐂: PreCCat} (A B: ob 𝐂): ob 𝐂 := span_ob (terminal (prod_ A B)).
 Infix "×" := prod (at level 30).
 
 #[short(type="CCat")]
@@ -78,14 +78,12 @@ HB.structure Definition ccat := { 𝐂 of preccat 𝐂 & cat 𝐂 }.
 
 Section prod.
   Context {𝐂: CCat}.
-  Implicit Types X Y Z T: 𝐂.
+  Implicit Types X Y Z T: ob 𝐂.
   Definition pair' {X Y Z T} (f: X ~> Y) (g: Z ~> T): X×Z ~> Y×T :=
     pair (f∘fst) (g∘snd).
 
-  Definition PROD (X: 𝐂*𝐂): 𝐂 := X.1 × X.2. 
-  HB.instance Definition _ :=
-    IsPreFunctor.Build _ _ PROD (fun A B f => pair' f.1 f.2).
-  Program Definition _PROD_functor := IsFunctor.Build _ _ PROD _ _ _.
+  Definition PROD (X: ob 𝐂*ob 𝐂): ob 𝐂 := X.1 × X.2. 
+  Program Definition _PROD_functor := @IsFunctor'.Build _ _ PROD (fun A B f => pair' f.1 f.2) _ _ _.
   Next Obligation.
     move=>/=A B f g [fg1 fg2]; apply: pair_eqv; by rewrite ?fg1 ?fg2. 
   Qed.
@@ -129,9 +127,7 @@ Section prod.
   Defined.
 
   Definition UNIT (X: Cat1): 𝐂 := top. 
-  HB.instance Definition _ :=
-    IsPreFunctor.Build _ _ UNIT (fun A B f => unique_elt (terminalP _ _)).
-  Program Definition _UNIT_functor := IsFunctor.Build _ _ UNIT _ _ _.
+  Program Definition _UNIT_functor := @IsFunctor'.Build _ _ UNIT (fun A B f => unique_elt (terminalP _ _)) _ _ _.
   Next Obligation.
     move=>/=A B f g fg/=. exact: uniqueness. 
   Qed.
@@ -168,30 +164,22 @@ Definition cat_top: Terminal Cat.
 Defined.
 *)
 
-HB.instance Definition _ (C D: Cat) :=
-  IsPreFunctor.Build (C*D: Cat)%type C Datatypes.fst (fun A B f => f.1).
 Program Definition _fst_functor (C D: Cat) :=
-  IsFunctor.Build (C*D: Cat)%type C Datatypes.fst _ _ _.
-Next Obligation. intros * F G FG. apply FG. Qed.
+  @IsFunctor'.Build (C*D: Cat)%type C Datatypes.fst (fun A B f => f.1) _ _ _.
 Next Obligation. done. Qed.
 Next Obligation. done. Qed.
 HB.instance Definition _ C D := _fst_functor C D.
 
-HB.instance Definition _ (C D: Cat) :=
-  IsPreFunctor.Build (C*D: Cat)%type D Datatypes.snd (fun A B f => f.2).
 Program Definition _snd_functor (C D: Cat) :=
-  IsFunctor.Build (C*D: Cat)%type D Datatypes.snd _ _ _.
-Next Obligation. intros * F G FG. apply FG. Qed.
+  @IsFunctor'.Build (C*D: Cat)%type D Datatypes.snd (fun A B f => f.2) _ _ _.
 Next Obligation. done. Qed.
 Next Obligation. done. Qed.
 HB.instance Definition _ C D := _snd_functor C D.
 
 
 Definition types_pair' {C A B} (F: C -> A) (G: C -> B) X := (F X, G X). 
-HB.instance Definition _ (C A B: Cat) (F: C ≈> A) (G: C ≈> B) :=
-  IsPreFunctor.Build C (A*B: Cat)%type (types_pair' F G) (fun _ _ h => (Fhom F h, Fhom G h)).
 Program Definition _types_pair'_functor (C A B: Cat) (F: C ≈> A) (G: C ≈> B) :=
-  IsFunctor.Build C (A*B: Cat)%type (types_pair' F G) _ _ _.
+  @IsFunctor'.Build C (A*B: Cat)%type (types_pair' F G) (fun _ _ h => (Fhom F h, Fhom G h)) _ _ _.
 Next Obligation. split; exact: Fhom_eqv. Qed.
 Next Obligation. split; exact: Fidmap. Qed.
 Next Obligation. split; exact: Fcomp. Qed.
@@ -240,13 +228,13 @@ HB.instance Definition _ := IsCartesian.Build Cat cat_top cat_prod.
 (** Bifunctors *)
 
 (*TMP-UNIV: * -> × *)
-Definition app11 {A B D: Cat} (F: (A*B)%type ≈> D) (X: A) (Y: B): D := F(X,Y).
+Definition app11 {A B D: Cat} (F: (A*B)%type ≈> D) (X: ob A) (Y: ob B): D := F(X,Y).
 (*TMP-UNIV: * -> × *)
 Definition app22 {A B D: Cat} (F: (A*B)%type ≈> D) {X X' Y Y'}
   (f: A X X') (g: B Y Y'): app11 F X Y ~> app11 F X' Y' :=
   @Fhom _ _ F (X,Y) (X',Y') (f,g).
 Instance app22_eqv {A B D F X X' Y Y'}: Proper (eqv ==> eqv ==> eqv) (@app22 A B D F X X' Y Y').
-Proof. intros ??? ???. by apply extensional. Qed.
+Proof. intros ??? ???. exact/extensional. Qed.
 
 (*TMP-UNIV
 Definition times {X X' Y Y': Cat}

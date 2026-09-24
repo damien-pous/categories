@@ -4,10 +4,10 @@ Require Export cat.
 
 Local Open Scope cat_scope.
 
-Record Span {𝐂: Quiver} (A B: 𝐂) :=
+Record Span {𝐂: Quiver} (A B: ob 𝐂) :=
   span
     {
-      span_ob:> 𝐂;
+      span_ob:> ob 𝐂;
       spanl: span_ob ~> A;
       spanr: span_ob ~> B;
     }.
@@ -15,12 +15,12 @@ Arguments span {_ _ _ _}.
 Arguments spanl {_ _ _ _}. 
 Arguments spanr {_ _ _ _}. 
 
-Definition Span_morphism {𝐂: PreCat} {A B: 𝐂} (X Y: Span A B) :=
+Definition Span_morphism {𝐂: PreCat} {A B: ob 𝐂} (X Y: Span A B) :=
   { h: X ~> Y | spanl ∘ h ≡ spanl /\ spanr ∘ h ≡ spanr }.
-HB.instance Definition _ (𝐂: PreCat) (A B: 𝐂) :=
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) :=
   IsQuiver.Build (Span A B) Span_morphism. 
 
-Program Definition _span_precat (𝐂: Cat) (A B: 𝐂) :=
+Program Definition _span_precat (𝐂: Cat) (A B: ob 𝐂) :=
   IsPreCat.Build (Span A B)
     (fun X => exist _ idmap _)
     (fun X Y Z h g => exist _ (g ∘ h) _).
@@ -30,7 +30,7 @@ Next Obligation.
 Qed.
 HB.instance Definition _ 𝐂 A B := @_span_precat 𝐂 A B.
 
-Program Definition _span_cat (𝐂: Cat) (A B: 𝐂) :=
+Program Definition _span_cat (𝐂: Cat) (A B: ob 𝐂) :=
   IsCat.Build (Span A B) _ _ _ _.
 Next Obligation. intros. apply: comp1o. Qed.
 Next Obligation. intros. apply: compo1. Qed.

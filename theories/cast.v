@@ -26,7 +26,7 @@ Abbreviation icast' f i j := (@icast _ _ _ _ _ i j f) (only parsing).
 Section s.
   
 Context {𝐂: PreCat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 
 (* already for cast2' *)
 Lemma hcastI A A' A'' B B' B'' (f: A ~> B)
@@ -90,7 +90,7 @@ Abbreviation cast' i j f := (@cast _ _ _ _ _ f i j) (only parsing).
 Section s.
   
 Context {𝐂: Cat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 
 Lemma icast_id A A' (e: A=A'): icast' (idmap A) e e = idmap A'.
 Proof. by destruct e. Qed.
@@ -114,7 +114,7 @@ Class auto_eqv {𝐂: PreCat} (A B: 𝐂) (f g: A ≃ B) := aeqv: iso.sort f ≡
 Section s.
   
 Context {𝐂: Cat}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 
 #[export] Instance bcomp_eqv_ {A B B' C}:
   Proper (eqv ==> eqv ==> eqv ==> eqv) (@bcomp _ A B B' C).
@@ -262,7 +262,7 @@ Qed.
 Section s.
   
 Context {𝐂: PreCatUIP}.
-Implicit Types A B C D: 𝐂.
+Implicit Types A B C D: ob 𝐂.
 
 Lemma hcastK A B (f: A ~> B) (a: A=A) (b: B=B): hcast' f a b = f. 
 Proof. by rewrite (UIP_ob a erefl) (UIP_ob b erefl). Qed.
