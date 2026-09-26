@@ -12,11 +12,12 @@ A Rocq library about category theory and monoidal categories
 
 - Damien Pous (CNRS, Plume team, LIP, ENS de Lyon)
 
-Based on work with
-- Samuel Arsac (ENS de Lyon, Plume team, LIP, ENS de Lyon) 
-- Olivier Laurent (CNRS, Plume team, LIP, ENS de Lyon) 
-- Cyril Cohen (Inria, Cash team, LIP, ENS de Lyon)
-- Russ Harmer (CNRS, Plume team, LIP, ENS de Lyon) 
+Based on work with/of
+- Samuel Arsac (ENS de Lyon, Plume team, LIP, ENS de Lyon)        [graph-rewriting library]
+- Kazuhiko Sakaguchi (ENS de Lyon, Plume team, LIP, ENS de Lyon)  [rewriting modulo tactics]
+- Cyril Cohen (Inria, Cash team, LIP, ENS de Lyon)                [initial template for categories in HB]
+- Olivier Laurent (CNRS, Plume team, LIP, ENS de Lyon)            [discussions on monoidal cats]
+- Russ Harmer (CNRS, Plume team, LIP, ENS de Lyon)                [discussions on graph-rewriting library]
 
 (cf. https://gitlab.com/SamuelArsac/graph-rewriting , and the category theory example of hierarchy-builder, written by Cyril)
 

@@ -1,4 +1,6 @@
 % Elpi code for aireflexivity: the reflexivity tactic modulo G
+% Author: Kazuhiko Sazkaguchi, late 2025 - early 2026,
+%   in the context of the graph-rewriting library we developped with Samuel Arsac
 
 solve (goal _ _ Type _ _ as G) [] :- @ltacfail! 0 => std.do! [
   std.assert-ok! (coq.unify-eq Type {{ @eqv lp:Setoid lp:LHS lp:RHS }})

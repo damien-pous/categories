@@ -1,4 +1,6 @@
 % Elpi code shared between the modulo G tactics
+% Author: Kazuhiko Sazkaguchi, late 2025 - early 2026,
+%   in the context of the graph-rewriting library we developped with Samuel Arsac
 
 % [mono->epi C X Y M Mono E] takes a monomorphism [M] from [X] to [Y] in PreCat
 % [C], and returns its monomorphism instance [Mono] and the inverse [E].

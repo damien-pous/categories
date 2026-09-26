@@ -1,4 +1,6 @@
 % Elpi code shared between the modulo AU/G tactics
+% Author: Kazuhiko Sazkaguchi, late 2025 - early 2026,
+%   in the context of the graph-rewriting library we developped with Samuel Arsac
 
 func to-eqv term -> term.
 to-eqv Proof {{ @eq_eqv lp:X lp:LHS lp:RHS lp:Proof }} :-
