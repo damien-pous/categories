@@ -33,9 +33,6 @@ HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: A ↪ B) :=
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: A ↠ B) :=
   IsMono.Build 𝐂^op B A (morphop f) (epi_prop f).
 
-Check fun (C: Cat) (a b: ob C) (i: Mono a b) => morphop i: Epi _ _.
-Check fun (C: Cat) (a b: ob C) (i: Epi a b) => morphop i: Mono _ _.
-
 Lemma id_is_epi (𝐂: Cat) (A: ob 𝐂): is_epi A. 
 Proof. move=>B f g. by rewrite !cats. Qed.
 Lemma id_is_mono (𝐂: Cat) (A: ob 𝐂): is_mono A. 
@@ -90,11 +87,6 @@ HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: RegMono A B) :=
   _IsRegEpi.Build 𝐂^op B A (morphop f) (regmono_prop f).
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: RegEpi A B) :=
   _IsRegMono.Build 𝐂^op B A (morphop f) (regepi_prop f).
-
-(* TODO: move to tests *)
-Check fun (C: Cat) (a b: ob C) (i: RegMono a b) => morphop i: RegEpi _ _.
-Check fun (C: Cat) (a b: ob C) (i: RegMono a b) => morphop i: Epi _ _.
-Check fun (C: Cat) (a b: ob C) (i: RegEpi a b) => morphop i: RegMono _ _.
 
 Lemma regepi_epi (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B): is_regepi f -> is_epi f.
 Proof.
@@ -243,11 +235,6 @@ HB.instance Definition _ (𝐂: Cat) (A B: ob 𝐂) (f: SplitMono A B) :=
 HB.instance Definition _ (𝐂: Cat) (A B: ob 𝐂) (f: SplitEpi A B) :=
   HasRightInverse.Build 𝐂 B A (f⁻¹) invKl.
 
-(* TODO: move to tests *)
-Check fun (C: Cat) (a b: C) (i: SplitMono a b) => morphop i: SplitEpi _ _.
-Check fun (C: Cat) (a b: C) (i: SplitEpi a b) => morphop i: SplitMono _ _.
-
-
 Lemma id_has_left_inverse (𝐂: Cat) (A: ob 𝐂): has_left_inverse (idmap A).
 Proof. by rewrite /= cats. Qed.
 Lemma id_has_right_inverse (𝐂: Cat) (A: ob 𝐂): has_right_inverse (idmap A).
@@ -299,14 +286,7 @@ HB.saturate idmap.
 HB.saturate comp.
 HB.saturate inv.
 HB.saturate morphop.
-
-Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: SplitEpi _ _.
-Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: SplitMono _ _.
-Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: @SplitEpi (C^op) b a.
-Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: @SplitMono (C^op) b a.
-Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: b≃_(C^op)a.
-Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: obop b ≃ obop a.
-Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: _ ≃ _.
+(* Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: _ ≃ _. *)
 
 (** * additional properties *)
 

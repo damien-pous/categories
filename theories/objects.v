@@ -27,18 +27,18 @@ HB.mixin Record IsTerminal (𝐂: Quiver) (A: ob 𝐂) := {
 #[short(type="Terminal")]
 HB.structure Definition terminal_ob 𝐂 := { A of IsTerminal 𝐂 A }.
 
-Check fun (C: Quiver) (A: Initial C) => A: ob C.
-Check fun (C: PreCat) (A: Initial C) => A: ob C.
-Check fun (C: Cat) (A: Initial C) => A: ob C.
+(* Check fun (C: Quiver) (A: Initial C) => A: ob C. *)
+(* Check fun (C: PreCat) (A: Initial C) => A: ob C. *)
+(* Check fun (C: Cat) (A: Initial C) => A: ob C. *)
 
 HB.instance Definition _ (𝐂: Quiver) (A: Initial 𝐂) :=
   IsTerminal.Build 𝐂^op (obop A) (@initial_prop _ A).
 HB.instance Definition _ (𝐂: Quiver) (A: Terminal 𝐂) :=
   IsInitial.Build 𝐂^op (obop A) (@terminal_prop _ A).
 
-Check fun (C: Quiver) (A: Initial C) => obop A: Terminal (C^op).
-Check fun (C: PreCat) (A: Initial C) => obop A: Terminal (C^op).
-Check fun (C: Cat) (A: Initial C) => obop A: Terminal (C^op).
+(* Check fun (C: Quiver) (A: Initial C) => obop A: Terminal (C^op). *)
+(* Check fun (C: PreCat) (A: Initial C) => obop A: Terminal (C^op). *)
+(* Check fun (C: Cat) (A: Initial C) => obop A: Terminal (C^op). *)
 
 Definition initial (𝐂: Quiver) (A: Initial 𝐂) X: A ~> X := unique_morph (initial_prop X).
 Definition terminal (𝐂: Quiver) (A: Terminal 𝐂) X: X ~> A := unique_morph (terminal_prop X).
@@ -126,14 +126,14 @@ HB.instance Definition _ {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: Algebra F) :
 HB.instance Definition _ {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: CoAlgebra F) :=
   IsAlgebra.Build (𝐂^op) (funcop F) (obop A) (coalg A).
 
-Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => C^op: Quiver.  
-Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => funcop F: C^op -> C^op.  
-Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: C^op.
-Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: Algebra _.  
-Check fun (C: Quiver) (F: ob C -> ob C) (A: Algebra F) => obop A: CoAlgebra _.  
-Check fun (C: PreCat) (F: PreFunctor C C) (A: CoAlgebra F) => obop A: Algebra _.  
-Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.  
-Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.  
+(* Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => C^op: Quiver.   *)
+(* Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => funcop F: C^op -> C^op.   *)
+(* Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: C^op. *)
+(* Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: Algebra _.   *)
+(* Check fun (C: Quiver) (F: ob C -> ob C) (A: Algebra F) => obop A: CoAlgebra _.   *)
+(* Check fun (C: PreCat) (F: PreFunctor C C) (A: CoAlgebra F) => obop A: Algebra _.   *)
+(* Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.   *)
+(* Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.   *)
 
 
 (* TOTHINK: do we really want to infer algebra homomorphisms, or just define them? *)
@@ -160,24 +160,25 @@ HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := IsQuiver.Bu
 
 HB.instance Definition _ 𝐂 F A B := Setoid.copy (CoAlgebraHom F A B) (kernel (@coalgebrahom.sort 𝐂 F A B)).
 HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (CoAlgebra F) CoAlgebraHom.
+
 (* with the above instances, obop A is seen as an object in the dual of the Coalgebra category *)
-Fail Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.  
-Fail Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.  
-Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: ob (CoAlgebra F)^op.  
-Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: ob (Algebra F)^op.  
-Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop (A: ob C): Algebra _.  
-Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop (A: ob C): CoAlgebra _.  
+(* Fail Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.   *)
+(* Fail Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.   *)
+(* Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: ob (CoAlgebra F)^op.   *)
+(* Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: ob (Algebra F)^op.   *)
+(* Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop (A: ob C): Algebra _.   *)
+(* Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop (A: ob C): CoAlgebra _.   *)
 
 HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F) (f: AlgebraHom A B) :=
   IsCoAlgebraHom.Build (𝐂^op) (funcop F) _ _ (morphop f) (alg_hom f).
 HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: CoAlgebra F) (f: CoAlgebraHom A B) :=
   IsAlgebraHom.Build (𝐂^op) (funcop F) _ _ (morphop f) (coalg_hom f).
 
-Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: _ ~> _.
-Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: CoAlgebraHom _ _.
-Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: CoAlgebraHom _ _.
-Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: _ ~>_(CoAlgebra _) _.
-Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => (morphop f: CoAlgebraHom _ _): _ ~> _.
+(* Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: _ ~> _. *)
+(* Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: CoAlgebraHom _ _. *)
+(* Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: CoAlgebraHom _ _. *)
+(* Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: _ ~>_(CoAlgebra _) _. *)
+(* Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => (morphop f: CoAlgebraHom _ _): _ ~> _. *)
 
 Lemma alg_hom_idmap (𝐂: Cat) (F: Functor 𝐂 𝐂) (A: Algebra F): Fhom F A \; alg A ≡ alg A \; A. 
 Proof. cat. Qed.
@@ -220,22 +221,6 @@ Proof.
   - exact/comp_eqv.
 Qed.
 HB.instance Definition _ 𝐂 F := @_coalg_cat 𝐂 F.
-
-
-Section s.
-  Context {𝐂: Cat} (F: Functor 𝐂 𝐂).
-  Check fun A: Algebra F => A: ob _. 
-  Check fun A: Algebra F => A: ob 𝐂. 
-  Check fun A: Algebra F => alg A. 
-  Check fun A: Algebra F => alg: F A ~> A. 
-
-  Check fun A: Initial (Algebra F) => A: ob _. 
-  Check fun A: Initial (Algebra F) => A: ob (Algebra _). 
-  Fail Check fun A: Initial (Algebra F) => A: Algebra _. 
-  Check fun A: Initial (Algebra F) => (A: ob (Algebra _)): ob 𝐂. 
-  Check fun A: Initial (Algebra F) => alg (A: ob (Algebra _)). 
-  Check fun A: Initial (Algebra F) => alg: F (A: ob (Algebra _)) ~> _.
-End s.
     
 
 
@@ -388,6 +373,6 @@ End s.
 
 Definition CoSpan := Span^op.
 (* HB.instance Definition _ := quiver.on CoSpan.  *)
-Check CoSpan: Quiver.
+(* Check CoSpan: Quiver. *)
 
 End Shape.

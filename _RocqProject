@@ -27,6 +27,7 @@ theories/monoidal.v                        # user-end module for monoidal cats
 theories/monoidal_examples.v               # example: composing monoids
 
 -R tests/ CategoriesTests
+tests/coercions.v			   # tests for the coercion setup
 tests/arewrite_tests.v			   # tests for the arewrite/areflexivity tactics
 tests/airewrite_tests.v	 	   	   # tests for the airewrite/aireflexivity tactics
 tests/hb_univ.v			   	   # waiting for HB to support universe polymorphism

@@ -11,7 +11,7 @@ Local Open Scope cat_scope.
 (** quivers *)
 #[primitive] HB.mixin Record IsQuiver 𝐂 := {
     #[canonical=no] hom : ob 𝐂 -> ob 𝐂 -> Setoid.type
-  }.
+}.
 #[short(type="Quiver")]
 HB.structure Definition quiver := { 𝐂 of IsQuiver 𝐂 }.
 Bind Scope cat_scope with Quiver.
@@ -24,8 +24,8 @@ Abbreviation bare f := (f: hom _ _).
 
 (** precategories: quivers + id and comp *)
 #[primitive] HB.mixin Record IsPreCat 𝐂 of quiver 𝐂 := {
-  #[canonical=no] idmap: forall {A: ob 𝐂}, A ~> A;
-  #[canonical=no] comp: forall {A B C: ob 𝐂}, (A ~> B) -> (B ~> C) -> (A ~> C);
+    #[canonical=no] idmap: forall {A: ob 𝐂}, A ~> A;
+    #[canonical=no] comp: forall {A B C: ob 𝐂}, (A ~> B) -> (B ~> C) -> (A ~> C);
 }.
 #[short(type="PreCat")]
 HB.structure Definition precat := { 𝐂 of IsPreCat 𝐂 & }.
@@ -39,11 +39,10 @@ Notation "f ∘_ 𝐂 g" := (@comp _ 𝐂 _ _ _ g f) (only parsing): cat_scope.
 
 (** categories: precategories + laws *)
 #[primitive] HB.mixin Record IsCat 𝐂 of precat 𝐂 := {
-  #[canonical=no] comp1o: forall {A B: ob 𝐂} (f: A ~> B), f ∘ idmap ≡ f;
-  #[canonical=no] compo1: forall {A B: ob 𝐂} (f: A ~> B), idmap ∘ f ≡ f;
-  #[canonical=no] compoA: forall {A B C D: ob 𝐂} (f: A ~> B) (g: B ~> C) (h: C ~> D),
-      h ∘ (g ∘ f) ≡ (h ∘ g) ∘ f;
-  #[canonical=no] comp_eqv: forall {A B C}, Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 A B C);
+    #[canonical=no] comp1o: forall {A B: ob 𝐂} (f: A ~> B), idmap \; f ≡ f;
+    #[canonical=no] compo1: forall {A B: ob 𝐂} (f: A ~> B), f \; idmap ≡ f;
+    #[canonical=no] compoA: forall {A B C D: ob 𝐂} (f: A ~> B) (g: B ~> C) (h: C ~> D), (f \; g) \; h ≡ f \; (g \; h);
+    #[canonical=no] comp_eqv: forall {A B C}, Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 A B C);
 }.
 #[short(type="Cat")]
 HB.structure Definition cat := { 𝐂 of IsCat 𝐂 & }.
