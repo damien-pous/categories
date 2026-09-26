@@ -173,7 +173,7 @@ Arguments has_right_inverse {_ _ _} _/.
 Lemma left_inverse_epi (𝐂: Cat) (A B: ob 𝐂) (f: Invertible A B): has_left_inverse f -> is_epi f.
 Proof. move=>K C i j H. rewrite -(comp1o i) -K. arewrite H. arewrite K. cat. Qed.
 Lemma right_inverse_mono (𝐂: Cat) (A B: ob 𝐂) (f: Invertible A B): has_right_inverse f -> is_mono f.
-Proof. exact: (@left_inverse_epi (𝐂^op) _ _ (morphop f)). Qed.
+Proof. exact: (left_inverse_epi (f:=morphop f)). Qed.
 
 Lemma left_inverse_regepi (𝐂: Cat) (A B: ob 𝐂) (f: Invertible A B): has_left_inverse f -> is_regepi f.
 Proof.
@@ -182,7 +182,7 @@ Proof.
   move=>h <-. arewrite K. cat.
 Qed.
 Lemma right_inverse_regmono (𝐂: Cat) (A B: ob 𝐂) (f: Invertible A B): has_right_inverse f -> is_regmono f.
-Proof. exact: (left_inverse_regepi (𝐂:=𝐂^op) (f:=morphop f)). Qed. (* TOFIX: need for C^op *)
+Proof. exact: (left_inverse_regepi (f:=morphop f)). Qed.
 
 HB.mixin Record _HasLeftInverse (𝐂: PreCat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
     #[canonical=no] invKl: has_left_inverse f;
@@ -396,9 +396,9 @@ End s.
 Definition iso_src := (@iso_src_l, @iso_src_r)%core.
 
 Lemma iso_tgt_r {𝐂: Cat} (A B B': ob 𝐂) (f: A ~> B) (g: A ~> B') (i: B' ≃ B): f ≡ i ∘ g <-> i⁻¹ ∘ f  ≡ g.
-Proof. exact: (@iso_src_r (𝐂^op) _ _ _ f g (morphop i)). Qed.
+Proof. exact: (iso_src_r _ _ (morphop i)). Qed.
 Lemma iso_tgt_l {𝐂: Cat} (A B B': ob 𝐂) (f: A ~> B) (g: A ~> B') (i: B ≃ B'): f \; i ≡ g <-> f  ≡ g \; i⁻¹.
-Proof. exact: (@iso_src_l (𝐂^op) _ _ _ f g (morphop i)). Qed.
+Proof. exact: (iso_src_l _ _ (morphop i)). Qed.
 Definition iso_tgt := (@iso_tgt_l, @iso_tgt_r)%core.
 
 (** forging isomorphisms from scratch (TODO: same for other concepts) *)

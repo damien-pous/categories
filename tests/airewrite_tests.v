@@ -9,7 +9,7 @@ Local Open Scope cat_scope.
 
 Section s.
 Context (C : Cat).
-Variables a b c d e: C. 
+Variables a b c d e: ob C. 
 
 Goal forall (f : SplitMono a a), f \; f⁻¹ ≡ idmap.
 Proof.

@@ -19,21 +19,21 @@ Export arewrite.Internals.
 Section syntax.
 
 Context (C : PreCat).
-Implicit Type (a b c : C).
+Implicit Type (a b c : ob C).
 
 (* syntax trees for reasoning modulo cancellation (of mono, epi, and iso) *)
 Scheme All for list.
-Inductive iexpr : C -> Type :=
-  | can_mono (a b : C) : SplitMono a b -> list (iexpr b) -> iexpr a.
+Inductive iexpr : ob C -> Type :=
+  | can_mono a b : SplitMono a b -> list (iexpr b) -> iexpr a.
 
 Fixpoint ie_eval a b (e : iexpr a) : (a ~> b) -> (a ~> b) :=
   let: can_mono mono es := e in
   fun acc => mono \; foldr (@ie_eval _ _) (inv mono \; acc) es.
 
 Inductive cexpr : C -> C -> Type :=
-  | ce_id (a : C) : cexpr a a
-  | ce_icons (f : bool) (a b : C) : iexpr a -> cexpr a b -> cexpr a b
-  | ce_cons (a b c : C) : (a ~> b) -> cexpr b c -> cexpr a c.
+  | ce_id a : cexpr a a
+  | ce_icons (f : bool) a b : iexpr a -> cexpr a b -> cexpr a b
+  | ce_cons a b c : (a ~> b) -> cexpr b c -> cexpr a c.
 
 Fixpoint ce_eval (f : bool) a b c (e : cexpr a b) : (b ~> c) -> (a ~> c) :=
   match e with
@@ -48,7 +48,7 @@ End syntax.
 Section correct.
 
 Context (C : Cat).
-Implicit Type (a b c d : C).
+Implicit Type (a b c d : ob C).
 
 Lemma ie_correct a b (e : iexpr a) (acc : a ~> b) : eqv (ie_eval e acc) acc.
 Proof.

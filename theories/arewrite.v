@@ -16,13 +16,13 @@ Module Import Internals.
 Section syntax.
 
 Context (C : PreCat).
-Implicit Type (a b c : C).
+Implicit Type (a b c : ob C).
 
 (* syntax trees for reasoning modulo associativity *)
-Inductive aexpr : C -> C -> Type :=
-  | ae_var (a b : C) (q : a ~> b) : aexpr a b
-  | ae_id (a : C) : aexpr a a
-  | ae_comp (a b c : C) : aexpr a b -> aexpr b c -> aexpr a c.
+Inductive aexpr : ob C -> ob C -> Type :=
+  | ae_var a b (q : a ~> b) : aexpr a b
+  | ae_id a : aexpr a a
+  | ae_comp a b c : aexpr a b -> aexpr b c -> aexpr a c.
 
 Definition ae_cons a b c (q : a ~> b) : aexpr b c -> aexpr a c :=
   ae_comp (ae_var q).
@@ -46,7 +46,7 @@ End syntax.
 Section correct.
 
 Context (C : Cat).
-Implicit Type (a b c d : C).
+Implicit Type (a b c d : ob C).
 
 Lemma ae_correct a b c (e : aexpr a b) (acc : b ~> c) :
   eqv (ae_eval e \; acc) (ae_norm e acc).
