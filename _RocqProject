@@ -16,6 +16,7 @@ theories/functor.v                         # functors
 theories/adjunction.v                      # adjunctions
 theories/objects.v                         # hierarchy of objects
 theories/algebra.v                         # (co)algebras
+theories/setoid.v                          # the category of setoids
 theories/span.v                            # spans
 theories/product.v                         # products
 theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
