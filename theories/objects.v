@@ -49,15 +49,15 @@ Proof. apply: Unicity. exact: (initial_prop X). all: done. Qed.
 Lemma terminalU (𝐂: Quiver) (A: Terminal 𝐂) X (f g: X ~> A): f ≡ g.
 Proof. exact: (initialU (morphop f) (morphop g)). Qed.
 
-Definition iso_Initial (𝐂: Cat) (A B: Initial 𝐂): initial_ob.sort A ≃_𝐂 initial_ob.sort B :=
+Definition iso_Initial (𝐂: Cat) (A B: Initial 𝐂): A ≃ B :=
   mk_iso (initial A B) (initial B A) (initialU _ _) (initialU _ _).
-Definition iso_Terminal (𝐂: Cat) (A B: Terminal 𝐂): terminal_ob.sort A ≃_𝐂 terminal_ob.sort B :=
+Definition iso_Terminal (𝐂: Cat) (A B: Terminal 𝐂): A ≃ B :=
   mk_iso (terminal B A) (terminal A B) (terminalU _ _) (terminalU _ _).
 
 (* useful? *)
-Lemma InitialU (𝐂: PreCat) (A B: Initial 𝐂) (i j: initial_ob.sort A ≃_𝐂 initial_ob.sort B): i ≡ j.
+Lemma InitialU (𝐂: PreCat) (A B: Initial 𝐂) (i j: A ≃ B): i¹ ≡ j¹.
 Proof. exact: initialU. Qed.
-Lemma TerminalU (𝐂: PreCat) (A B: Terminal 𝐂) (i j: terminal_ob.sort A ≃_𝐂 terminal_ob.sort B): i ≡ j.
+Lemma TerminalU (𝐂: PreCat) (A B: Terminal 𝐂) (i j: A ≃ B): i¹ ≡ j¹.
 Proof. exact: terminalU. Qed.
 
 Lemma adjoint_preserve_initial (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: ob 𝐂) (H: is_initial A): is_initial (F A).
@@ -65,6 +65,7 @@ Proof.
   move=>X. destruct (H (radj F X)) as [f _ U].
   exists (dn f)=>//g _. specialize (U (up g) I). apply: up_inj. by rewrite up_dn.
 Qed.
+(* forgetful inheritance?, why? *)
 HB.instance Definition _ (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: Initial 𝐂) :=
   IsInitial.Build 𝐃 (F A) (adjoint_preserve_initial F initial_prop).
 

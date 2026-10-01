@@ -1,6 +1,7 @@
 (** rewriting and reflexivity modulo associativity and split epi / split mono / isos
-    this file was originally written by Kazuhiko Sazkaguchi, late 2025 - early 2026,
+    this file was originally written by Kazuhiko Sakaguchi, late 2025 - early 2026,
     in the context of the graph-rewriting library we developped with Samuel Arsac
+    adapted by Damien Pous to deal with the new way categorical structures are defined
  *)
 
 From elpi Require Import elpi.
@@ -91,17 +92,14 @@ End correct.
 
 End Internals.
 
-Local Abbreviation quiver_of_precat := cat_precat__to__cat_quiver.
-Local Abbreviation quiver_of_cat := cat_cat__to__cat_quiver.
+Local Abbreviation barequiver_of_cat := cat_cat__to__cat_barequiver.
+Local Abbreviation bareprecat_of_cat := cat_cat__to__cat_bareprecat.
+Local Abbreviation precat_of_cat := cat_cat__to__cat_precat.
 
 Local Abbreviation inverse_of_mono C a b mono :=
-  (@inv C a b
-     (@morphisms_splitmono__to__morphisms_invertible C a b mono)).
+  (inv (@morphisms_splitmono__to__morphisms_invertible C a b mono)).
 Local Abbreviation inverse_of_epi C a b epi :=
-  (@inv C a b
-     (@morphisms_splitepi__to__morphisms_invertible C a b epi)).
-(* Local Abbreviation epi_of_mono C a b mono := *)
-(*   (@morphisms_inv__canonical__morphisms_splitepi C a b mono). *)
+  (inv (@morphisms_splitepi__to__morphisms_invertible C a b epi)).
 Local Abbreviation mono_of_epi C a b epi :=
   (@morphisms_inv__canonical__morphisms_splitmono C a b epi).
 
@@ -113,18 +111,32 @@ Elpi Accumulate File common.
 Elpi Accumulate File inv_common.
 Elpi Accumulate File aireflexivity.
 
+Ltac aireflexivity := elpi aireflexivity.
+
+Section test.
+  Context (C : Cat).
+  Variables a b c d e: ob C. 
+  Goal forall (f : a ~> a), f \; idmap ≡ idmap \; f.
+  Proof.
+    move=>f. aireflexivity. 
+  Qed.  
+  Goal forall (f : SplitMono a a), f \; f⁻¹ ≡ idmap.
+  Proof.
+    move=>f. aireflexivity. 
+  Qed.  
+  Goal forall (f : SplitEpi a a), f⁻¹ \; f ≡ idmap.
+  Proof.
+    move=>f. aireflexivity. 
+  Qed.
+End test.
+
+
 (* Elpi code for airewrite *)
 
 Elpi Tactic airewrite_proofgen.
 Elpi Accumulate File common.
 Elpi Accumulate File inv_common.
 Elpi Accumulate File airewrite.
-
-(*********************)
-(* Exporting tactics *)
-(*********************)
-
-Ltac aireflexivity := elpi aireflexivity.
 
 (* airewrite *)
 
@@ -157,3 +169,18 @@ Tactic Notation "airewrite" "-" "[" ssrpatternarg(pat) "]" uconstr(proof) :=
 Tactic Notation "airewrite" uconstr(proof) := airewrite [comp _ _]proof.
 
 Tactic Notation "airewrite" "-" uconstr(proof) := airewrite -[comp _ _]proof.
+
+
+Section test.
+  Context (C : Cat).
+  Variables a b c d e: ob C. 
+  Goal forall (f : SplitMono a a) (g fg : a ~> a), f ∘ g ≡ fg -> g ≡ f⁻¹ ∘ fg.
+  Proof.
+    move=> f g fg H.
+    (* The default pattern [comp _ _] cannot select the right subterm [g]. *)
+    Fail airewrite H.
+    (* But, it works if we explicitly select [g]. *)
+    airewrite [g]H.
+    done.
+  Qed.
+End test.

@@ -29,7 +29,7 @@ Proof.
   split.
   - move=>M x y eq.
     exact: ((M _ (const x: _ -eqv-> _) (const y: _ -eqv-> _) _ (f x))).
-  - move=>H X g h E x. apply: H. exact: E.
+  - move=>H X g h E/=. cbn=>x. apply: H. exact: E.
 Qed.
 
 (* Lemma setoid_is_regmono: iffT (is_regmono f) (forall b, (exists a, f a ≡ b) -> { a | f a ≡ b }). *)
@@ -49,7 +49,7 @@ Proof.
     lapply (E (Prop: Setoid.type) (mk_ext g eg: B -eqv-> Prop) (const True: B-eqv->Prop)).
     move=>/(_ b)/=[_ /(_ I)[a]]. by exists a.
     move=>a; split=>//_. by exists a. 
-  - move=>H X g h E b. case: (H b)=>a <-. exact: E.
+  - move=>H X g h E. cbn=>b. case: (H b)=>a <-. exact: E.
 Qed.
 
 (* Lemma setoid_is_regepi: iffT (is_regepi f) ... *)

@@ -120,6 +120,6 @@ Proof.
   - exact/comp1o. 
   - exact/compo1. 
   - exact/compoA.
-  - exact/comp_eqv.
+  - move=>??????. exact/comp_eqv.
 Qed.
 HB.instance Definition _ 𝐂 F := @_coalg_cat 𝐂 F.

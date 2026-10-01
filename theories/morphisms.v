@@ -131,25 +131,22 @@ HB.instance Definition _ (𝐂: Cat) (A: ob 𝐂) := _IsRegMono.Build _ _ _ idma
 
 (** * morphisms with an unspecified inverse *)
 
-(* TOFIX: could be defined in [Quiver], but breaks [airewrite/aireflexivity] tactics for now *)
-HB.mixin Record HasInverseOp (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
+HB.mixin Record HasInverseOp (𝐂: BareQuiver) (A B: ob 𝐂) (f: A ~> B) := {
     #[canonical=no] inv: B ~> A;
 }.
 #[short(type="Invertible")]
 HB.structure Definition invertible 𝐂 A B := { f of HasInverseOp 𝐂 A B f }.
 Arguments inv {_ _ _}.
 Notation "f ⁻¹" := (inv f): cat_scope.
-Notation "f ¹" := (bare f): cat_scope.
 
-(* TOFIX: idem, those two instance should lie [Quiver] *)
-HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: Invertible A B) :=
+HB.instance Definition _ (𝐂: BareQuiver) (A B: ob 𝐂) (f: Invertible A B) :=
   HasInverseOp.Build 𝐂 B A (f⁻¹) f. 
-HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: Invertible A B) :=
+HB.instance Definition _ (𝐂: BareQuiver) (A B: ob 𝐂) (f: Invertible A B) :=
   HasInverseOp.Build (𝐂^op) B A (morphop f) (f⁻¹). 
 
-HB.instance Definition _ (𝐂: PreCat) (A: ob 𝐂) :=
+HB.instance Definition _ (𝐂: BarePreCat) (A: ob 𝐂) :=
   HasInverseOp.Build 𝐂 A A A A. 
-HB.instance Definition _ (𝐂: PreCat) (A B C: ob 𝐂) (f: Invertible A B) (g: Invertible B C) :=
+HB.instance Definition _ (𝐂: BarePreCat) (A B C: ob 𝐂) (f: Invertible A B) (g: Invertible B C) :=
   HasInverseOp.Build 𝐂 A C (f \; g) (g⁻¹ \; f⁻¹). 
 
 
@@ -225,10 +222,10 @@ Definition isoK := @invKl.
 #[deprecated(note="use invKr instead")]
 Definition isoK' := @invKr.
 
-HB.instance Definition _ (𝐂: Cat) (A B: ob 𝐂) (f: SplitMono A B) :=
-  HasLeftInverse.Build 𝐂^op B A (morphop f) invKr.
-HB.instance Definition _ (𝐂: Cat) (A B: ob 𝐂) (f: SplitEpi A B) :=
-  HasRightInverse.Build 𝐂^op B A (morphop f) invKl.
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: SplitMono A B) :=
+  _HasLeftInverse.Build 𝐂^op B A (morphop f) invKr.
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: SplitEpi A B) :=
+  _HasRightInverse.Build 𝐂^op B A (morphop f) invKl.
 
 HB.instance Definition _ (𝐂: Cat) (A B: ob 𝐂) (f: SplitMono A B) :=
   HasLeftInverse.Build 𝐂 B A (f⁻¹) invKr.
@@ -261,6 +258,7 @@ HB.instance Definition _ (𝐂: Cat) (A B C: ob 𝐂) (f: SplitMono A B) (g: Spl
   HB.structure Definition iso (𝐂: PreCat) (A B: ob 𝐂) := { f of @splitepi 𝐂 A B f & splitmono _ f }.
 Infix "≃" := Iso: cat_scope.
 Notation "A ≃_ 𝐂 B" := (@Iso 𝐂 A B) (only parsing): cat_scope.
+Notation "f ¹" := (iso.sort f): cat_scope.
 
 HB.factory Record IsIso' (𝐂: Cat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
     invKl: has_left_inverse f;
@@ -366,7 +364,7 @@ Proof. by rewrite -(epiP i) -compoA invKr cats. Qed.
 Lemma iso_src_l A A' B (f: A ~> B) (g: A' ~> B) (i: A' ≃ A): i \; f ≡ g <-> f ≡ i⁻¹ \; g.
 Proof. split=>H; exact/eqv_sym/iso_src_r/eqv_sym. Qed.
 
-Lemma inv_eqv A B (i j: A ≃ B): i ≡[𝐂 A B] j -> i⁻¹ ≡ j⁻¹.
+Lemma inv_eqv A B (i j: A ≃ B): i ≡ j -> i⁻¹ ≡ j⁻¹.
 Proof. move=>ij. apply/(epiP i). by rewrite /= invKr ij invKr. Qed.
 
 Lemma inv_inj A B (i j: A ≃ B): i⁻¹ ≡ j⁻¹ -> i ≡ j.
@@ -390,6 +388,6 @@ Arguments mk_iso' {_ _ _}.
 
 (** isomorphisms in product categories *)
 Program Definition pair_iso {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B'): (A,B) ≃ (A',B')
-  := @mk_iso (𝐂*𝐃)%type (A,B) (A',B') (i¹,j¹) (i⁻¹, j⁻¹)  _ _.
+  := @mk_iso (𝐂*𝐃)%type (A,B) (A',B') (i,j) (i⁻¹, j⁻¹)  _ _.
 Next Obligation. split; exact: invKl. Qed.
 Next Obligation. split; exact: invKr. Qed.

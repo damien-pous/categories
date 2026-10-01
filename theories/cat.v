@@ -1,5 +1,6 @@
 (** * categories with hom-setoids *)
 Require Export prelim.
+From elpi Require Import elpi coercion.
 
 Declare Scope cat_scope.
 Delimit Scope cat_scope with cat.
@@ -9,56 +10,88 @@ Local Open Scope cat_scope.
 (** * Categories *)
 
 (** quivers *)
-#[primitive] HB.mixin Record IsQuiver 𝐂 := {
-    #[canonical=no] hom : ob 𝐂 -> ob 𝐂 -> Setoid.type
+#[primitive] HB.mixin Record IsBareQuiver 𝐂 := {
+    #[canonical=no] hom: ob 𝐂 -> ob 𝐂 -> Type
 }.
-#[short(type="Quiver")]
-HB.structure Definition quiver := { 𝐂 of IsQuiver 𝐂 }.
-Bind Scope cat_scope with Quiver.
+#[short(type="BareQuiver")]
+HB.structure Definition barequiver := { 𝐂 of IsBareQuiver 𝐂 }.
 Bind Scope cat_scope with hom.
 Arguments hom {_}.
-Coercion hom: Quiver >-> Funclass.
+Coercion hom: BareQuiver >-> Funclass.
 Notation "a ~> b" := (hom a b): cat_scope.
 Notation "a ~>_ 𝐂 b" := (@hom 𝐂 a b) (only parsing): cat_scope.
 Abbreviation bare f := (f: hom _ _). 
 
 (** precategories: quivers + id and comp *)
-#[primitive] HB.mixin Record IsPreCat 𝐂 of quiver 𝐂 := {
-    #[canonical=no] idmap: forall {A: ob 𝐂}, A ~> A;
-    #[canonical=no] comp: forall {A B C: ob 𝐂}, (A ~> B) -> (B ~> C) -> (A ~> C);
+#[primitive] HB.mixin Record IsPreCat 𝐂 of barequiver 𝐂 := {
+    #[canonical=no] _idmap: forall (a: ob 𝐂), a ~> a;
+    #[canonical=no] _comp: forall (a b c: ob 𝐂), (a ~> b) -> (b ~> c) -> (a ~> c);
 }.
-#[short(type="PreCat")]
-HB.structure Definition precat := { 𝐂 of IsPreCat 𝐂 & }.
+#[short(type="BarePreCat")]
+  HB.structure Definition bareprecat := { 𝐂 of IsPreCat 𝐂 & }.
+Coercion idmap {𝐂: BarePreCat} (a: ob 𝐂): a ~> a := _idmap a.
 Arguments idmap {_ _}, {_}.
+Definition comp {𝐂: BarePreCat} (a b c: ob 𝐂) (f: a ~> b) (g: b ~> c): a ~> c := _comp _ _ _ f g.
 Arguments comp {_ _ _ _}.
-Bind Scope cat_scope with PreCat.
 Notation "f \; g" := (comp f g): cat_scope.
 Notation "f \;_ 𝐂 g" := (@comp _ 𝐂 _ _ _ f g) (only parsing): cat_scope.
 Notation "f ∘ g" := (comp g f) (only parsing): cat_scope.
 Notation "f ∘_ 𝐂 g" := (@comp _ 𝐂 _ _ _ g f) (only parsing): cat_scope.
 
-(** categories: precategories + laws *)
-#[primitive] HB.mixin Record IsCat 𝐂 of precat 𝐂 := {
-    #[canonical=no] comp1o: forall {A B: ob 𝐂} (f: A ~> B), idmap \; f ≡ f;
-    #[canonical=no] compo1: forall {A B: ob 𝐂} (f: A ~> B), f \; idmap ≡ f;
-    #[canonical=no] compoA: forall {A B C D: ob 𝐂} (f: A ~> B) (g: B ~> C) (h: C ~> D), (f \; g) \; h ≡ f \; (g \; h);
-    #[canonical=no] comp_eqv: forall {A B C}, Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 A B C);
-}.
-#[short(type="Cat")]
-HB.structure Definition cat := { 𝐂 of IsCat 𝐂 & }.
-Bind Scope cat_scope with Cat.
-Arguments compo1 {_ _ _}.
-Arguments comp1o {_ _ _}.
-Arguments compoA {_ _ _ _ _}.
-Arguments comp_eqv {_ _ _ _}.
-Existing Instance comp_eqv.
-
-Coercion idmap: ob >-> Setoid.sort.
 (* Check fun C: Cat => fun A: ob C => A: A ~> A. *)
 Module HIDEOBJ.
   Abbreviation idmap := (@idmap _ _).
   (* Check fun C: Cat => fun A: ob C => A: A ~> A. *)
 End HIDEOBJ.
+
+(** setoid enriched quivers *)
+#[primitive] HB.mixin Record HomSetoids 𝐂 of barequiver 𝐂  := {
+    #[canonical=no] hom_setoid: forall a b: ob 𝐂, Setoid.axioms_ (hom a b)
+}.
+#[short(type="Quiver")]
+HB.structure Definition quiver := { 𝐂 of HomSetoids 𝐂 & }.
+HB.instance Definition _ (𝐂: Quiver) (a b: ob 𝐂) := hom_setoid a b. 
+
+HB.factory Record IsQuiver 𝐂 := {
+    hom: ob 𝐂 -> ob 𝐂 -> Setoid.type
+}.
+HB.builders Context 𝐂 of IsQuiver 𝐂.
+  HB.instance Definition _ := IsBareQuiver.Build 𝐂 hom. 
+  HB.instance Definition _ := HomSetoids.Build 𝐂 (fun a b => Setoid.class (hom a b)). 
+HB.end.
+
+#[short(type="PreCat")]
+HB.structure Definition precat := { 𝐂 of quiver 𝐂 & bareprecat 𝐂 }.
+
+(** enable coercions [T >-> hom] to be used when expecting a setoid value *)
+Fail Check fun (C: PreCat) (a: ob C) => a ≡ a.
+Elpi Accumulate coercion.db lp:{{
+      coercion _ V _ {{Setoid.sort _}} R :-
+      coq.elaborate-skeleton V {{hom _ _}} R ok.
+}}.
+Check fun (C: PreCat) (a: ob C) => a ≡ a.
+Module _test.
+  Parameters (C: PreCat) (a: ob C) (T: Type) (f: T -> (a ~> a)).
+  Coercion f: T >-> hom.
+  Check fun t: T => t ≡ t. 
+End _test.
+
+
+(** categories: precategories + laws *)
+#[primitive] HB.mixin Record IsCat 𝐂 of precat 𝐂 := {
+    #[canonical=no] _comp1o: forall {a b: ob 𝐂} (f: a ~> b), idmap \; f ≡ f;
+    #[canonical=no] _compo1: forall {a b: ob 𝐂} (f: a ~> b), f \; idmap ≡ f;
+    #[canonical=no] _compoA: forall {a b c d: ob 𝐂} (f: a ~> b) (g: b ~> c) (h: c ~> d), (f \; g) \; h ≡ f \; (g \; h);
+    #[canonical=no] _comp_eqv: forall {a b c}, Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 a b c);
+}.
+#[short(type="Cat")]
+HB.structure Definition cat := { 𝐂 of IsCat 𝐂 & }.
+Bind Scope cat_scope with Cat.
+Definition comp1o {𝐂: Cat} {a b: ob 𝐂} (f: a ~> b): idmap \; f ≡ f := _comp1o _ _ f. 
+Definition compo1 {𝐂: Cat} {a b: ob 𝐂} (f: a ~> b): f \; idmap ≡ f := _compo1 _ _ f. 
+Definition compoA {𝐂: Cat} {a b c d: ob 𝐂} (f: a ~> b) (g: b ~> c) (h: c ~> d): (f \; g) \; h ≡ f \; (g \; h):= _compoA _ _ _ _ f g h. 
+Instance comp_eqv {𝐂: Cat} {a b c: ob 𝐂}: Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 a b c) :=
+  _comp_eqv a b c.
 
 
 (** rewriting tuple *)
@@ -67,19 +100,21 @@ Definition cats := (@compo1, @comp1o, @compoA)%core.
 (** duality: opposite category *)
 Definition catop (𝐂: Type): Type := 𝐂.
 Notation "𝐂 ^op" := (catop 𝐂): cat_scope.
+HB.instance Definition _ (𝐂: BareQuiver) :=
+  IsBareQuiver.Build 𝐂^op (fun a b => hom b a).
 HB.instance Definition _ (𝐂: Quiver) :=
-  IsQuiver.Build 𝐂^op (fun a b => hom b a).
+  HomSetoids.Build 𝐂^op (fun a b => Setoid.class (hom a b)).
 HB.instance Definition _ (𝐂: PreCat) :=
   IsPreCat.Build (𝐂^op) (fun=> idmap) (fun _ _ _ f g => f ∘ g).
 HB.instance Definition _ (𝐂: Cat) := IsCat.Build (𝐂^op)
   (fun _ _ => compo1) 
   (fun _ _ => comp1o)
   (fun _ _ _ _ _ _ _ => eqv_sym _ _ (compoA _ _ _))
-  (fun _ _ _ _ _ H _ _ H' => comp_eqv _ _ H' _ _ H).
+  (fun _ _ _ _ _ H _ _ H' => comp_eqv H' H).
 (** key for dual objects  *)
-Definition obop (𝐂: Quiver) (A: ob 𝐂): ob (𝐂^op) := A. 
+Definition obop (𝐂: BareQuiver) (A: ob 𝐂): ob (𝐂^op) := A. 
 (** key for dual morphisms *)
-Definition morphop {𝐂: Quiver} [x y: ob 𝐂] (f: x ~> y): obop y ~> obop x := f.
+Definition morphop {𝐂: BareQuiver} [x y: ob 𝐂] (f: x ~> y): obop y ~> obop x := f.
 
 (** unit (terminal) category *)
 Definition Cat1 := unit.
@@ -91,6 +126,8 @@ HB.instance Definition _ := IsCat.Build Cat1
                               (fun _ _ _ _ _ _ _ _ _ => erefl).
 
 (** product of categories *)
+HB.instance Definition _ (𝐂 𝐃: BareQuiver) := IsBareQuiver.Build (𝐂*𝐃)%type
+    (fun A B => (A.1 ~> B.1) * (A.2 ~> B.2))%type. 
 HB.instance Definition _ (𝐂 𝐃: Quiver) := IsQuiver.Build (𝐂*𝐃)%type
     (fun A B => (A.1 ~> B.1) * (A.2 ~> B.2))%type. 
 HB.instance Definition _ (𝐂 𝐃: PreCat) := IsPreCat.Build (𝐂*𝐃)%type
@@ -204,7 +241,7 @@ Lemma cats' {a b} (u v: reified a b):
   term u ≡ term v <-> eval (norm u) ≡ eval (norm v).
 Proof. by rewrite 2!normE. Qed.
 
-Lemma normalise {A B} (u v: reified A B): eval (norm u) ≡ eval (norm v) -> u ≡ v.
+Lemma normalise {A B} (u v: reified A B): eval (norm u) ≡ eval (norm v) -> term u ≡ term v.
 Proof. apply cats'. Qed.
 
 End s.
@@ -237,7 +274,7 @@ Ltac cat := exact: HL.normalise.
 Definition cats' := @HL.cats'.
 
 (** tests *)
-Goal forall (C: Cat) A (f: C A A), idmap ∘ f ∘ (idmap ∘ f) ∘ f ≡ f ∘ (idmap ∘ f) ∘ (idmap ∘ f).
+Goal forall (C: Cat) A (f: C A A), idmap ∘ f ∘ (idmap ∘ f) ∘ f ≡ f ∘ (A ∘ f) ∘ (idmap ∘ f).
   intros. normalise. reflexivity.
   Restart.
   intros. by cat. 

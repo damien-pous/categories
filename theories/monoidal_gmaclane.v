@@ -2,7 +2,6 @@
       generalised MacLane's coherence theorem, and associated tactic *)
 
 Require Import arity monoidal_def monoidal_maclane.
-From elpi Require Import elpi coercion.
 
 Local Open Scope cat_scope. 
 
@@ -178,15 +177,15 @@ Proof.
   exact: find_MacLane e. 
 Qed.
 
-Definition iso_gmaclane a b (h: gmaclane a b): eval_gtree a ≃ eval_gtree b :=
-  locked (icast' (iso_maclane h) (esym (eval_gtree_tree a)) (esym (eval_gtree_tree b))).
-Definition eval_gmaclane a b (h: gmaclane a b): eval_gtree a ~> eval_gtree b := iso_gmaclane h.
+Definition eval_gmaclane a b (h: gmaclane a b): eval_gtree a ≃ eval_gtree b :=
+  locked (icast' (eval_maclane h) (esym (eval_gtree_tree a)) (esym (eval_gtree_tree b))).
+Definition eval_gmaclane' a b (h: gmaclane a b): eval_gtree a ~> eval_gtree b := eval_gmaclane h.
 
 Lemma eval_gmaclaneE a b (h: gmaclane a b):
-  iso.sort (iso_gmaclane h) = hcast' (eval_maclane h) (esym (eval_gtree_tree a)) (esym (eval_gtree_tree b)).
-Proof. by rewrite /iso_gmaclane-lock -hcast_iso. Qed.
+  iso.sort (eval_gmaclane h) = hcast' (eval_maclane h) (esym (eval_gtree_tree a)) (esym (eval_gtree_tree b)).
+Proof. by rewrite /eval_gmaclane-lock -hcast_iso. Qed.
 
-Coercion iso_gmaclane: gmaclane >-> iso.type.
+Coercion eval_gmaclane: gmaclane >-> iso.type.
 Local Coercion gtree_tree: gtree >-> tree.
 
 Definition gmcl_id a: gmaclane a a := mcl_id a. 
@@ -214,7 +213,7 @@ Lemma eval_gmaclane_comp a b c (f: gmaclane a b) (g: gmaclane b c): gmcl_comp f 
 Proof. by rewrite !eval_gmaclaneE hcast_comp. Qed.
 Lemma eval_gmaclane_inv a b (f: gmaclane a b): gmcl_inv f ≡ f⁻¹.
 Proof.
-  rewrite eval_gmaclaneE -eval_maclane_invE/=.
+  rewrite eval_gmaclaneE/=. 
   rewrite hcast_inv. apply: inv_inj=>/=.
   rewrite -hcast_iso. cbn. by rewrite eval_gmaclaneE. 
 Qed.
@@ -226,16 +225,16 @@ Proof. by rewrite !eval_gmaclaneE/= -!tensor11_eq_sym hcast_assoc. Qed.
 Lemma eval_gmaclane_assoc' a b c: gmcl_assoc' a b c ≡ assoc' (eval_gtree a) (eval_gtree b) (eval_gtree c).
 Proof. rewrite eval_gmaclane_inv. apply: inv_inj. exact/eval_gmaclane_assoc. Qed.
 Lemma eval_gmaclane_unitl a: gmcl_unitl a ≡ unitl (eval_gtree a).
-Proof. rewrite !eval_gmaclaneE/=. by destruct (eval_gtree_tree a). Qed.
+Proof. rewrite !eval_gmaclaneE/=-/eval_tree. by destruct (eval_gtree_tree a). Qed.
 Lemma eval_gmaclane_unitl' a: gmcl_unitl' a ≡ unitl' (eval_gtree a).
 Proof. rewrite eval_gmaclane_inv. apply: inv_inj. exact/eval_gmaclane_unitl. Qed.
 Lemma eval_gmaclane_unitr a: gmcl_unitr a ≡ unitr (eval_gtree a).
-Proof. rewrite !eval_gmaclaneE/=. by destruct (eval_gtree_tree a). Qed.
+Proof. rewrite !eval_gmaclaneE/=-/eval_tree. by destruct (eval_gtree_tree a). Qed.
 Lemma eval_gmaclane_unitr' a: gmcl_unitr' a ≡ unitr' (eval_gtree a).
 Proof. rewrite eval_gmaclane_inv. apply: inv_inj. exact/eval_gmaclane_unitr. Qed.
 
 Lemma eval_gmaclane_cast a a' b b' (f: gmaclane a b) aa bb:
-  iso_gmaclane (@cast2' _ _ a b a' b' f aa bb) =
+  eval_gmaclane (@cast2' _ _ a b a' b' f aa bb) =
     icast' f (f_equal eval_gtree aa) (f_equal eval_gtree bb). 
 Proof. by destruct aa; destruct bb. Qed.
 
@@ -245,16 +244,22 @@ Definition mcl_eq a b (e: gtree_tree a = gtree_tree b): eval_gtree a ~> eval_gtr
   hcast' idmap (esym (eval_gtree_tree _)) (etrans (f_equal eval_tree e) (esym (eval_gtree_tree _))).
 Lemma eval_gmaclane_eq a b e:
   @gmcl_eq a b e ≡ mcl_eq e.
-Proof. rewrite /gmcl_eq !eval_gmaclaneE. by rewrite eval_maclane_cast hcastI/=/mcl_eq etrans_id. Qed.
+Proof.
+  rewrite /gmcl_eq !eval_gmaclaneE.
+  by rewrite eval_maclane_cast/=-hcast_iso hcastI/=/mcl_eq etrans_id.
+Qed.
 
 Lemma eval_gmaclane_comp' a b b' c (f: gmaclane a b) e (g: gmaclane b' c): gmcl_comp' f e g ≡ f \; mcl_eq e \; g.
 Proof. by rewrite 2!eval_gmaclane_comp eval_gmaclane_eq. Qed.
 
 Lemma eval_gmaclane_maclane s t (f: maclane s t): gmcl_maclane f ≡ hcast' (eval_maclane f) (eval_tree_gtree s) (eval_tree_gtree t).
-Proof. rewrite !eval_gmaclaneE eval_maclane_cast hcastI. MacLane. Qed.
+Proof. rewrite !eval_gmaclaneE eval_maclane_cast -hcast_iso hcastI. MacLane. Qed.
 
 End s.
 
+Check fun (𝐂: PreMonoidalCat) (a: gtree 𝐂) (m: gmaclane a a) => m ≡ m.
+Check fun (𝐂: PreMonoidalCat) (a: tree 𝐂) (m: maclane a a) => m ≡ m.
+      
 (** reification of generalised tensor tree expressions *)
 
 Coercion eval_arity {𝐂: PreMonoidalCat} (l: list (ob 𝐂)): ob 𝐂 := arity_tree l. 
@@ -301,11 +306,11 @@ Ltac find_gmaclane' :=
   | |- ?A ≃ ?B => 
       let a := reify_ob A in
       let b := reify_ob B in
-      refine (iso_gmaclane (@find_gMacLane _ a b _))
+      refine (eval_gmaclane (@find_gMacLane _ a b _))
   | |- ?A ~> ?B => 
       let a := reify_ob A in
       let b := reify_ob B in
-      refine (eval_gmaclane (@find_gMacLane _ a b _))
+      refine (iso.sort (eval_gmaclane (@find_gMacLane _ a b _)))
   end.
 
 Ltac find_gmaclane := by find_gmaclane'.
@@ -350,7 +355,7 @@ HB.mixin Record isMacLane (𝐂: PreMonoidalCat) (A B: ob 𝐂) (f: A ~> B) := {
     #[canonical=no] srcE: eval_gtree src_gtree = A; 
     #[canonical=no] tgtE: eval_gtree tgt_gtree = B; 
     #[canonical=no] rmcl: gmaclane src_gtree tgt_gtree; 
-    #[canonical=no] rmorE: f ≡ hcast' (iso_gmaclane rmcl) srcE tgtE;
+    #[canonical=no] rmorE: f ≡ hcast' (eval_gmaclane rmcl) srcE tgtE;
   }.
 HB.builders Context 𝐂 a b f of isMacLane 𝐂 a b f.
   Definition f': b ~> a := hcast' (rmcl⁻¹) tgtE srcE.
@@ -372,7 +377,7 @@ Definition tgt_tree {𝐂: PreMonoidalCat} (A B: ob 𝐂) (f: maclane A B) := gt
 
 Definition compatible {𝐂: PreMonoidalCat} {A B: ob 𝐂} (f g: maclane A B) :=
   src_tree f = src_tree g /\ tgt_tree f = tgt_tree g.
-  
+
 Lemma MacLane_cs {𝐂: MonoidalCat} {A B: ob 𝐂} (f g: maclane A B):
   compatible f g -> f ≡ g.
 Proof.
@@ -381,8 +386,8 @@ Proof.
   set rg := rmcl g.
   unfold gmaclane in *. 
   have: eval_maclane (cast2' rf e e') ≡ eval_maclane rg by exact/MacLane.
-  rewrite eval_maclane_cast !eval_gmaclaneE 2!hcastI.
-  move=><-. rewrite hcastI. MacLane.
+  rewrite eval_maclane_cast !eval_gmaclaneE 2!hcastI. 
+  cbn=><-. rewrite -hcast_iso hcastI. MacLane.
 Qed.
 Arguments MacLane_cs {_ _ _} _ _ & _. 
 
@@ -543,20 +548,20 @@ HB.instance Definition _ A B B' C f g m i j := @_mcl_cast A B B' C f g m i j.
 Proof. all: done. Defined.
 
 Program Definition _mcl_eval_gmaclane (s t: gtree 𝐂) (h: gmaclane s t)
-  := @isMacLane.Build _ (eval_gtree s) (eval_gtree t) (eval_gmaclane h)
+  := @isMacLane.Build _ (eval_gtree s) (eval_gtree t) (eval_gmaclane' h)
        s t erefl erefl
        h _.
 Next Obligation. intros. by rewrite hcastK. Qed.
 HB.instance Definition _ s t h := @_mcl_eval_gmaclane s t h.
-Definition maclane_eval_gmaclane s t (h: gmaclane s t): maclane _ _ := eval_gmaclane h.
+Definition maclane_eval_gmaclane s t (h: gmaclane s t): maclane _ _ := eval_gmaclane' h.
 
 Program Definition _mcl_eval_maclane (s t: tree 𝐂) (h: monoidal_maclane.maclane s t)
-  := @isMacLane.Build _ (eval_tree s) (eval_tree t) (eval_maclane h)
+  := @isMacLane.Build _ (eval_tree s) (eval_tree t) (eval_maclane' h)
        (tree_gtree s) (tree_gtree t) (esym (eval_tree_gtree s)) (esym (eval_tree_gtree t))
        (gmcl_maclane h) _.
 Next Obligation. intros. by rewrite eval_gmaclane_maclane hcastI hcastK. Qed.
 HB.instance Definition _ s t h := @_mcl_eval_maclane s t h.
-Definition maclane_eval_maclane s t (h: monoidal_maclane.maclane s t): maclane _ _ := eval_maclane h.
+Definition maclane_eval_maclane s t (h: monoidal_maclane.maclane s t): maclane _ _ := eval_maclane' h.
 
 End s.
 Arguments maclane_comp {_ _ _ _} _ _&.
@@ -652,9 +657,10 @@ Ltac reify_gmcl f :=
   | iso.sort ?f => reify_gmcl f
   | reverse_coercion ?f _ => reify_gmcl f
   | mcl ?f => reify_gmcl f
-  | iso_gmaclane ?m => constr:(maclane_eval_gmaclane m)
   | eval_gmaclane ?m => constr:(maclane_eval_gmaclane m)
+  | eval_gmaclane' ?m => constr:(maclane_eval_gmaclane m)
   | eval_maclane ?m => constr:(maclane_eval_maclane m)
+  | eval_maclane' ?m => constr:(maclane_eval_maclane m)
   | Maclane.sort ?m => constr:(m)
   | _ => fail "could not reify" f "as a MacLane morphism" 
   end.
@@ -688,7 +694,6 @@ Ltac gMacLane_pose := gMacLane_gen gMacLane_pose_.
 #[export] Hint Extern 0 (auto_eqv _ _) => gMacLane: typeclass_instances.
 
 Arguments eval_maclane: simpl never.
-Arguments iso_gmaclane: simpl never.
 Arguments eval_gmaclane: simpl never.
 
 Section tests_gMacLane.
@@ -716,10 +721,10 @@ Proof. gMacLane. Qed.
 Goal A · unitl (B⊗C) ∘ assoc A unit (B⊗C) ≡ unitr A · (B⊗C).
 Proof. gMacLane. Qed.
 
-Goal A · unitl (B⊗C) ∘ assoc A unit (B⊗C) ≡ mcl.
+Goal A · unitl (B⊗C) ∘ assoc A unit (B⊗C) ≡ mcl¹.
 Proof. gMacLane. Qed.
 
-Goal idmap h ≡ mcl.
+Goal idmap h ≡ mcl¹.
 Proof. gMacLane. Qed.
 
 Goal idmap h ≡ mcl ∘ idmap.
@@ -731,7 +736,7 @@ Proof. gMacLane. Qed.
 Goal acast (A · unitl h) ≡ unitr A · eval_arity h.
 Proof. gMacLane. Qed.
 
-Goal assoc A B C ∘∘ assoc A B C ≡ mcl.
+Goal assoc A B C ∘∘ assoc A B C ≡ mcl¹.
 Proof. gMacLane. Qed.
 
 Goal unitl unit ≡[𝐂 _ _] unitr unit. 
@@ -740,14 +745,17 @@ Proof. gMacLane. Qed.
 Goal unitl A ≡ (unitl' A)⁻¹. 
 Proof. gMacLane. Qed.
 
-Goal (unitl (A⊗B))⁻¹ ≡ mcl. 
+Goal (unitl (A⊗B))⁻¹ ≡ mcl¹. 
+Proof. gMacLane. Qed.
+
+Goal @find_gMacLane _ (gt_tensor gt_unit (gt_ob A)) (gt_ob A) erefl ≡ mcl¹. 
 Proof. gMacLane. Qed.
 
 Goal forall (s t: gtree 𝐂) (i: maclane s t), i ∘ i⁻¹ ≡ idmap. 
 Proof. intros. gMacLane_try. unfold compatible. cbn. Abort.
 
 (* Notation test_maclane f := (f ≡ idmap ∘ f) (only parsing). *)
-Abbreviation test_maclane f := (f ∘ f⁻¹ ≡ idmap) (only parsing).
+Abbreviation test_maclane f := (f%cat ∘ f%cat⁻¹ ≡ idmap) (only parsing).
 
 Goal test_maclane (mcl: h⊗unit ≃ h).
 Proof. gMacLane. Qed.

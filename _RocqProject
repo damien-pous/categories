@@ -20,6 +20,8 @@ theories/setoid.v                          # the category of setoids
 theories/span.v                            # spans
 theories/product.v                         # products
 theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
+theories/bicat.v                           # bicategories
+theories/cat_bicat.v                       # Cat: BiCat (needs universe polymorphism, hence type:type for now)
 theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors
 theories/monoidal_maclane.v                # MacLane theorem for monoidal categories

@@ -238,15 +238,15 @@ Definition blocked_unitr {A}: _ ≃ _ := unitr A.
 Definition blocked_unitr' {A}: _ ≃ _ := unitr' A.
 
 (** temporay resolution, to be overriden in [monoidal_gmaclane]  *)
-Local Hint Extern 0 (auto_eqv _ _) => unfold auto_eqv; simpl; cat: typeclass_instances.
+Local Hint Extern 0 (auto_eqv _ _) => rewrite /auto_eqv/=; cat: typeclass_instances.
 
 Lemma bexchange {A B B_ C A' B' B_' C'}
   (i: A ~> B) (j: B_ ~> C)
   (i': A' ~> B') (j': B_' ~> C') (m n n': _ ≃ _)
-  (H: iso.sort m ≡ n·n'):
+  (H: m¹ ≡ n·n'):
   bcomp (i·i') (j·j') m ≡ (bcomp i j n) · (bcomp i' j' n').
 Proof.
-  rewrite /bcomp-!lock H.
+  rewrite /bcomp/=-!lock H. 
   by rewrite 2!exchange. 
 Qed.
 

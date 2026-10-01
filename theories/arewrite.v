@@ -1,6 +1,7 @@
 (** rewriting and reflexivity modulo associativity
-    this file was originally written by Kazuhiko Sazkaguchi, late 2025 - early 2026,
+    this file was originally written by Kazuhiko Sakaguchi, late 2025 - early 2026,
     in the context of the graph-rewriting library we developped with Samuel Arsac
+    adapted by Damien Pous to deal with the new way categorical structures are defined
  *)
 
 From elpi Require Import elpi.
@@ -13,10 +14,10 @@ From Categories.elpi Extra Dependency "arewrite.elpi" as arewrite.
 Local Open Scope cat_scope.
 
 Module Import Internals.
-Section syntax.
+Section s.
 
-Context (C : PreCat).
-Implicit Type (a b c : ob C).
+Context (C : BarePreCat).
+Implicit Type (a b c d : ob C).
 
 (* syntax trees for reasoning modulo associativity *)
 Inductive aexpr : ob C -> ob C -> Type :=
@@ -41,9 +42,8 @@ Fixpoint ae_norm a b c (e : aexpr a b) : (b ~> c) -> (a ~> c) :=
   | ae_comp e1 e2 => fun acc => ae_norm e1 (ae_norm e2 acc)
   end.
 
-End syntax.
-
-Section correct.
+End s.
+Section s.
 
 Context (C : Cat).
 Implicit Type (a b c d : ob C).
@@ -70,12 +70,13 @@ Lemma arewrite_correct a b (e lhs : aexpr a b) (rhs : a ~> b) :
   eqv (ae_eval lhs) rhs -> eqv (ae_eval e) rhs.
 Proof. by move=> /eq_eqv; rewrite -!ae_correct !compo1 => ->. Qed.
 
-End correct.
+End s.
 
 End Internals.
 
-Local Abbreviation quiver_of_precat := cat_precat__to__cat_quiver.
-Local Abbreviation quiver_of_cat := cat_cat__to__cat_quiver.
+
+Local Abbreviation barequiver_of_cat := cat_cat__to__cat_barequiver.
+Local Abbreviation bareprecat_of_cat := cat_cat__to__cat_bareprecat.
 
 (* Elpi code for areflexivity *)
 
@@ -83,19 +84,23 @@ Elpi Tactic areflexivity.
 Elpi Accumulate File common.
 Elpi Accumulate File areflexivity.
 
+Ltac areflexivity := elpi areflexivity.
+
+Section test.
+Context (C : Cat).
+Variables a b: ob C.
+Goal forall (f : a ~> a), f \; f \; idmap \; f ≡ f \; idmap \; f \; f.
+Proof.
+  move=>f. areflexivity.
+Qed.
+End test.
+
+
 (* Elpi code for arewrite *)
 
 Elpi Tactic arewrite_proofgen.
 Elpi Accumulate File common.
 Elpi Accumulate File arewrite.
-
-(*********************)
-(* Exporting tactics *)
-(*********************)
-
-Ltac areflexivity := elpi areflexivity.
-
-(* arewrite *)
 
 Tactic Notation "arewrite" "[" ssrpatternarg(pat) "]" uconstr(proof) :=
   ssrpattern pat;
@@ -126,4 +131,16 @@ Tactic Notation "arewrite" "-" "[" ssrpatternarg(pat) "]" uconstr(proof) :=
 Tactic Notation "arewrite" uconstr(proof) := arewrite [comp _ _]proof.
 
 Tactic Notation "arewrite" "-" uconstr(proof) := arewrite -[comp _ _]proof.
+
+Section test.
+Context (C : Cat).
+Variables a b c d: ob C.
+Goal forall (f f' : a ~> b) (g g' : b ~> c) (h : c ~> d),
+    g ∘ f ≡ g' ∘ f' -> h ∘ g ∘ f ≡ h ∘ g' ∘ f'.
+Proof.
+move=> f f' g g' h H.
+arewrite H.
+areflexivity.
+Qed.
+End test.
 

@@ -109,7 +109,7 @@ End s.
 
 (** class for automatic inferrence of isomorphism equalities (later, for MacLane isomoprhisms) *)
 
-Class auto_eqv {𝐂: PreCat} (A B: 𝐂) (f g: A ≃ B) := aeqv: iso.sort f ≡ g. 
+Class auto_eqv {𝐂: PreCat} (A B: 𝐂) (f g: A ≃ B) := aeqv: f¹ ≡ g¹. 
 
 Section s.
   

@@ -1,18 +1,18 @@
 % Elpi code for areflexivity: the reflexivity tactic modulo AU
-% Author: Kazuhiko Sazkaguchi, late 2025 - early 2026,
+% initial author: Kazuhiko Sakaguchi, late 2025 - early 2026,
 %   in the context of the graph-rewriting library we developped with Samuel Arsac
+% adapted by Damien Pous to deal with the new way categorical structures are defined
 
 solve (goal _ _ Type _ _ as G) [] :- @ltacfail! 0 => std.do! [
   std.assert-ok! (coq.unify-eq Type {{ @eqv lp:Setoid lp:LHS lp:RHS }})
     "The goal is not a setoid equivalence",
-  std.assert-ok! (coq.unify-eq Setoid {{ @hom lp:Quiver lp:Src lp:Tgt }})
+  std.assert-ok! (coq.unify-eq {{Setoid.sort lp:Setoid}} {{ @hom lp:BareQuiver lp:Src lp:Tgt }})
     "The setoid is not a hom-set",
-  std.assert-ok! (coq.unify-eq Quiver {{ (quiver_of_precat lp:PreCat) }})
-    "The quiver is not a precat",
-  std.assert-ok! (coq.unify-eq Quiver {{ (quiver_of_cat lp:Cat) }})
+  std.assert-ok! (coq.unify-eq BareQuiver {{ (barequiver_of_cat lp:Cat) }})
     "The quiver is not a cat",
-  quote PreCat Src Tgt LHS LHSQ _,
-  quote PreCat Src Tgt RHS RHSQ _,
+  BarePreCat = {{ bareprecat_of_cat lp:Cat }},
+  quote BarePreCat Src Tgt LHS LHSQ _,
+  quote BarePreCat Src Tgt RHS RHSQ _,
   (refine {{ @areflexivity_correct lp:Cat lp:Src lp:Tgt
                lp:LHSQ lp:RHSQ erefl }} G [];
    coq.ltac.fail 0 "Not a valid equivalence")

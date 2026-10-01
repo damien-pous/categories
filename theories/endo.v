@@ -18,9 +18,9 @@ Next Obligation.
   move=>FG FG' fg fg' [ff gg].
   exact: ntx_comp'_eqv.
 Qed.
-Next Obligation. move=>FG A/=. cat. Qed.
+Next Obligation. cbn=>FG A/=. cat. Qed.
 Next Obligation.
-  move=>FG IJ UV fg ij X/=.
+  cbn=>FG IJ UV fg ij X/=.
   normalise. rewrite -!compoA.
   apply comp_eqv=>//.
   normalise. by rewrite natural. 

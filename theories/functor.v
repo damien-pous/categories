@@ -10,14 +10,13 @@ Local Open Scope cat_scope.
 (** prefunctor: a functor without laws *)
 #[primitive] HB.mixin Record IsPreFunctor' (𝐂 𝐃: Quiver) (F: ob 𝐂 -> ob 𝐃) := {
    #[canonical=no] Fhom: forall A B: ob 𝐂, (A ~> B) -> (F A ~> F B);
-   #[canonical=no] Fhom_eqv: forall {A B: ob 𝐂}, Proper (eqv ==> eqv) (Fhom A B);
+   #[canonical=no] _Fhom_eqv: forall A B: ob 𝐂, Proper (eqv ==> eqv) (Fhom A B);
   }.
 #[short(type="PreFunctor")]
 HB.structure Definition prefunctor 𝐂 𝐃 :=
   { F of IsPreFunctor' 𝐂 𝐃 F }.
 Arguments Fhom {_ _} _ {_ _}. 
-
-Existing Instance Fhom_eqv. 
+Instance Fhom_eqv {𝐂 𝐃: Quiver} {F: PreFunctor 𝐂 𝐃} {A B: ob 𝐂}: Proper (eqv ==> eqv) (Fhom F) := _Fhom_eqv A B. 
 HB.instance Definition _ 𝐂 𝐃 (F: PreFunctor 𝐂 𝐃) A B :=
   isExtensional.Build _ _ (@Fhom _ _ F A B) _. 
 
@@ -31,17 +30,19 @@ HB.end.
 
 (** functor: prefunctor + laws *)
 #[primitive] HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @prefunctor 𝐂 𝐃 F := {
-    #[canonical=no] Fidmap: forall A: ob 𝐂, Fhom F A ≡ F A;
-    #[canonical=no] Fcomp: forall {A B C: ob 𝐂} (f: A ~> B) (g: B ~> C), Fhom F (g ∘ f) ≡ Fhom F g ∘ Fhom F f;
+    #[canonical=no] _Fidmap: forall A: ob 𝐂, Fhom F A ≡ F A;
+    #[canonical=no] _Fcomp: forall (A B C: ob 𝐂) (f: A ~> B) (g: B ~> C), Fhom F (f \; g) ≡ Fhom F f \; Fhom F g;
   }.
 #[short(type="Functor")]
 HB.structure Definition functor (𝐂 𝐃: PreCat) :=
   { F of IsFunctor 𝐂 𝐃 F & }.
+Definition Fidmap {𝐂 𝐃: PreCat} {F: Functor 𝐂 𝐃} {A: ob 𝐂}: Fhom F A ≡ F A := _Fidmap A.
+Definition Fcomp {𝐂 𝐃: PreCat} {F: Functor 𝐂 𝐃} {A B C: ob 𝐂} (f: A ~> B) (g: B ~> C): Fhom F (f \; g) ≡ Fhom F f \; Fhom F g := _Fcomp _ _ _ f g. 
 
 HB.factory Record IsFunctor' (𝐂 𝐃: PreCat) (F: ob 𝐂 -> ob 𝐃) := {
    Fhom: forall {A B: ob 𝐂}, (A ~> B) -> (F A ~> F B);
    Fhom_eqv: forall {A B: ob 𝐂}, Proper (eqv ==> eqv) (@Fhom A B);
-   Fidmap: forall A: ob 𝐂, Fhom A ≡ F A;
+   Fidmap: forall A: ob 𝐂, Fhom A ≡ idmap (F A);
    Fcomp: forall {A B C: ob 𝐂} (f: A ~> B) (g: B ~> C), Fhom (g ∘ f) ≡ Fhom g ∘ Fhom f;
   }.
 HB.builders Context 𝐂 𝐃 F of @IsFunctor' 𝐂 𝐃 F.
@@ -98,7 +99,7 @@ HB.instance Definition _ 𝐂 𝐃 (F: PreFunctor 𝐂 𝐃) :=
   @IsPreFunctor'.Build 𝐂^op 𝐃^op (funcop F) (fun _ _ f => Fhom F f)
                                 (fun A B f g fg => @Fhom_eqv _ _ F B A f g fg).
 HB.instance Definition _ 𝐂 𝐃 (F: Functor 𝐂 𝐃) :=
-  @IsFunctor.Build 𝐂^op 𝐃^op (funcop F) (fun _ => Fidmap _) (fun _ _ _ _ _ => Fcomp _ _ _ _ _). 
+  @IsFunctor.Build 𝐂^op 𝐃^op (funcop F) (fun _ => Fidmap) (fun _ _ _ _ _ => Fcomp _ _). 
 HB.instance Definition _ 𝐂 𝐃 (F: FaithfulPreFunctor 𝐂 𝐃) :=
   @IsFaithful.Build 𝐂^op 𝐃^op (funcop F) (fun A B => @Fhom_inj _ _ F B A). 
 HB.instance Definition _ 𝐂 𝐃 (F: FaithfulFunctor 𝐂 𝐃) := 
@@ -128,7 +129,6 @@ Module HL.
   Next Obligation. intros. by rewrite eval_map normE. Qed.  
   End s.
 End HL.
-(* TOTHINK: projection is on setoid_morphism.sort *)
 Canonical HL.r_Fhom.
 
 
@@ -254,14 +254,12 @@ Program Definition iso_ntx'
   (H: forall X, n X ≡ i X): functor_equiv :=
   mk_iso n (mk_ntx G F (fun X => (i X)⁻¹) _) _ _.
 Next Obligation.
-  intros=>/=. rewrite iso_src/=.
-  (* TOFIX: ugly term here, why do we need cbn? *)
-  cbn.
+  intros=>/=. rewrite -iso_src.
   rewrite -H -compoA -natural.
   by rewrite compoA H invKr cats. 
 Qed.
-Next Obligation. move=>i n H A/=. by rewrite H invKl. Qed.
-Next Obligation. move=>i n H A/=. by rewrite H invKr. Qed.
+Next Obligation. cbn=>i n H A/=. by rewrite H invKl. Qed.
+Next Obligation. cbn=>i n H A/=. by rewrite H invKr. Qed.
 
 (** via natural tranformations which are pointwise isomorphisms *)
 Definition iso_ntx
@@ -378,7 +376,7 @@ Lemma functor_comp_eqv:
   Proper (eqv ==> eqv ==> eqv) (@functor_comp 𝐂 𝐃 𝐄).
 Proof.
   intros F G [i] F' G' [j]. split.  
-  apply: (mk_iso' (j¹⊚ i¹) (j⁻¹⊚i⁻¹) _ _).
+  apply: (mk_iso' (j⊚ i) (j⁻¹⊚i⁻¹) _ _).
   rewrite endo_exchange.
   etransitivity. exact: (ntx_comp'_eqv (invKl i) (invKl j)). by rewrite -ntx_id_comp. 
   rewrite endo_exchange.

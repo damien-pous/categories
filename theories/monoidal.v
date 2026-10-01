@@ -23,8 +23,8 @@ Ltac MacLane := gMacLane.
 
 Tactic Notation "transitivity'" constr(g) :=
   lazymatch goal with
-  | |- _ ≡[hom ?A ?B] cast _ => apply: (eqv_trans_cast' g mcl mcl)=>/= 
-  | |- _ ≡[hom ?A ?B] _ => apply: (eqv_trans_cast g mcl mcl)=>/= 
+  | |- _ ≡ cast _ => apply: (eqv_trans_cast' g mcl mcl)=>/= 
+  | |- _ ≡ _ => apply: (eqv_trans_cast g mcl mcl)=>/= 
   | _ => fail "not an equality between morphisms"
   end.
 

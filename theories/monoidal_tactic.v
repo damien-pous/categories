@@ -1,6 +1,6 @@
 (** * decision procedure for monoidal categories *)
 
-Require Import arity monoidal_def monoidal_maclane monoidal_gmaclane.
+Require Import arity monoidal_def monoidal_maclane monoidal_gmaclane arewrite.
 From Stdlib Require Import List.
 
 Local Open Scope cat_scope.
@@ -23,7 +23,7 @@ Section s.
   Fixpoint eval_tmor a b (u: tmor a b): a ~> b :=
     match u with
     | t_var f => f
-    | t_mcl E => eval_gmaclane (find_gMacLane E)
+    | t_mcl E => eval_gmaclane' (find_gMacLane E)
     | t_comp f g => eval_tmor f \; eval_tmor g
     | t_tens f g => eval_tmor f · eval_tmor g
     end.
@@ -75,10 +75,12 @@ Proof. destruct e=>/=. gMacLane. Qed.
 Lemma eval_gNf_mor_tens a b c d (f: tmor a b) (g: tmor c d):
   eval_amor (gNf_mor (t_tens f g)) ≡ acast (eval_amor (gNf_mor f) · eval_amor (gNf_mor g)).
 Proof.
-  simpl. set u := (_·_). set v := cast u.
-  apply: (eqv_trans _ (acast v) _). rewrite 2!eval_a_mcl /cast-lock.
-  repeat apply: comp_eqv=>//; gMacLane.
-  rewrite castI. gMacLane.
+  cbn -[gNf]. set u := (_·_). set v := cast u. 
+  apply: (eqv_trans _ (acast v) _).
+  rewrite /cast-lock.
+  repeat apply: comp_eqv=>//.
+  1,2: rewrite eval_a_mcl; gMacLane.
+  rewrite castI; gMacLane.
 Qed.
 
 Theorem eval_gNf_mor a b (f: tmor a b):
@@ -87,7 +89,7 @@ Proof.
   induction f.
   - by rewrite /= castIK. 
   - rewrite /=eval_a_mcl/=. gMacLane. 
-  - rewrite /= IHf1 IHf2 cast_comp.
+  - rewrite /=. arewrite IHf1. rewrite IHf2 cast_comp. 
     rewrite 2!comp_cast. gMacLane. 
   - rewrite eval_gNf_mor_tens /= {}IHf1 {}IHf2. 
     rewrite tensor_cast castI. gMacLane.
@@ -121,14 +123,14 @@ Fixpoint eval_row a b (r: row a b): a ~> b :=
   | rnil => idmap
   | rcons a u r => acast ((eval_arity a · u) · eval_row r)
   end.
-Coercion eval_row: row >-> Setoid.sort.
+Coercion eval_row: row >-> hom.
 
 Fixpoint eval_nmor a b (r: nmor a b): a ~> b :=
   match r with
   | nnil => idmap
   | ncons u r => r ∘ eval_nmor u
   end.
-Coercion eval_nmor: nmor >-> Setoid.sort.
+Coercion eval_nmor: nmor >-> hom.
 
 
 
@@ -377,11 +379,11 @@ Definition gmcl_eq_ar a b (e: a=b): gmaclane (gt_trees (gt_ar a)) (gt_trees (gt_
 Defined.
 
 Lemma eval_rcast {a' a b b'} (f: row a b) (i: a=a') (j: b=b'):
-  eval_row (cast2' f i j) ≡ cast' (iso_gmaclane (gmcl_eq_ar (esym i))) (iso_gmaclane (gmcl_eq_ar j)) f.
+  eval_row (cast2' f i j) ≡ cast' (eval_gmaclane (gmcl_eq_ar (esym i))) (eval_gmaclane (gmcl_eq_ar j)) f.
 Proof. destruct i; destruct j. by rewrite castK. Qed.
 
 Lemma eval_ncast {a' a b b'} (f: nmor a b) (i: a=a') (j: b=b'):
-  eval_nmor (cast2' f i j) ≡ cast' (iso_gmaclane (gmcl_eq_ar (esym i))) (iso_gmaclane (gmcl_eq_ar j)) f.
+  eval_nmor (cast2' f i j) ≡ cast' (eval_gmaclane (gmcl_eq_ar (esym i))) (eval_gmaclane (gmcl_eq_ar j)) f.
 Proof. destruct i; destruct j. by rewrite castK. Qed.
 
 Lemma id_app a b: idmap (a++b) ≡ acast (idmap a·idmap b).
@@ -414,7 +416,7 @@ Lemma eval_next_left a b c (f: nmor b c): next_left a f ≡ acast (eval_arity a 
 Proof.
   elim: f=>[|b' v f IH r]/=.
   - gMacLane.
-  - rewrite eval_rext_left {}IH.
+  - arewrite eval_rext_left. rewrite {}IH.
     rewrite tensor_comp_r_src. 
     by rewrite comp_cast bcompK.
 Qed.
@@ -432,7 +434,7 @@ Lemma eval_next_right a b c (f: nmor b c): next_right a f ≡ acast (f · eval_a
 Proof.
   elim: f=>[|b' v f IH r]/=.
   - gMacLane. 
-  - rewrite eval_rext_right {}IH.
+  - arewrite eval_rext_right. rewrite {}IH.
     rewrite tensor_comp_l_src. 
     by rewrite comp_cast bcompK.
 Qed.
@@ -455,10 +457,10 @@ Proof.
   elim: f=>{b}[|a' u f IH r]/= in c d g *.
   - apply: eval_next_left. 
   - case: g=>[|c' v g s]/=.
-    -- rewrite eval_rext_right eval_next_right.
+    -- arewrite eval_rext_right. rewrite eval_next_right.
        rewrite tensor_comp_l_src. 
        by rewrite comp_cast bcompK. 
-    -- rewrite eval_rtensor {}IH.
+    -- arewrite eval_rtensor. rewrite {}IH.
        rewrite -exchange. 
        by rewrite comp_cast bcompK. 
 Qed.
@@ -509,12 +511,12 @@ Proof. exact/cast_switch. Qed.
 Tactic Notation "recast" hyp(f) constr(A') constr(B') constr(E) :=
   let a' := reify_ob (A': ob 𝐂) in
   let b' := reify_ob (B': ob 𝐂) in
-  match type of (f: _~> _) with
-  | Setoid.sort (?A ~> ?B) =>
+  match type of (f: _ ~> _) with
+  | ?A ~> ?B =>
       let a := reify_ob A in
       let b := reify_ob B in
-      let i := uconstr:(iso_gmaclane (@find_gMacLane _ a' a _)) in
-      let j := uconstr:(iso_gmaclane (@find_gMacLane _ b b' _)) in
+      let i := uconstr:(eval_gmaclane (@find_gMacLane _ a' a _)) in
+      let j := uconstr:(eval_gmaclane (@find_gMacLane _ b b' _)) in
       let f' := fresh f in
       unshelve erewrite (castK' i j f) ;
       [rewrite //=?(app_assoc,E)//; exact/find_eq_arity
@@ -624,11 +626,7 @@ Proof.
   match goal with
   | |- bcomp _ _ ?m ≡ bcomp _ _ ?n -> bcomp _ _ ?m' ≡ bcomp _ _ ?n' =>
       have [-> ->]: m ≡ m' /\ n ≡ n' =>//; split
-  end; 
-  (* TO IMPROVE *)
-  match goal with
-  | |- ?f ≡ ?g => change (iso.sort f ≡ iso.sort g)
-  end; simpl; gMacLane.  
+  end; gMacLane.  
 Qed.
 
 Lemma rcons_rtwo_eqv z [a c]
@@ -752,15 +750,14 @@ Proof.
   rewrite /rcomp.
   have [b' c' r' s' bc] := zrcomp_spec.
   destruct bc. 
-  rewrite eval_ncons'/= {}IH.
-  rewrite 2!castK !compoA. by move=>->.
+  rewrite eval_ncons'/= 2!castK=>H. arewrite IH. arewrite -H. cat. 
 Qed.
 
 Lemma eval_ncomp a b c f g: @ncomp _ a b c f g ≡ g ∘ f.
 Proof.
   elim: g=>[|b' u g IH r]/=.
   - by rewrite compo1.
-  - by rewrite eval_nrcomp IH compoA. 
+  - rewrite eval_nrcomp. arewrite IH. cat.
 Qed.
 
 Theorem eval_norm a b (u: amor a b): norm u ≡ eval_amor u.
@@ -768,7 +765,7 @@ Proof.
   elim: u=>[{}a {}b f|{}a|{}a {}b c f IHf g IHg|{}a {}b c d f IHf g IHg].
   - exact/eval_nvar. 
   - done. 
-  - by rewrite eval_ncomp IHf IHg. 
+  - rewrite /=eval_ncomp. arewrite IHf. by rewrite IHg. 
   - by rewrite eval_ntensor IHf IHg.
 Qed.
 
@@ -799,7 +796,7 @@ Arguments reify_mor {_}.
 Structure reified_mcl {𝐂: PreMonoidalCat} (a b: gtree 𝐂) := reify_mcl {
   rm':> a ≃ b;
   #[canonical=no] rt': gmaclane a b;
-  #[canonical=no] rt'E: iso.sort rm' ≡ eval_gmaclane rt';
+  #[canonical=no] rt'E: rm'¹ ≡ eval_gmaclane rt';
 }.
 Arguments reify_mcl {_}.
 
@@ -824,13 +821,13 @@ Canonical r_id a :=
   reify_mor a a idmap (t_mcl erefl) MacLane.
 
 Canonical r_comp a b c (f: reified_mor a b) (g: reified_mor b c) :=
-  reify_mor a c (f\;g) (t_comp f g) (comp_eqv _ _ (rtE f) _ _ (rtE g)).
+  reify_mor a c (f\;g) (t_comp f g) (comp_eqv (rtE f) (rtE g)).
 
 Canonical r_tens a b c d (f: reified_mor a b) (g: reified_mor c d) :=
   reify_mor (gt_tensor a c) (gt_tensor b d) (f·g) (t_tens f g) (tensor_eqv (rtE f) (rtE g)).
 
 Canonical r_gmaclane a b (f: gmaclane a b) e :=
-  reify_mor a b (eval_gmaclane f) (t_mcl e) MacLane.
+  reify_mor a b (eval_gmaclane' f) (t_mcl e) MacLane.
 
 Canonical r_assoc a b c :=
   reify_mor (gt_tensor (gt_tensor a b) c) (gt_tensor a (gt_tensor b c))
@@ -858,7 +855,7 @@ Canonical r_unitr' a :=
 
 Program Canonical r_mcl a b (f: reified_mcl a b) e :=
   reify_mor a b (mcl f) (t_mcl e) _.
-Next Obligation. intros. rewrite /mcl rt'E. gMacLane. Qed.
+Next Obligation. intros. rewrite /mcl (rt'E f). gMacLane. Qed.
 
 Program Canonical r_bcomp a b b' c (f: reified_mor a b) (g: reified_mor b' c) (m: reified_mcl b b') e :=
   reify_mor a c (bcomp f g m) (t_comp f (t_comp (t_mcl e) g)) _.
@@ -890,7 +887,9 @@ Program Definition r'_tens a b c d (f: reified_mcl a b) (g: reified_mcl c d) :=
 Next Obligation. intros. by rewrite /=eval_gmaclane_tensor 2!rt'E. Qed.
 
 Definition r'_gmaclane a b (f: gmaclane a b) :=
-  reify_mcl a b (iso_gmaclane f) f eqv_refl.
+  reify_mcl a b (eval_gmaclane f) f eqv_refl.
+Definition r'_gmaclane' a b (f: gmaclane a b) :=
+  reify_mcl a b (eval_gmaclane' f) f eqv_refl.
 
 Definition r'_assoc a b c :=
   reify_mcl (gt_tensor (gt_tensor a b) c) (gt_tensor a (gt_tensor b c))
@@ -958,7 +957,9 @@ Ltac reify_iso_mcl f :=
       constr:(r'_inv (r_unitr a))
   | iso.sort ?f =>
       reify_hom_mcl f
-  | iso_gmaclane ?m => 
+  | eval_gmaclane ?m => 
+      constr:(r'_gmaclane m)
+  | eval_gmaclane' ?m => 
       constr:(r'_gmaclane m)
   | mcl ?f =>
       reify_iso_mcl f 
@@ -1016,6 +1017,8 @@ with reify_hom_mcl f :=
       constr:(r'_inv (r_unitr a))
   | eval_gmaclane ?m => (* (find_gMacLane ?E) *)
       constr:(r'_gmaclane m)
+  | eval_gmaclane' ?m => (* (find_gMacLane ?E) *)
+      constr:(r'_gmaclane m)
   | reverse_coercion ?f _ => reify_hom_mcl f
   | ?m => fail "could not reify" m "as a MacLane morphism"
   end.
@@ -1071,12 +1074,14 @@ Ltac reify_mor f :=
   | reverse_coercion ?f _ => reify_mor f
   | @eval_gmaclane _ ?s ?t ?m => (* (find_gMacLane ?E) *)
       constr:(@r_gmaclane _ s t m erefl)
+  | @eval_gmaclane' _ ?s ?t ?m => (* (find_gMacLane ?E) *)
+      constr:(@r_gmaclane _ s t m erefl)
   | iso.sort ?f =>
       let m := reify_iso_mcl f in
       constr:(r_mcl m erefl)
   | ?f =>
       lazymatch type of f with
-      | Setoid.sort (?A ~> ?B) =>
+      | ?A ~> ?B =>
           let a := reify_ob A in
           let b := reify_ob B in
           constr:(@r_var _ a b f)
@@ -1119,7 +1124,7 @@ Goal forall (f g: A ~> B), f·g ≡ idmap·g ∘ f·idmap.
 Proof. intros. mcat. Qed.
 Goal A · unit · B ≡ idmap.
 Proof. mcat. Qed.
-Goal A · unit · B ≡ mcl.
+Goal A · unit · B ≡ mcl¹.
 Proof. mcat. Qed.
 Goal (mcl: A⊗unit ~> A) ≡ (acast idmap: A⊗unit ~> A).
 Proof. intros. mcat. Qed.
@@ -1127,7 +1132,7 @@ Goal (mcl: A⊗unit ~> A) ∘ (acast idmap: unit⊗A ~> A⊗unit) ∘ (mcl: A ~>
 Proof. intros. mcat. Qed.
 Goal forall (f: A ~> A) (g: A⊗unit ~> A), g ∘∘ idmap ∘∘ f ≡ g ∘∘ f.
 Proof. intros. mcat. Qed.
-Goal assoc A B C ≡ mcl.
+Goal assoc A B C ≡ mcl¹.
 Proof. mcat. Qed.
 Goal assoc A B C ≡ mcl⁻¹.
 Proof. Fail mcat. Abort.          (* TOFIX (was working before morphism hierarchy) *)

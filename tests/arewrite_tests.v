@@ -3,7 +3,7 @@
     in the context of the graph-rewriting library we developped with Samuel Arsac
  *)
 
-Require Import cat functor arewrite.
+Require Import cat morphisms functor arewrite.
 
 Local Open Scope cat_scope.
 

@@ -1,13 +1,19 @@
 % Elpi code shared between the modulo G tactics
-% Author: Kazuhiko Sazkaguchi, late 2025 - early 2026,
+% initial author: Kazuhiko Sakaguchi, late 2025 - early 2026,
 %   in the context of the graph-rewriting library we developped with Samuel Arsac
+% adapted by Damien Pous to deal with the new way categorical structures are defined
+
+% unless otherwise specified, [C: PreCat]
+
 
 % [mono->epi C X Y M Mono E] takes a monomorphism [M] from [X] to [Y] in PreCat
 % [C], and returns its monomorphism instance [Mono] and the inverse [E].
 func mono->epi term, term, term, term -> term, term.
-mono->epi C X Y M {{ mono_of_epi lp:C lp:Y lp:X lp:Epi }}
+mono->epi C X Y M {{ mono_of_epi lp:C' lp:Y lp:X lp:Epi }}
                   {{ @splitepi.sort lp:C lp:Y lp:X lp:Epi }} :-
-  coq.unify-eq M {{ inverse_of_epi lp:C lp:Y lp:X lp:Epi }} ok, !.
+  coq.unify-eq C {{ precat_of_cat lp:C' }} ok, 
+  coq.unify-eq M {{ inverse_of_epi lp:C lp:Y lp:X lp:Epi }} ok,
+  !.
 mono->epi C X Y M Mono {{ inverse_of_mono lp:C lp:X lp:Y lp:Mono }} :-
   coq.unify-eq M {{ @splitmono.sort lp:C lp:X lp:Y lp:Mono }} ok, !.
 
@@ -16,9 +22,11 @@ mono->epi C X Y M Mono {{ inverse_of_mono lp:C lp:X lp:Y lp:Mono }} :-
 func epi->mono term, term, term, term -> term, term.
 epi->mono C X Y E Mono {{ @splitmono.sort lp:C lp:Y lp:X lp:Mono }} :-
   coq.unify-eq E {{ inverse_of_mono lp:C lp:Y lp:X lp:Mono }} ok, !.
-epi->mono C X Y E {{ mono_of_epi lp:C lp:X lp:Y lp:Epi }}
+epi->mono C X Y E {{ mono_of_epi lp:C' lp:X lp:Y lp:Epi }}
                   {{ inverse_of_epi lp:C lp:X lp:Y lp:Epi }} :-
-  coq.unify-eq E {{ @splitepi.sort lp:C lp:X lp:Y lp:Epi }} ok, !.
+  coq.unify-eq C {{ precat_of_cat lp:C' }} ok, 
+  coq.unify-eq E {{ @splitepi.sort lp:C lp:X lp:Y lp:Epi }} ok, 
+  !.
 
 % [mkrocqlist T In Out] takes an (Elpi) list [In] of terms of type [T], and
 % turns it into a (Rocq) list [Out] of type [list T].

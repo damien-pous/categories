@@ -166,12 +166,14 @@ Defined.
 
 Program Definition _fst_functor (C D: Cat) :=
   @IsFunctor'.Build (C*D: Cat)%type C Datatypes.fst (fun A B f => f.1) _ _ _.
+Next Obligation. cbn=>*. exact/extensional. Qed.
 Next Obligation. done. Qed.
 Next Obligation. done. Qed.
 HB.instance Definition _ C D := _fst_functor C D.
 
 Program Definition _snd_functor (C D: Cat) :=
   @IsFunctor'.Build (C*D: Cat)%type D Datatypes.snd (fun A B f => f.2) _ _ _.
+Next Obligation. cbn=>*. exact/extensional. Qed.
 Next Obligation. done. Qed.
 Next Obligation. done. Qed.
 HB.instance Definition _ C D := _snd_functor C D.
