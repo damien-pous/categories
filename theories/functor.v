@@ -1,7 +1,7 @@
-(** * Functors and natural transformations *)
+(** * Functors, natural transformations, adjunctions *)
 
 Require Export morphisms.
-Require Import cast.
+Require Import cast arewrite.
 
 Local Open Scope cat_scope.
 
@@ -140,9 +140,9 @@ HB.instance Definition _ (𝐂: PreCat) :=
 
 (** composition of functors *)
 HB.instance Definition _ {𝐂 𝐃 𝐄: Quiver} {F: PreFunctor 𝐂 𝐃} {G: PreFunctor 𝐃 𝐄} :=
-  IsPreFunctor.Build 𝐂 𝐄 (types_comp G F) (fun _ _ => types_comp (Fhom G) (Fhom F)).
+  IsPreFunctor.Build 𝐂 𝐄 (catcomp F G) (fun _ _ => types_comp (Fhom G) (Fhom F)).
 Program Definition _comp_functor {𝐂 𝐃 𝐄: PreCat} {F: Functor 𝐂 𝐃} {G: Functor 𝐃 𝐄} :=
-  IsFunctor.Build 𝐂 𝐄 (types_comp G F) _ _.
+  IsFunctor.Build 𝐂 𝐄 (catcomp F G) _ _.
 Next Obligation. intros. cbn=>/=. by rewrite 2!Fidmap. Qed.
 Next Obligation. intros. cbn=>/=. by rewrite 2!Fcomp. Qed.
 HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_comp_functor 𝐂 𝐃 𝐄 F G.
@@ -163,6 +163,21 @@ Section s.
   HB.instance Definition _ := _functor_iso.
 End s.
 
+(* waiting for universe polymorphism, we cannot declare the following instance *)
+(* Unset Universe Checking. *)
+(*TMP-UNIV
+HB.instance Definition _ := IsBareQuiver.Build Cat Functor. 
+*)
+(* meanwhile, we use the following notation for functors; later we will replace it with "~>" *)
+Notation "F ≈> G" := (Functor F G): cat_scope.
+Definition functor_id {𝐂: Cat}: 𝐂 ≈> 𝐂 := idfun: Functor 𝐂 𝐂.
+Definition functor_comp {𝐂 𝐃 𝐄: Cat} (F: 𝐂 ≈> 𝐃) (G: 𝐃 ≈> 𝐄): 𝐂 ≈> 𝐄 := catcomp F G: Functor _ _.
+Definition functor_cst {𝐂 𝐃: Cat} (D: 𝐃): 𝐂 ≈> 𝐃 := cst D: Functor _ _.
+(*TMP-UNIV
+HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp). 
+*)
+
+
 
 (** * Natural transformations *)
 
@@ -177,6 +192,12 @@ Definition mk_ntx {𝐂: Quiver} {𝐃: PreCat} (F G: PreFunctor 𝐂 𝐃)
   (n : forall X, F X ~> G X) (H: forall (X Y: ob 𝐂) (f: X ~> Y), n Y ∘ Fhom F f ≡ Fhom G f ∘ n X)
   := HB.pack_for (NTX F G) n (IsNatural.Build _ _ F G n H).
 Arguments mk_ntx {_ _} _ _ _ _.
+
+Definition ntxop {𝐂 𝐃: Quiver} (F G: ob 𝐂 -> ob 𝐃) (n: forall X, F X ~> G X): forall X, funcop G X ~> funcop F X
+  := fun X => morphop (n X).
+
+HB.instance Definition _ {𝐂: Quiver} {𝐃: PreCat} (F G: PreFunctor 𝐂 𝐃) (n: NTX F G) :=
+  @IsNatural.Build 𝐂^op 𝐃^op (funcop G) (funcop F) (ntxop n) (fun _ _ f => eqv_sym _ _ (natural n f)).
 
 (** setoid structure on natural transformations *)
 HB.instance Definition _ (𝐂: Quiver) {𝐃: PreCat} (F G: PreFunctor 𝐂 𝐃) :=
@@ -241,6 +262,218 @@ HB.instance Definition _ 𝐂 𝐃 := _functor_cat 𝐂 𝐃.
 
 (* Check fun (𝐂: Cat) (F: Functor 𝐂 𝐂) (f: F ~> F) => let G: PreFunctor _ _ := F in f: G ~> G. *)
 
+Definition ntx_comp'_ 𝐂 𝐃 {𝐄: PreCat} {F G: PreFunctor 𝐂 𝐃} {F' G': PreFunctor 𝐃 𝐄}
+  (k: forall X, F X ~> G X) (h: forall X, F' X ~> G' X): forall X, (catcomp F F') X ~> (catcomp G G') X :=
+  (fun X => h _ ∘ Fhom _ (k _)).
+Arguments ntx_comp'_ {_ _ _ _ _ _ _} _ _ _/. 
+Program Definition _ntx_comp'_natural 𝐂 𝐃 (𝐄: Cat) (F G: 𝐂 ≈> 𝐃) (F' G': 𝐃 ≈> 𝐄)
+  (k: F ~> G) (h: F' ~> G') := IsNatural.Build 𝐂 𝐄 (catcomp F F') (catcomp G G') (ntx_comp'_ k h) _.
+Next Obligation.
+  intros. cbn. 
+  rewrite natural -compoA !natural.
+  rewrite compoA -Fcomp natural.
+  Fail cat.                     (* was working before *)
+  rewrite !Fcomp. cat. 
+Qed.
+HB.instance Definition _ 𝐂 𝐃 𝐄 F G F' G' k h := @_ntx_comp'_natural 𝐂 𝐃 𝐄 F G F' G' k h.
+Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}
+  (*TMP-UNIV: functor_comp -> ∘ once we have Cat:Cat  *)
+  (n: F ~> G) (m: F' ~> G'): (functor_comp F F') ~> (functor_comp G G') :=
+  (ntx_comp'_ n m: NTX _ _). 
+Notation "h ⊚ k" := (ntx_comp' k h): cat_scope. (* TODO: reverse this notation! *)
+
+
+
+#[primitive] 
+HB.mixin Record IsPreAdjoint {𝐂 𝐃: Type} (F: ob 𝐂 -> ob 𝐃) :=
+  { #[canonical=no] adj: ob 𝐃 -> ob 𝐂 }.
+#[short(type="PreAdjoint")]
+HB.structure Definition preAdjoint 𝐂 𝐃 := {F of IsPreAdjoint 𝐂 𝐃 F & }.
+Arguments adj {_ _}.
+
+HB.instance Definition _ {𝐂 𝐃: Type} (F: PreAdjoint 𝐂 𝐃) :=
+  IsPreAdjoint.Build 𝐂^op 𝐃^op (funcop F) (adj F).
+HB.instance Definition _ {𝐂 𝐃: Type} (F: PreAdjoint 𝐂 𝐃) :=
+  IsPreAdjoint.Build 𝐃 𝐂 (adj F) F.
+
+HB.instance Definition _ {𝐂: Type} := IsPreAdjoint.Build 𝐂 𝐂 idfun idfun.
+HB.instance Definition _ {𝐂 𝐃 𝐄: Type} (F: PreAdjoint 𝐂 𝐃) (G: PreAdjoint 𝐃 𝐄) :=
+  IsPreAdjoint.Build 𝐂 𝐄 (catcomp F G) (catcomp (adj G) (adj F)).
+
+#[primitive] 
+HB.mixin Record IsPreAdjointF {𝐂 𝐃: PreCat} F of @preAdjoint 𝐂 𝐃 F :=
+  { #[canonical=no] _adj_functor: @functor.axioms_ _ _ (adj F) }.
+#[short(type="PreAdjointF")]
+HB.structure Definition preAdjointF 𝐂 𝐃 := {F of @functor 𝐂 𝐃 F & IsPreAdjointF _ _ F & IsPreAdjoint _ _ F}.
+HB.instance Definition _ 𝐂 𝐃 F := @_adj_functor 𝐂 𝐃 F. 
+
+HB.instance Definition _ {𝐂 𝐃: PreCat} (F: PreAdjointF 𝐂 𝐃) :=
+  IsPreAdjointF.Build 𝐂^op 𝐃^op (funcop F) (functor.class (funcop (adj F))).
+HB.instance Definition _ {𝐂 𝐃: PreCat} (F: PreAdjointF 𝐂 𝐃) :=
+  IsPreAdjointF.Build 𝐃 𝐂 (adj F) (functor.class F).
+
+HB.instance Definition _ {𝐂: Cat} := IsPreAdjointF.Build 𝐂 𝐂 idfun (functor.class functor_id).
+HB.instance Definition _ {𝐂 𝐃 𝐄: Cat} (F: PreAdjointF 𝐂 𝐃) (G: PreAdjointF 𝐃 𝐄) :=
+  IsPreAdjointF.Build 𝐂 𝐄 (catcomp F G) (functor.class (functor_comp (adj G) (adj F))).
+
+
+#[primitive] HB.mixin Record IsLeftAdjoint {𝐂 𝐃: Cat} F of @preAdjointF 𝐂 𝐃 F :=
+  { #[canonical=no] unit: functor_id ~> functor_comp F (adj F);
+    #[canonical=no] counit: functor_comp (adj F) F ~> functor_id;
+    #[canonical=no] unit_counit_l: idmap ⊚ unit \; counit ⊚ idmap ≡ ntx_id _;
+    #[canonical=no] unit_counit_r: unit ⊚ idmap \; idmap ⊚ counit ≡ ntx_id _;
+  }.
+#[short(type="LeftAdjoint")]
+HB.structure Definition leftAdjoint 𝐂 𝐃 := {F of IsLeftAdjoint 𝐂 𝐃 F & }.
+Infix "⊣" := LeftAdjoint (at level 79): cat_scope.
+Arguments unit {_ _ _}, {_ _} _.
+Arguments counit {_ _ _}, {_ _} _.
+
+Program Definition _leftAdjoint_id 𝐂 := @IsLeftAdjoint.Build 𝐂 𝐂 idfun (ntx_id _) (ntx_id _) _ _.
+Next Obligation. cbn=>*. by rewrite !cats. Qed.
+Next Obligation. cbn=>*. by rewrite !cats. Qed.
+HB.instance Definition _ 𝐂 := @_leftAdjoint_id 𝐂.
+
+Program Definition _leftAdjoint_comp 𝐂 𝐃 𝐄 (F: 𝐂 ⊣ 𝐃) (G: 𝐃 ⊣ 𝐄) :=
+  @IsLeftAdjoint.Build 𝐂 𝐄 (catcomp F G)
+    (unit F \; idmap ⊚ unit G ⊚ idmap) (idmap ⊚ counit F ⊚ idmap \; counit G) _ _.
+Admit Obligations.
+HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_leftAdjoint_comp 𝐂 𝐃 𝐄 F G. 
+
+
+#[primitive] HB.mixin Record IsRightAdjoint {𝐂 𝐃: Cat} F of @preAdjointF 𝐂 𝐃 F :=
+  { #[canonical=no] unit': functor_id ~> functor_comp (adj F) F;
+    #[canonical=no] counit': functor_comp F (adj F) ~> functor_id;
+    #[canonical=no] unit_counit_l': idmap ⊚ unit' \; counit' ⊚ idmap ≡ ntx_id _;
+    #[canonical=no] unit_counit_r': unit' ⊚ idmap \; idmap ⊚ counit' ≡ ntx_id _;
+  }.
+#[short(type="RightAdjoint")]
+HB.structure Definition rightAdjoint 𝐂 𝐃 := {F of IsRightAdjoint 𝐂 𝐃 F & }.
+Infix "⊢" := RightAdjoint (at level 79): cat_scope.
+Arguments unit' {_ _ _}, {_ _} _.
+Arguments counit' {_ _ _}, {_ _} _.
+
+Program Definition _rightAdjoint_id 𝐂 := @IsRightAdjoint.Build 𝐂 𝐂 idfun (ntx_id _) (ntx_id _) _ _.
+Next Obligation. cbn=>*. by rewrite !cats. Qed.
+Next Obligation. cbn=>*. by rewrite !cats. Qed.
+HB.instance Definition _ 𝐂 := @_rightAdjoint_id 𝐂.
+
+Program Definition _rightAdjoint_comp 𝐂 𝐃 𝐄 (F: 𝐂 ⊢ 𝐃) (G: 𝐃 ⊢ 𝐄) :=
+  @IsRightAdjoint.Build 𝐂 𝐄 (catcomp F G)
+    (unit' G \; idmap ⊚ unit' F ⊚ idmap) (idmap ⊚ counit' G ⊚ idmap \; counit' F) _ _.
+Admit Obligations.
+HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_rightAdjoint_comp 𝐂 𝐃 𝐄 F G. 
+
+HB.instance Definition _ {𝐂 𝐃: Cat} (F: 𝐂 ⊣ 𝐃) :=
+  IsRightAdjoint.Build 𝐃 𝐂 (adj F) unit_counit_l unit_counit_r.
+HB.instance Definition _ {𝐂 𝐃: Cat} (F: 𝐂 ⊢ 𝐃) :=
+  IsLeftAdjoint.Build 𝐃 𝐂 (adj F) unit_counit_l' unit_counit_r'.
+
+Program Definition _right_adjoint_funcop {𝐂 𝐃: Cat} (F: 𝐂 ⊣ 𝐃) :=
+  @IsRightAdjoint.Build 𝐂^op 𝐃^op (funcop F) (ntxop (counit F): NTX _ _) (ntxop (unit F): NTX _ _) _ _.
+Next Obligation.
+  intros. cbn=>X. move: (@unit_counit_r _ _ F X). cbn.
+  rewrite /ntxop/morphop/types_id/=!cats. exact.
+Qed.
+Next Obligation.
+  intros. cbn=>X. move: (@unit_counit_l _ _ F X). cbn.
+  rewrite /ntxop/morphop/types_id/=!cats. exact.
+Qed.
+HB.instance Definition _ 𝐂 𝐃 F := @_right_adjoint_funcop 𝐂 𝐃 F . 
+
+Program Definition _left_adjoint_funcop {𝐂 𝐃: Cat} (F: 𝐂 ⊢ 𝐃) :=
+  @IsLeftAdjoint.Build 𝐂^op 𝐃^op (funcop F) (ntxop (counit' F): NTX _ _) (ntxop (unit' F): NTX _ _) _ _.
+Next Obligation.
+  intros. cbn=>X. move: (@unit_counit_r' _ _ F X). cbn.
+  rewrite /ntxop/morphop/types_id/=!cats. exact.
+Qed.
+Next Obligation.
+  intros. cbn=>X. move: (@unit_counit_l' _ _ F X). cbn.
+  rewrite /ntxop/morphop/types_id/=!cats. exact.
+Qed.
+HB.instance Definition _ 𝐂 𝐃 F := @_left_adjoint_funcop 𝐂 𝐃 F . 
+
+#[short(type="AdjointEquivalence")]
+HB.structure Definition adjointEquivalence {𝐂 𝐃: Cat} :=
+  {F of @leftAdjoint 𝐂 𝐃 F & @rightAdjoint 𝐂 𝐃 F }.
+
+(* TOFIX: declarations below are no-ops *)
+HB.saturate adj. 
+HB.saturate funcop. 
+HB.saturate idfun. 
+HB.saturate catcomp. 
+(* we emulate them using the following asymmetric declarations *)
+HB.instance Definition _ (C D: Cat) (F: AdjointEquivalence C D) := leftAdjoint.on (adj F).
+HB.instance Definition _ (C D: Cat) (F: AdjointEquivalence C D) := leftAdjoint.on (funcop F).
+HB.instance Definition _ (C: Cat) := leftAdjoint.on (@idfun C).
+HB.instance Definition _ (C D E: Cat) (F: AdjointEquivalence C D) (G: AdjointEquivalence D E) := leftAdjoint.on (catcomp F G).
+Check fun (C D: Cat) (F: AdjointEquivalence C D) => adj F: AdjointEquivalence D C. 
+Check fun (C D: Cat) (F: AdjointEquivalence C D) => funcop F: AdjointEquivalence (C^op) (D^op). 
+Check fun (C: Cat) => idfun: AdjointEquivalence C C. 
+
+
+HB.factory Record IsAdjointEquivalence {𝐂 𝐃: Cat} F of @preAdjointF 𝐂 𝐃 F :=
+  { adjKl: functor_comp (adj F) F ≃ functor_id;
+    adjKr: functor_comp F (adj F) ≃ functor_id;
+    unit_counit_l: idmap ⊚ adjKr⁻¹ \; adjKl ⊚ idmap ≡ ntx_id _;
+    unit_counit_r: adjKr⁻¹ ⊚ idmap \; idmap ⊚ adjKl ≡ ntx_id _;
+  }.
+HB.builders Context 𝐂 𝐃 F of @IsAdjointEquivalence 𝐂 𝐃 F.
+  HB.instance Definition _ := @IsLeftAdjoint.Build 𝐂 𝐃 F adjKr⁻¹ adjKl unit_counit_l unit_counit_r.  
+  Lemma unit_counit_l': idmap ⊚ adjKl⁻¹ \; adjKr ⊚ idmap ≡ ntx_id _.
+  Admitted.
+  Lemma unit_counit_r': adjKl⁻¹ ⊚ idmap \; idmap ⊚ adjKr ≡ ntx_id _.
+  Admitted.
+  HB.instance Definition _ := @IsRightAdjoint.Build 𝐂 𝐃 F adjKl⁻¹ adjKr unit_counit_l' unit_counit_r'.  
+HB.end.
+
+Section theory.
+Context {𝐂 𝐃: Cat} (F: 𝐂 ⊣ 𝐃).
+
+Lemma unit_counit_l_at A: Fhom F (unit F A) \; counit F (F A) ≡ idmap.
+Proof. move: (@unit_counit_l _ _ F A)=>/=. by rewrite !cats. Qed.
+Lemma unit_counit_r_at B: unit F (adj F B) \; Fhom (adj F) (counit F B) ≡ idmap.
+Proof. move: (@unit_counit_r _ _ F B)=>/=. by rewrite !cats. Qed.
+
+Definition up {A B} (f: F A ~> B): A ~> adj F B :=
+  Fhom (adj F) f ∘ unit F A.
+Definition dn {A B} (f: A ~> adj F B): F A ~> B :=
+  counit F B ∘ Fhom F f. 
+
+Lemma up_eqv {A B}: Proper (eqv ==> eqv) (@up A B).
+Proof. move=>f f' ff. rewrite/up. apply:comp_eqv=>//. exact/Fhom_eqv. Qed.
+HB.instance Definition _ A B := isExtensional.Build _ _ _ (@up_eqv A B). 
+
+Lemma dn_eqv {A B}: Proper (eqv ==> eqv) (@dn A B).
+Proof. move=>f f' ff. rewrite/dn. apply:comp_eqv=>//. exact/Fhom_eqv. Qed.
+HB.instance Definition _ A B := isExtensional.Build _ _ _ (@dn_eqv A B). 
+
+Lemma dn_up {A B} (f: F A ~> B): dn (up f) ≡ f.
+Proof.
+  rewrite /dn/up/=.
+  rewrite Fcomp.                (* FIXRW *)
+  arewrite (natural counit). 
+  arewrite unit_counit_l_at.
+  cat. 
+Qed.
+
+Lemma up_inj {A B} (f f': F A ~> B): up f ≡ up f' -> f ≡ f'.
+Proof. move=>H. rewrite -(dn_up f) -(dn_up f'). exact/dn_eqv. Qed.
+
+Lemma up_dn {A B} (f: A ~> adj F B): up (dn f) ≡ f.
+Proof.
+  rewrite /dn/up/=.
+  rewrite Fcomp.                (* FIXRW *)
+  arewrite -(natural unit). 
+  arewrite unit_counit_r_at.
+  cat. 
+Qed.
+
+Lemma dn_inj {A B} (f f': A ~> adj F B): dn f ≡ dn f' -> f ≡ f'.
+Proof. move=>H. rewrite -(up_dn f) -(up_dn f'). exact/up_eqv. Qed.
+
+End theory.
+
 
 (** ** functor equivalence (i.e., natural isomorphisms) *)
 
@@ -295,32 +528,6 @@ Infix "≈" := functor_equiv: cat_scope.
 
 (* Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹. *)
 
-#[projections(primitive=no)]
-Record functor_eqv {𝐂} {𝐃: Cat} (F G: Functor 𝐂 𝐃): Prop := { _: F ≈ G }. 
-
-#[local] Instance Equivalence_functor_eqv {𝐂} {𝐃: Cat}: Equivalence (@functor_eqv 𝐂 𝐃). 
-Proof.
-  split.
-  -- intro h. split. apply: iso_refl.
-  -- intros F G [i]. split. exact: iso_sym. 
-  -- intros F G H [i] [j]. split. apply: iso_trans; eassumption.
-Qed.
-HB.instance Definition _ {𝐂}{𝐃: Cat} := isSetoid.Build (Functor 𝐂 𝐃) _.
-
-(* waiting for universe polymorphism, we cannot declare the following instance *)
-(*TMP-UNIV
-HB.instance Definition _ := IsQuiver.Build Cat Functor. 
-*)
-(* meanwhile, we use the following notation for functors; later we will replace it with "~>" *)
-Notation "F ≈> G" := (Functor F G): cat_scope.
-Definition functor_id {𝐂: Cat}: 𝐂 ≈> 𝐂 := idfun: Functor 𝐂 𝐂.
-Definition functor_comp {𝐂 𝐃 𝐄: Cat} (F: 𝐂 ≈> 𝐃) (G: 𝐃 ≈> 𝐄): 𝐂 ≈> 𝐄 := types_comp G F: Functor _ _.
-Definition functor_cst {𝐂 𝐃: Cat} (D: 𝐃): 𝐂 ≈> 𝐃 := cst D: Functor _ _.
-(*TMP-UNIV
-HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp). 
-*)
-
-
 Lemma iso_ntx_alt 𝐂 (𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) A B (f: A ~> B):
   Fhom G f ≡ i B ∘ Fhom F f ∘ (i A)⁻¹.
 Proof. rewrite natural -compoA invKl. cat. Qed.
@@ -330,26 +537,6 @@ Lemma iso_ntx_eqv 𝐂 (𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) A B (f g: 
 Proof. rewrite 2!(iso_ntx_alt i). by move=>->. Qed.
 
 (* Check fun {𝐂 𝐃: Cat} (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹. *)
-
-Definition ntx_comp'_ 𝐂 𝐃 {𝐄: PreCat} {F G: PreFunctor 𝐂 𝐃} {F' G': PreFunctor 𝐃 𝐄}
-  (k: forall X, F X ~> G X) (h: forall X, F' X ~> G' X): forall X, (types_comp F' F) X ~> (types_comp G' G) X :=
-  (fun X => h _ ∘ Fhom _ (k _)).
-Arguments ntx_comp'_ {_ _ _ _ _ _ _} _ _ _/. 
-Program Definition _ntx_comp'_natural 𝐂 𝐃 (𝐄: Cat) (F G: 𝐂 ≈> 𝐃) (F' G': 𝐃 ≈> 𝐄)
-  (k: F ~> G) (h: F' ~> G') := IsNatural.Build 𝐂 𝐄 (types_comp F' F) (types_comp G' G) (ntx_comp'_ k h) _.
-Next Obligation.
-  intros. cbn. 
-  rewrite natural -compoA !natural.
-  rewrite compoA -Fcomp natural.
-  Fail cat.                     (* was working before *)
-  rewrite !Fcomp. cat. 
-Qed.
-HB.instance Definition _ 𝐂 𝐃 𝐄 F G F' G' k h := @_ntx_comp'_natural 𝐂 𝐃 𝐄 F G F' G' k h.
-Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}
-  (*TMP-UNIV: functor_comp -> ∘ once we have Cat:Cat  *)
-  (n: F ~> G) (m: F' ~> G'): (functor_comp F F') ~> (functor_comp G G') :=
-  (ntx_comp'_ n m: NTX _ _). 
-Notation "h ⊚ k" := (ntx_comp' k h): cat_scope.
 
 Section strict.
 Context {𝐂 𝐃 𝐄: Cat}.
@@ -372,16 +559,16 @@ Lemma ntx_comp'_eqv {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}:
   Proper (eqv ==> eqv ==> eqv) (@ntx_comp' _ _ _ F G F' G').
 Proof. intros i i' ii j j' jj X. by rewrite /= (ii _) (jj _). Qed.
 
-Lemma functor_comp_eqv:
-  Proper (eqv ==> eqv ==> eqv) (@functor_comp 𝐂 𝐃 𝐄).
-Proof.
-  intros F G [i] F' G' [j]. split.  
-  apply: (mk_iso' (j⊚ i) (j⁻¹⊚i⁻¹) _ _).
-  rewrite endo_exchange.
-  etransitivity. exact: (ntx_comp'_eqv (invKl i) (invKl j)). by rewrite -ntx_id_comp. 
-  rewrite endo_exchange.
-  etransitivity. exact: (ntx_comp'_eqv (invKr i) (invKr j)). by rewrite -ntx_id_comp. 
-Qed.
+(* Lemma functor_comp_eqv: *)
+(*   Proper (eqv ==> eqv ==> eqv) (@functor_comp 𝐂 𝐃 𝐄). *)
+(* Proof. *)
+(*   intros F G [i] F' G' [j]. split.   *)
+(*   apply: (mk_iso' (j⊚ i) (j⁻¹⊚i⁻¹) _ _). *)
+(*   rewrite endo_exchange. *)
+(*   etransitivity. exact: (ntx_comp'_eqv (invKl i) (invKl j)). by rewrite -ntx_id_comp.  *)
+(*   rewrite endo_exchange. *)
+(*   etransitivity. exact: (ntx_comp'_eqv (invKr i) (invKr j)). by rewrite -ntx_id_comp.  *)
+(* Qed. *)
 End strict.
 
 (*TMP-UNIV 
@@ -392,3 +579,27 @@ Next Obligation. split. exact: same_functor. Qed.
 Next Obligation. intros. exact: functor_comp_eqv. Qed.
 HB.instance Definition _ := _cat_cat.
 *)
+
+Definition biop {𝐂: Quiver} (x: ob 𝐂): 𝐂^op^op := obop (obop x).
+HB.instance Definition _ (𝐂: Quiver) :=
+  IsPreFunctor'.Build 𝐂 (𝐂^op^op) biop (fun _ _ _ _ H => H).
+HB.instance Definition _ (𝐂: PreCat) :=
+  IsFunctor.Build 𝐂 (𝐂^op^op) biop (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+
+Definition biop' {𝐂: Quiver} (x: 𝐂^op^op): ob 𝐂 := x.
+HB.instance Definition _ (𝐂: Quiver) :=
+  IsPreFunctor'.Build (𝐂^op^op) 𝐂 biop' (fun _ _ _ _ H => H).
+HB.instance Definition _ (𝐂: PreCat) :=
+  IsFunctor.Build (𝐂^op^op) 𝐂 biop' (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+
+HB.instance Definition _ (𝐂: PreCat) := IsPreAdjoint.Build 𝐂 𝐂^op^op biop biop'. 
+HB.instance Definition _ (𝐂: PreCat) := IsPreAdjointF.Build 𝐂 𝐂^op^op biop (functor.class biop'). 
+Program Definition _biop_ladj (𝐂: Cat) := @IsLeftAdjoint.Build 𝐂 𝐂^op^op biop (ntx_id _) (ntx_id _) _ _.
+Next Obligation. cbn=>? a. cat. Qed.
+Next Obligation. cbn=>? a. cat. Qed.
+HB.instance Definition _ 𝐂 := _biop_ladj 𝐂.
+Program Definition _biop_radj (𝐂: Cat) := @IsRightAdjoint.Build 𝐂 𝐂^op^op biop (ntx_id _) (ntx_id _) _ _.
+Next Obligation. cbn=>? a. cat. Qed.
+Next Obligation. cbn=>? a. cat. Qed.
+HB.instance Definition _ 𝐂 := _biop_radj 𝐂.
+

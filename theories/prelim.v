@@ -57,8 +57,9 @@ Reserved Notation "𝐂 ^op" (at level 1, format "𝐂 ^op").
 (** unique existence of morphisms *)
 Reserved Notation "Σ! x .. y , P" (at level 200, x binder, y binder, right associativity).
 
-(** iff in Type *)
+(** iff/and in Type *)
 Notation "A ⇆ B" := (iffT A B) (at level 95, B at next level). 
+Infix "∧" := prod (at level 80).
 
 (** for temporarily admitting things *)
 Axiom sorry: forall {A: Type}, A.

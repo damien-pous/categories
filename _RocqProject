@@ -2,7 +2,7 @@
 -arg -w -arg -undo-batch-mode
 -arg -w -arg -notation-overridden          # temporary, for mathcomp
 -arg -w -arg -uniform-inheritance
--arg -w -arg +HB.no-new-instance
+# -arg -w -arg +HB.no-new-instance
 
 -R theories/ Categories
 theories/prelim.v                          # preliminaries, reserved notations
@@ -12,8 +12,7 @@ theories/morphisms.v                       # hierarchy of morphisms
 theories/airewrite.v			   # rewriting/reflexivity modulo associativity and inverses
 theories/arity.v                           # lists of objects
 theories/cast.v                            # casting operations
-theories/functor.v                         # functors
-theories/adjunction.v                      # adjunctions
+theories/functor.v                         # functors, natural transformations, adjunctions
 theories/objects.v                         # hierarchy of objects
 theories/algebra.v                         # (co)algebras
 theories/setoid.v                          # the category of setoids

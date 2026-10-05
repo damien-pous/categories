@@ -2,7 +2,6 @@
 
 Require Export functor.
 Require Import arewrite.
-Require Import adjunction.
 From Stdlib Require Import CMorphisms.
 
 Local Open Scope cat_scope.
@@ -62,12 +61,222 @@ Proof. exact: terminalU. Qed.
 
 Lemma adjoint_preserve_initial (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: ob 𝐂) (H: is_initial A): is_initial (F A).
 Proof.
-  move=>X. destruct (H (radj F X)) as [f _ U].
+  move=>X. destruct (H (adj F X)) as [f _ U].
   exists (dn f)=>//g _. specialize (U (up g) I). apply: up_inj. by rewrite up_dn.
 Qed.
 (* forgetful inheritance?, why? *)
 HB.instance Definition _ (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: Initial 𝐂) :=
   IsInitial.Build 𝐃 (F A) (adjoint_preserve_initial F initial_prop).
+
+(* TODO: (right) adjoint preserve_terminal *)
+
+(** * (co)spans *)
+
+#[primitive] 
+HB.mixin Record IsSpan {𝐂: BareQuiver} (A B X: ob 𝐂) := {
+    #[canonical=no] pi1: X ~> A;
+    #[canonical=no] pi2: X ~> B;
+  }.
+#[short(type="Span")]
+HB.structure Definition span 𝐂 A B := {X of IsSpan 𝐂 A B X}.  
+Arguments pi1 {_ _ _ _}, {_ _ _} _. 
+Arguments pi2 {_ _ _ _}, {_ _ _} _.
+Definition mk_span 𝐂 A B X (f: X ~> A) (g: X ~> B): @Span 𝐂 A B :=
+  HB.pack X (IsSpan.Build _ _ _ _ f g). 
+
+#[primitive] 
+HB.mixin Record IsCospan {𝐂: BareQuiver} (A B X: ob 𝐂) := {
+    #[canonical=no] in1: A ~> X;
+    #[canonical=no] in2: B ~> X;
+  }.
+#[short(type="Cospan")]
+HB.structure Definition cospan 𝐂 A B := {X of IsCospan 𝐂 A B X}.  
+Arguments in1 {_ _ _ _}, {_ _ _} _. 
+Arguments in2 {_ _ _ _}, {_ _ _} _. 
+Definition mk_cospan 𝐂 A B X (f: A ~> X) (g: B ~> X): @Cospan 𝐂 A B :=
+  HB.pack X (IsCospan.Build _ _ _ _ f g). 
+
+HB.instance Definition _ 𝐂 A B (X: @Span 𝐂 A B) := IsCospan.Build 𝐂^op (obop A) (obop B) (obop X) pi1 pi2. 
+HB.instance Definition _ 𝐂 A B (X: @Cospan 𝐂 A B) := IsSpan.Build 𝐂^op (obop A) (obop B) (obop X) in1 in2. 
+
+#[primitive] 
+HB.mixin Record IsSpanHom (𝐂: PreCat) (A B: ob 𝐂) (X Y: Span A B) (f: X ~> Y) := {
+    #[canonical=no] span_hom: f \; pi1 ≡ pi1 ∧ f \; pi2 ≡ pi2
+  }.
+#[short(type="SpanHom")]
+HB.structure Definition spanhom 𝐂 A B X Y := {f of IsSpanHom 𝐂 A B X Y f}.  
+Arguments span_hom {_ _ _ _ _ _}, {_ _ _ _ _} _.
+Definition mk_spanhom {𝐂: PreCat} {A B: ob 𝐂} {X Y: Span A B} (f: X ~> Y) (H: f \; pi1 ≡ pi1 ∧ f \; pi2 ≡ pi2): SpanHom X Y := HB.pack f (@IsSpanHom.Build 𝐂 A B X Y f H). 
+
+#[primitive] 
+HB.mixin Record IsCospanHom (𝐂: PreCat) (A B: ob 𝐂) (X Y: Cospan A B) (f: X ~> Y) := {
+    #[canonical=no] cospan_hom: in1 \; f ≡ in1 ∧ in2 \; f ≡ in2;
+  }.
+#[short(type="CospanHom")]
+HB.structure Definition cospanhom 𝐂 A B X Y := {f of IsCospanHom 𝐂 A B X Y f}.  
+Arguments cospan_hom {_ _ _ _ _ _}, {_ _ _ _ _} _.
+Definition mk_cospanhom {𝐂: PreCat} {A B: ob 𝐂} {X Y: Cospan A B} (f: X ~> Y) (H: in1 \; f ≡ in1 ∧ in2 \; f ≡ in2): CospanHom X Y := HB.pack f (@IsCospanHom.Build 𝐂 A B X Y f H). 
+
+HB.instance Definition _ 𝐂 A B X Y (f: @SpanHom 𝐂 A B X Y) :=
+  IsCospanHom.Build 𝐂^op (obop A) (obop B) (obop Y) (obop X) (morphop f) span_hom. 
+HB.instance Definition _ 𝐂 A B X Y (f: @CospanHom 𝐂 A B X Y) :=
+  IsSpanHom.Build 𝐂^op (obop A) (obop B) (obop Y) (obop X) (morphop f) cospan_hom. 
+
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (X Y: Span A B) :=
+  Setoid.copy (SpanHom X Y) (kernel (@spanhom.sort _ _ _ X Y)).
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (X Y: Span A B) :=
+  IsQuiver.Build (Span A B) (@SpanHom _ _ _).
+
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (X Y: Cospan A B) :=
+  Setoid.copy (CospanHom X Y) (kernel (@cospanhom.sort _ _ _ X Y)).
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (X Y: Cospan A B) :=
+  IsQuiver.Build (Cospan A B) (@CospanHom _ _ _).
+
+Section s.
+Context {𝐂: Cat} {A B: ob 𝐂}.
+Lemma is_span_hom_id (X: Span A B): IsSpanHom _ _ _ _ _ X.
+Proof. split. split; cat. Qed.
+HB.instance Definition _ X := is_span_hom_id X.
+Definition SpanHom_id X := idmap: SpanHom X X.
+Lemma is_span_hom_comp (X Y Z: Span A B) (f: SpanHom X Y) (g: SpanHom Y Z): IsSpanHom _ _ _ _ _ (f \; g).
+Proof. split. split; by rewrite compoA 2!span_hom. Qed.
+HB.instance Definition _ X Y Z f g := @is_span_hom_comp X Y Z f g.
+Definition SpanHom_comp (X Y Z: Span A B) (f: X ~> Y) (g: Y ~> Z) := f \; g: SpanHom X Z.
+HB.instance Definition _ := IsPreCat.Build (Span A B) (@SpanHom_id) (@SpanHom_comp).
+Lemma _span_cat : IsCat (Span A B).
+Proof.
+  split; intros.
+  - exact/comp1o. 
+  - exact/compo1. 
+  - exact/compoA.
+  - intros??????;exact/comp_eqv. 
+Qed.
+HB.instance Definition _ := _span_cat.
+End s. 
+
+Section s.
+Context {𝐂: Cat} {A B: ob 𝐂}.
+Lemma is_cospan_hom_id (X: Cospan A B): IsCospanHom _ _ _ _ _ X.
+Proof. split. by case: (is_span_hom_id (obop (cospan.sort X))). Qed.
+HB.instance Definition _ X := is_cospan_hom_id X.
+Definition CospanHom_id X := idmap: CospanHom X X.
+Lemma is_cospan_hom_comp (X Y Z: Cospan A B) (f: CospanHom X Y) (g: CospanHom Y Z): IsCospanHom _ _ _ _ _ (f \; g).
+Proof. split. by case: (is_span_hom_comp (morphop g) (morphop f)). Qed.
+HB.instance Definition _ X Y Z f g := @is_cospan_hom_comp X Y Z f g.
+Definition CospanHom_comp (X Y Z: Cospan A B) (f: X ~> Y) (g: Y ~> Z) := f \; g: CospanHom X Z.
+HB.instance Definition _ := IsPreCat.Build (Cospan A B) (@CospanHom_id) (@CospanHom_comp).
+Lemma _cospan_cat : IsCat (Cospan A B).
+Proof. 
+  split; intros.
+  - exact/comp1o. 
+  - exact/compo1. 
+  - exact/compoA.
+  - intros??????;exact/comp_eqv. 
+Qed.
+HB.instance Definition _ := _cospan_cat.
+End s. 
+
+Check fun {𝐂: Cat} {A B: ob 𝐂} (X Y: Span A B) (f: X ~> Y) => X: ob _. (* Span A B *)
+Check fun {𝐂: Cat} {A B: ob 𝐂} (X Y: Span A B) (f: X ~> Y) => X: ob 𝐂.
+Check fun {𝐂: Cat} {A B C: ob 𝐂} (X Y: Span A B) (f: X ~> Y) (g: (X: ob 𝐂) ~> C) => X \; g.
+Check fun {𝐂: Cat} {A B C: ob 𝐂} (X Y: Span A B) (f: X ~> Y) (g: (X: ob 𝐂) ≃ C) => inv g \; f.
+Check fun {𝐂: Cat} {A B C: ob 𝐂} (X Y: Span A B) (f: X ≃ Y) (g: (X: ob 𝐂) ≃ C) => inv g \; f¹.
+
+Section s.
+Context {𝐂: Cat} {A B: ob 𝐂}.
+Abbreviation 𝐃 := (Span A B). 
+Abbreviation 𝐄 := ((Cospan (obop A) (obop B))^op). 
+Definition spanop (X: 𝐃): 𝐄 := @mk_cospan _ (obop A) (obop B) _ (pi1 X) (pi2 X).
+Definition spanop' (X: 𝐄): 𝐃 := @mk_span 𝐂 A B _ (in1 X) (in2 X).
+HB.instance Definition _ :=
+  @IsPreFunctor'.Build 𝐃 𝐄 spanop 
+    (fun X Y f => @mk_cospanhom _ _ _ (spanop Y) (spanop X) f span_hom) (fun _ _ _ _ H => H).
+HB.instance Definition _ :=
+  IsFunctor.Build 𝐃 𝐄 spanop (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+HB.instance Definition _ :=
+  @IsPreFunctor'.Build 𝐄 𝐃 spanop'
+    (fun X Y f => @mk_spanhom 𝐂 A B (spanop' X) (spanop' Y) f (cospan_hom (s:=f))) (fun _ _ _ _ H => H).
+HB.instance Definition _ :=
+  IsFunctor.Build 𝐄 𝐃 spanop' (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+HB.instance Definition _ := IsPreAdjoint.Build 𝐃 𝐄 spanop spanop'. 
+HB.instance Definition _ := IsPreAdjointF.Build 𝐃 𝐄 spanop (functor.class spanop'). 
+Program Definition _spanop_ladj := @IsLeftAdjoint.Build 𝐃 𝐄 spanop _ _ _ _.
+Next Obligation.
+  unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. repeat split; cat.
+  split; split; cbn=>X Y f. cat. 
+Defined.
+Next Obligation.
+  unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. split; split; split; by rewrite !cats.
+  split; split; cbn=>X Y f. by rewrite !cats. 
+Defined.
+Next Obligation. cbn=>a. by rewrite !cats. Qed.
+Next Obligation. cbn=>a. by rewrite !cats. Qed.
+HB.instance Definition _ := _spanop_ladj.
+Program Definition _spanop_radj := @IsRightAdjoint.Build 𝐃 𝐄 spanop _ _ _ _.
+Next Obligation.
+  unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. repeat split; by rewrite !cats.
+  split; split; cbn=>X Y f. by rewrite !cats. 
+Defined.
+Next Obligation.
+  unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. repeat split; by rewrite !cats.
+  split; split; cbn=>X Y f. by rewrite !cats. 
+Defined.
+Next Obligation. cbn=>a. by rewrite !cats. Qed.
+Next Obligation. cbn=>a. by rewrite !cats. Qed.
+HB.instance Definition _ := _spanop_radj.
+
+End s.
+
+
+(** * (co)products *)
+
+#[primitive] 
+HB.mixin Record IsProduct {𝐂: PreCat} (A B: ob 𝐂) X of span 𝐂 A B X := {
+    #[canonical=no] productP: is_terminal (X: Span A B);
+  }.
+#[short(type="Product")]
+HB.structure Definition product 𝐂 A B := {X of IsProduct 𝐂 A B X &}.
+
+Definition pair {𝐂: PreCat} {A B: ob 𝐂} (X: Product A B) {Y} (f: Y ~> A) (g: Y ~> B): Y ~> X
+  := (unique_morph (productP (mk_span f g))). 
+Lemma pairE{𝐂: PreCat} {A B: ob 𝐂} {X: Product A B} {Y} (f: Y ~> A) (g: Y ~> B):
+  pair X f g \; pi1 ≡ f ∧ pair X f g \; pi2 ≡ g .
+Proof. exact: (span_hom (unique_morph (productP (mk_span f g)))). Qed.
+
+#[primitive] 
+HB.mixin Record IsCoproduct {𝐂: PreCat} (A B: ob 𝐂) X of cospan 𝐂 A B X := {
+    #[canonical=no] coproductP: is_initial (X: Cospan A B);
+  }.
+#[short(type="Coproduct")]
+HB.structure Definition coproduct 𝐂 A B := {X of IsCoproduct 𝐂 A B X &}.
+
+Definition copair {𝐂: PreCat} {A B: ob 𝐂} (X: Coproduct A B) {Y} (f: A ~> Y) (g: B ~> Y): X ~> Y
+  := (unique_morph (coproductP (mk_cospan f g))). 
+Lemma copairE{𝐂: PreCat} {A B: ob 𝐂} {X: Coproduct A B} {Y} (f: A ~> Y) (g: B ~> Y):
+  in1 \; copair X f g ≡ f ∧ in2 \; copair X f g ≡ g .
+Proof. exact: (cospan_hom (unique_morph (coproductP (mk_cospan f g)))). Qed.
+
+Lemma _product_coproduct 𝐂 A B (X: @Product 𝐂 A B): @IsCoproduct (𝐂^op) (obop A) (obop B) (obop X).
+Proof. 
+  split. move: (@productP _ _ _ X).
+Admitted.
+HB.instance Definition _ 𝐂 A B X := @_product_coproduct 𝐂 A B X. 
+Lemma _coproduct_product 𝐂 A B (X: @Coproduct 𝐂 A B): @IsProduct (𝐂^op) (obop A) (obop B) (obop X).
+Proof. 
+  split. move: (@coproductP _ _ _ X).
+Admitted.
+HB.instance Definition _ 𝐂 A B X := @_coproduct_product 𝐂 A B X. 
+
+Lemma copairE'{𝐂: PreCat} {A B: ob 𝐂} {X: Coproduct A B} {Y} (f: A ~> Y) (g: B ~> Y):
+  in1 \; copair X f g ≡ f ∧ in2 \; copair X f g ≡ g .
+Proof.
+  move: (@pairE (𝐂^op) _ _ (obop (X: ob _)) _ (morphop f) (morphop g))=>/=.
+  rewrite /pair/copair/=. cbn. intro H. Fail exact: H. 
+Abort.
+
+
+(** * pushouts and pullbacks *)
+
 
 (** * squares *)
 

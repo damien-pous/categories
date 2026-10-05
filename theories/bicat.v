@@ -44,3 +44,21 @@ HB.end.
   }.
 #[short(type="BiCat")]
 HB.structure Definition bicat := { 𝐂 of IsBiCat 𝐂 & }.
+
+Arguments comp'22 {_ _ _ _ _ _ _ _}.
+Infix "·" := comp'22: cat_scope. 
+
+Arguments comp'1o {_ _ _}.
+Arguments comp'o1 {_ _ _}.
+Arguments comp'oA {_ _ _ _ _}.
+
+Section s.
+  Context {𝐂: BiCat}.
+  Implicit Types a b c d: ob 𝐂.
+  Record adjunction {a b} (f: a~>b) (g: b~>a) := {
+      unit: idmap ~> f \; g;
+      counit: g \; f ~> idmap;
+      unit_counit_l: unit · idmap \; comp'oA _ _ _ \; idmap · counit ≡ comp'1o _ \; (comp'o1 _)⁻¹;
+      unit_counit_r: idmap · unit \; (comp'oA _ _ _)⁻¹ \; counit · idmap ≡ comp'o1 _ \; (comp'1o _)⁻¹;
+    }.
+End s.
