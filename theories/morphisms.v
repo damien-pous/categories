@@ -91,7 +91,7 @@ HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: RegEpi A B) :=
 Lemma regepi_epi (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B): is_regepi f -> is_epi f.
 Proof.
   move=>[D [a [b [P U]]]] C i j H.
-  apply: Unicity. apply: U. all: cbn. 2: exact: H. 2: done.
+  apply: unicity. apply: U. all: cbn. 2: exact: H. 2: done.
   arewrite P; cat. 
 Qed.
 Lemma regmono_mono (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B): is_regmono f -> is_mono f.

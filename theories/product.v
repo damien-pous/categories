@@ -140,7 +140,7 @@ Section prod.
     apply: (mk_iso snd (pair (unique_elt (terminalP _ X)) idmap)).
     - apply snd_pair.
     - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) ?compo1 comp1o//.
-      exact: (Unicity (terminalP top_ _)).
+      exact: (unicity (terminalP top_ _)).
   Defined.
   
   Definition prod_unitr X: X×top ≃ X.
@@ -148,7 +148,7 @@ Section prod.
     apply: (mk_iso fst (pair idmap (unique_elt (terminalP _ X)))).
     - apply fst_pair.
     - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) ?compo1 comp1o//.
-      exact: (Unicity (terminalP top_ _)).
+      exact: (unicity (terminalP top_ _)).
   Defined.
   
 End prod.

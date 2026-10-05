@@ -45,7 +45,7 @@ Definition initial (𝐂: Quiver) (A: Initial 𝐂) X: A ~> X := unique_morph (i
 Definition terminal (𝐂: Quiver) (A: Terminal 𝐂) X: X ~> A := unique_morph (terminal_prop X).
 
 Lemma initialU (𝐂: Quiver) (A: Initial 𝐂) X (f g: A ~> X): f ≡ g.
-Proof. apply: Unicity. exact: (initial_prop X). all: done. Qed.
+Proof. apply: unicity. exact: (initial_prop X). all: done. Qed.
 Lemma terminalU (𝐂: Quiver) (A: Terminal 𝐂) X (f g: X ~> A): f ≡ g.
 Proof. exact: (initialU (morphop f) (morphop g)). Qed.
 

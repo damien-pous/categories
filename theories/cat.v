@@ -20,7 +20,6 @@ Arguments hom {_}.
 Coercion hom: BareQuiver >-> Funclass.
 Notation "a ~> b" := (hom a b): cat_scope.
 Notation "a ~>_ 𝐂 b" := (@hom 𝐂 a b) (only parsing): cat_scope.
-Abbreviation bare f := (f: hom _ _). 
 
 (** precategories: quivers + id and comp *)
 #[primitive] HB.mixin Record IsPreCat 𝐂 of barequiver 𝐂 := {
@@ -93,6 +92,12 @@ Definition compoA {𝐂: Cat} {a b c d: ob 𝐂} (f: a ~> b) (g: b ~> c) (h: c ~
 Instance comp_eqv {𝐂: Cat} {a b c: ob 𝐂}: Proper (eqv ==> eqv ==> eqv) (@comp 𝐂 a b c) :=
   _comp_eqv a b c.
 
+(** UGLY FIXES for setoid_rewrite (look for occurrences of FIXRW for places that fail without this hack) *)
+Lemma comp_eqv_fix {𝐂: Cat} (a b c: ob 𝐂) (f: a ~> b): Proper (eqv ==> eqv) (@comp _ a b c f).
+Proof. intros ???. exact/comp_eqv. Qed.
+Hint Extern 0 (Proper _ comp) => exact/comp_eqv : typeclass_instances.
+Hint Extern 0 (Proper _ (comp _)) => exact/comp_eqv_fix : typeclass_instances.
+Hint Extern 0 (@ProperProxy _ eqv _) => exact/eqv_refl : typeclass_instances.
 
 (** rewriting tuple *)
 Definition cats := (@compo1, @comp1o, @compoA)%core.
@@ -104,8 +109,9 @@ HB.instance Definition _ (𝐂: BareQuiver) :=
   IsBareQuiver.Build 𝐂^op (fun a b => hom b a).
 HB.instance Definition _ (𝐂: Quiver) :=
   HomSetoids.Build 𝐂^op (fun a b => Setoid.class (hom a b)).
-HB.instance Definition _ (𝐂: PreCat) :=
+HB.instance Definition _ (𝐂: BarePreCat) :=
   IsPreCat.Build (𝐂^op) (fun=> idmap) (fun _ _ _ f g => f ∘ g).
+HB.saturate catop. 
 HB.instance Definition _ (𝐂: Cat) := IsCat.Build (𝐂^op)
   (fun _ _ => compo1) 
   (fun _ _ => comp1o)
@@ -155,24 +161,19 @@ Arguments unique_elt {_ _}.
 Arguments unique_prop {_ _}.
 Arguments uniqueness {_ _}.
 
+Lemma unicity {T P} (U: @Unique T P) (x y: T): P x -> P y -> x ≡ y.
+Proof. move=>Px Py. by rewrite -(uniqueness U _ Px) (uniqueness U _ Py). Qed.
+
 (** of morphisms *)
 
 Section s.
 Context {𝐂: Quiver} [A B: ob 𝐂] (P: (A ~> B) -> Type).
           
 Definition Unique_morph := Unique P.
-
-Lemma Unicity: Unique_morph -> forall (u v: A ~> B), P u -> P v -> u ≡ v.
-Proof.
-  intros [w _ U] u v Pu Pv.
-  by rewrite -(U _ Pu) (U _ Pv). 
-Qed.
-
-Definition unique_morph: Unique P -> A ~> B := unique_elt.
+Coercion unique_morph := unique_elt: Unique P -> A ~> B.
 
 End s.
 Arguments unique_morph {_ _ _ _}.
-Arguments Unicity {_ _ _ _}.
 
 Notation "Σ! x .. y , P" := (Unique_morph (fun x => .. (Unique_morph (fun y => P)) ..))
   (at level 200, x binder, y binder, right associativity): cat_scope.
@@ -180,8 +181,8 @@ Notation "Σ! x .. y , P" := (Unique_morph (fun x => .. (Unique_morph (fun y => 
 Lemma unique_morph_eqv {𝐂: Quiver} [A B: ob 𝐂] (P Q: (A ~> B) -> Type):
   (forall f, P f -> Q f) -> forall p: Unique_morph P, forall q: Unique_morph Q, unique_morph p ≡ unique_morph q.
 Proof.
-  move=>PQ p q. apply: Unicity. eassumption.
-  apply: PQ. all: exact: unique_prop.
+  move=>PQ p q. apply: (unicity q). 
+  apply: PQ. all: exact: unique_prop. 
 Qed.
 
 

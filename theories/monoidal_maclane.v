@@ -174,70 +174,45 @@ Context {𝐂: PreMonoidalCat}.
 Implicit Types a b c d: tree 𝐂.
 
 (** evaluation of MacLane expressions *)
-Fixpoint eval_maclane a b (h: maclane a b): a ≃ b := 
+Fixpoint iso_maclane a b (h: maclane a b): a ≃ b := 
   match h with
   | mcl_id => idmap
-  | mcl_comp f g => eval_maclane g ∘ eval_maclane f
-  | mcl_tensor f g => eval_maclane f · eval_maclane g
-  | mcl_inv f => (eval_maclane f)⁻¹
+  | mcl_comp f g => iso_maclane g ∘ iso_maclane f
+  | mcl_tensor f g => iso_maclane f · iso_maclane g
+  | mcl_inv f => (iso_maclane f)⁻¹
   | mcl_assoc a b c => assoc a b c
   | mcl_unitl a => unitl a
   | mcl_unitr a => unitr a
   end.
-(* with eval_maclane_inv a b (h: maclane a b): b ~> a :=  *)
-(*   match h with *)
-(*   | mcl_id => idmap *)
-(*   | mcl_comp f g => eval_maclane_inv f ∘ eval_maclane_inv g *)
-(*   | mcl_tensor f g => eval_maclane_inv f · eval_maclane_inv g *)
-(*   | mcl_inv f => eval_maclane f *)
-(*   | mcl_assoc a b c => assoc' a b c *)
-(*   | mcl_unitl a => unitl' a *)
-(*   | mcl_unitr a => unitr' a *)
-(*   end. *)
+Coercion eval_maclane a b (h: maclane a b) := iso_maclane h: a ~> b.
+HB.instance Definition _ a b (h: maclane a b) := iso.on (eval_maclane h).
 
-(* TOTHINK: call the one above iso_maclane, and mainly use the one below? *)
-Definition eval_maclane' a b (h: maclane a b): a ~> b := eval_maclane h.
-
-(* Lemma mcl_invKl a b (h: maclane a b): eval_maclane h ∘ eval_maclane_inv h ≡ idmap *)
-(* with mcl_invKr a b (h: maclane a b): eval_maclane_inv h ∘ eval_maclane h ≡ idmap. *)
-(* Proof. *)
-(*   - destruct h=>//=. *)
-(*     -- cat. *)
-(*     -- by rewrite compoA -(compoA _ (eval_maclane h1)) mcl_invKl cats mcl_invKl. *)
-(*     -- by rewrite exchange 2!mcl_invKl tensor_id. *)
-(*     -- exact: invKl. *)
-(*     -- exact: invKl. *)
-(*     -- exact: invKl. *)
-(*   - destruct h=>//=. *)
-(*     -- cat. *)
-(*     -- by rewrite compoA -(compoA _ (eval_maclane_inv h2)) mcl_invKr cats mcl_invKr. *)
-(*     -- by rewrite exchange 2!mcl_invKr tensor_id. *)
-(*     -- exact: invKr.  *)
-(*     -- exact: invKr. *)
-(*     -- exact: invKr. *)
-(* Qed. *)
-
-(* HB.instance Definition _ a b (h: maclane a b) := *)
-(*   @IsIso.Build _ _ _ (eval_maclane h) (eval_maclane_inv h) (mcl_invKl h) (mcl_invKr h). *)
-(* HB.instance Definition _ a b (h: maclane a b) := *)
-(*   @IsIso.Build _ _ _ (eval_maclane_inv h) (eval_maclane h) (mcl_invKr h) (mcl_invKl h). *)
-
-Coercion eval_maclane: maclane >-> Iso.
-
-(* Definition iso_maclane a b (h: maclane a b): a ≃ b := eval_maclane h.  *)
-
-(* Lemma eval_maclane_invE a b (h: maclane a b): h⁻¹ = mcl_inv h. *)
-(* Proof. done. Qed. *)
+Lemma eval_maclane_id a: eval_maclane (@mcl_id _ a) = idmap.
+Proof. done. Qed.
+Lemma eval_maclane_comp a b c f g: eval_maclane (@mcl_comp _ a b c f g) = f \; g.
+Proof. done. Qed.
+Lemma eval_maclane_tensor a b c d f g: eval_maclane (@mcl_tensor _ a b c d f g) = f · g.
+Proof. done. Qed.
+Lemma eval_maclane_inv a b f: eval_maclane (@mcl_inv _ a b f) = f⁻¹.
+Proof. done. Qed.
+Lemma eval_maclane_assoc a b c: eval_maclane (@mcl_assoc _ a b c) = assoc a b c.
+Proof. done. Qed.
+Lemma eval_maclane_unitl a: eval_maclane (@mcl_unitl _ a) = unitl a.
+Proof. done. Qed.
+Lemma eval_maclane_unitr a: eval_maclane (@mcl_unitr _ a) = unitr a.
+Proof. done. Qed.
 
 Lemma eval_maclane_cast a a' b b' (f: maclane a b) aa bb:
   eval_maclane (@cast2' _ _ a b a' b' f aa bb) =
-    icast' f (f_equal eval_tree aa) (f_equal eval_tree bb). 
+    hcast' f (f_equal eval_tree aa) (f_equal eval_tree bb). 
 Proof. by destruct aa; destruct bb. Qed.
-
 
 End s.
 
 Check fun (𝐂: PreMonoidalCat) (a: tree 𝐂) (m: maclane a a) => m ≡ m.
+
+Definition eval_maclane_cbn := (@eval_maclane_id, @eval_maclane_comp, @eval_maclane_tensor, @eval_maclane_inv, @eval_maclane_assoc, @eval_maclane_unitl, @eval_maclane_unitr).
+Ltac cbn_maclane := rewrite ?eval_maclane_cbn.
 
 Ltac reify_ob A :=
   lazymatch A with
@@ -255,7 +230,7 @@ Ltac find_maclane :=
   | |- Bridge ?A ?B => 
       let a := reify_ob A in
       let b := reify_ob B in
-      refine (eval_maclane (@find_MacLane _ a b erefl))
+      refine (iso_maclane (@find_MacLane _ a b erefl))
   end.
 Local Hint Extern 0 (Bridge _ _) => find_maclane: typeclass_instances.
 
@@ -383,7 +358,7 @@ Qed.
 
 Lemma Norm21E a b (f: maclane a b): forall n, Norm21 f n ≡ Norm21' f n.
 Proof.
-  induction f=>//=n.
+  induction f=>//=n; cbn_maclane.
   - rewrite Norm21'_comp; exact/comp_eqv.
   - rewrite Norm21'_tensor. apply: comp_eqv=>//.  exact/Norm12_eqv.
   - rewrite Norm21'_inv. exact/inv_inj. 
@@ -400,8 +375,8 @@ Proof. by rewrite 2!Norm21E/Norm21' (Norm_eq_unique f g). Qed.
 Lemma ntx_ξ2 a: forall n m (k: maclane n m),
     ξ a m  ∘  idmap · k ≡ Norm12 a k  ∘  ξ a n.
 Proof.
-  induction a as [x| |a IHa b IHb]=>n m k/=; 
-    fold (@eval_tree) in *. (* TOFIX: /eval_tree *)
+  induction a as [x| |a IHa b IHb]=>/=n m k;  
+    fold (@eval_tree) in *; cbn_maclane. (* TOFIX: /eval_tree *)
   - cbn. cat.
   - exact: ntx_unitl.
   - rewrite id_tensor. arewrite ntx_assoc. arewrite exchange. 
@@ -413,11 +388,11 @@ Qed.
 Lemma ntx_ξ1 a b (h: maclane a b):
   forall n, ξ b n  ∘  h · idmap ≡ Norm21 h n  ∘  ξ a n.
 Proof.
+  (* TOFIX: arewrite fails a quite a few places here *)
   induction h as [a|a b c f IHf g IHg|a a' b b' f IHf g IHg|a b f IHf| | | ]=>/=n; 
-    fold (@eval_tree) in *.        (* TOFIX: /eval_tree *)
-    (* TOFIX: both rewrite and arewrite fail at various places below *)
-  - arewrite tensor_id. cat.
-  - arewrite tensor_comp_l_tgt. arewrite IHg. arewrite IHf. cat.
+    fold (@eval_tree) in *; cbn_maclane=>/=.       (* TOFIX: /eval_tree *)
+  - rewrite tensor_id. cat.
+  - rewrite tensor_comp_l_tgt. arewrite IHg. arewrite IHf. cat.
   - rewrite !compoA -(compoA _ _ (Norm12 _ _)) -IHf !compoA. 
     rewrite -ntx_ξ2 -!compoA.
     rewrite (compoA (assoc _ _ _)) -tensor_rl.
@@ -426,7 +401,7 @@ Proof.
   - rewrite iso_tgt_r/= compoA -IHf -compoA exchange.
     rewrite (invKl f) cats tensor_id. cat.
   - rewrite cats.
-    rewrite -tensor_id.
+    rewrite -tensor_id. 
     rewrite -!compoA (compoA _ _ (assoc _ _ _)) ntx_assoc.
     rewrite tensor_comp_r_src tensor_comp_r_tgt.
     rewrite -!compoA -pentagon. cat. 
@@ -446,7 +421,7 @@ Qed.
 (** soundness of canonization *)
 Proposition canonizeE a b (f: maclane a b): f ≡ canonize f.
 Proof.
-  rewrite /canonize/=.
+  rewrite /canonize/=; cbn_maclane.
   rewrite -compoA -ntx_φ compoA invKr. cat.
 Qed.
 
@@ -473,7 +448,7 @@ Ltac reify_mcl f :=
       let v := reify_mcl g in
       constr:(mcl_comp u v)
   | inv ?f =>
-      let f := (eval simpl in (bare f)) in
+      let f := (eval simpl in (f: hom _ _)) in
       let u := reify_mcl f in
       constr:(mcl_inv u)
   | iso.sort ?f =>
@@ -506,9 +481,8 @@ Ltac reify_mcl f :=
       let a := reify_ob A in
       constr:(mcl_inv (mcl_unitr a))
   | mcl ?f => reify_mcl f
-  (* | iso_maclane ?m => constr:(m) *)
+  | iso_maclane ?m => constr:(m)
   | eval_maclane ?m => constr:(m)
-  (* | eval_maclane_inv ?m => constr:(mcl_inv m) *)
   end.
 
 

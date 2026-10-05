@@ -23,7 +23,7 @@ Section s.
   Fixpoint eval_tmor a b (u: tmor a b): a ~> b :=
     match u with
     | t_var f => f
-    | t_mcl E => eval_gmaclane' (find_gMacLane E)
+    | t_mcl E => find_gMacLane E
     | t_comp f g => eval_tmor f \; eval_tmor g
     | t_tens f g => eval_tmor f · eval_tmor g
     end.
@@ -76,9 +76,8 @@ Lemma eval_gNf_mor_tens a b c d (f: tmor a b) (g: tmor c d):
   eval_amor (gNf_mor (t_tens f g)) ≡ acast (eval_amor (gNf_mor f) · eval_amor (gNf_mor g)).
 Proof.
   cbn -[gNf]. set u := (_·_). set v := cast u. 
-  apply: (eqv_trans _ (acast v) _).
-  rewrite /cast-lock.
-  repeat apply: comp_eqv=>//.
+  apply: (eqv_trans _ (acast v) _). 
+  rewrite /cast-lock. repeat apply: comp_eqv=>//.
   1,2: rewrite eval_a_mcl; gMacLane.
   rewrite castI; gMacLane.
 Qed.
@@ -827,7 +826,7 @@ Canonical r_tens a b c d (f: reified_mor a b) (g: reified_mor c d) :=
   reify_mor (gt_tensor a c) (gt_tensor b d) (f·g) (t_tens f g) (tensor_eqv (rtE f) (rtE g)).
 
 Canonical r_gmaclane a b (f: gmaclane a b) e :=
-  reify_mor a b (eval_gmaclane' f) (t_mcl e) MacLane.
+  reify_mor a b (eval_gmaclane f) (t_mcl e) MacLane.
 
 Canonical r_assoc a b c :=
   reify_mor (gt_tensor (gt_tensor a b) c) (gt_tensor a (gt_tensor b c))
@@ -888,8 +887,6 @@ Next Obligation. intros. by rewrite /=eval_gmaclane_tensor 2!rt'E. Qed.
 
 Definition r'_gmaclane a b (f: gmaclane a b) :=
   reify_mcl a b (eval_gmaclane f) f eqv_refl.
-Definition r'_gmaclane' a b (f: gmaclane a b) :=
-  reify_mcl a b (eval_gmaclane' f) f eqv_refl.
 
 Definition r'_assoc a b c :=
   reify_mcl (gt_tensor (gt_tensor a b) c) (gt_tensor a (gt_tensor b c))
@@ -955,11 +952,11 @@ Ltac reify_iso_mcl f :=
   | @blocked_unitr' _ ?A =>
       let a := reify_ob A in
       constr:(r'_inv (r_unitr a))
-  | iso.sort ?f =>
-      reify_hom_mcl f
-  | eval_gmaclane ?m => 
-      constr:(r'_gmaclane m)
-  | eval_gmaclane' ?m => 
+  (* | iso.sort ?f => *)
+  (*     reify_hom_mcl f *)
+  (* | eval_gmaclane ?m =>  *)
+  (*     constr:(r'_gmaclane m) *)
+  | iso_gmaclane ?m => 
       constr:(r'_gmaclane m)
   | mcl ?f =>
       reify_iso_mcl f 
@@ -1017,8 +1014,6 @@ with reify_hom_mcl f :=
       constr:(r'_inv (r_unitr a))
   | eval_gmaclane ?m => (* (find_gMacLane ?E) *)
       constr:(r'_gmaclane m)
-  | eval_gmaclane' ?m => (* (find_gMacLane ?E) *)
-      constr:(r'_gmaclane m)
   | reverse_coercion ?f _ => reify_hom_mcl f
   | ?m => fail "could not reify" m "as a MacLane morphism"
   end.
@@ -1073,8 +1068,6 @@ Ltac reify_mor f :=
       constr:(r_unitr' a)
   | reverse_coercion ?f _ => reify_mor f
   | @eval_gmaclane _ ?s ?t ?m => (* (find_gMacLane ?E) *)
-      constr:(@r_gmaclane _ s t m erefl)
-  | @eval_gmaclane' _ ?s ?t ?m => (* (find_gMacLane ?E) *)
       constr:(@r_gmaclane _ s t m erefl)
   | iso.sort ?f =>
       let m := reify_iso_mcl f in

@@ -177,15 +177,15 @@ Proof.
   exact: find_MacLane e. 
 Qed.
 
-Definition eval_gmaclane a b (h: gmaclane a b): eval_gtree a ≃ eval_gtree b :=
+Definition iso_gmaclane a b (h: gmaclane a b): eval_gtree a ≃ eval_gtree b :=
   locked (icast' (eval_maclane h) (esym (eval_gtree_tree a)) (esym (eval_gtree_tree b))).
-Definition eval_gmaclane' a b (h: gmaclane a b): eval_gtree a ~> eval_gtree b := eval_gmaclane h.
+Coercion eval_gmaclane a b (h: gmaclane a b): eval_gtree a ~> eval_gtree b := iso_gmaclane h.
+HB.instance Definition _ a b h := iso.on (@eval_gmaclane a b h).
 
 Lemma eval_gmaclaneE a b (h: gmaclane a b):
-  iso.sort (eval_gmaclane h) = hcast' (eval_maclane h) (esym (eval_gtree_tree a)) (esym (eval_gtree_tree b)).
-Proof. by rewrite /eval_gmaclane-lock -hcast_iso. Qed.
+  eval_gmaclane h = hcast' (eval_maclane h) (esym (eval_gtree_tree a)) (esym (eval_gtree_tree b)).
+Proof. by rewrite /eval_gmaclane/iso_gmaclane-lock -hcast_iso. Qed.
 
-Coercion eval_gmaclane: gmaclane >-> iso.type.
 Local Coercion gtree_tree: gtree >-> tree.
 
 Definition gmcl_id a: gmaclane a a := mcl_id a. 
@@ -225,17 +225,17 @@ Proof. by rewrite !eval_gmaclaneE/= -!tensor11_eq_sym hcast_assoc. Qed.
 Lemma eval_gmaclane_assoc' a b c: gmcl_assoc' a b c ≡ assoc' (eval_gtree a) (eval_gtree b) (eval_gtree c).
 Proof. rewrite eval_gmaclane_inv. apply: inv_inj. exact/eval_gmaclane_assoc. Qed.
 Lemma eval_gmaclane_unitl a: gmcl_unitl a ≡ unitl (eval_gtree a).
-Proof. rewrite !eval_gmaclaneE/=-/eval_tree. by destruct (eval_gtree_tree a). Qed.
+Proof. rewrite !eval_gmaclaneE/=-/eval_tree. cbn_maclane. by destruct (eval_gtree_tree a). Qed.
 Lemma eval_gmaclane_unitl' a: gmcl_unitl' a ≡ unitl' (eval_gtree a).
 Proof. rewrite eval_gmaclane_inv. apply: inv_inj. exact/eval_gmaclane_unitl. Qed.
 Lemma eval_gmaclane_unitr a: gmcl_unitr a ≡ unitr (eval_gtree a).
-Proof. rewrite !eval_gmaclaneE/=-/eval_tree. by destruct (eval_gtree_tree a). Qed.
+Proof. rewrite !eval_gmaclaneE/=-/eval_tree. cbn_maclane. by destruct (eval_gtree_tree a). Qed.
 Lemma eval_gmaclane_unitr' a: gmcl_unitr' a ≡ unitr' (eval_gtree a).
 Proof. rewrite eval_gmaclane_inv. apply: inv_inj. exact/eval_gmaclane_unitr. Qed.
 
 Lemma eval_gmaclane_cast a a' b b' (f: gmaclane a b) aa bb:
   eval_gmaclane (@cast2' _ _ a b a' b' f aa bb) =
-    icast' f (f_equal eval_gtree aa) (f_equal eval_gtree bb). 
+    hcast' f (f_equal eval_gtree aa) (f_equal eval_gtree bb). 
 Proof. by destruct aa; destruct bb. Qed.
 
 
@@ -246,14 +246,14 @@ Lemma eval_gmaclane_eq a b e:
   @gmcl_eq a b e ≡ mcl_eq e.
 Proof.
   rewrite /gmcl_eq !eval_gmaclaneE.
-  by rewrite eval_maclane_cast/=-hcast_iso hcastI/=/mcl_eq etrans_id.
+  by rewrite eval_maclane_cast/=hcastI/=/mcl_eq etrans_id.
 Qed.
 
 Lemma eval_gmaclane_comp' a b b' c (f: gmaclane a b) e (g: gmaclane b' c): gmcl_comp' f e g ≡ f \; mcl_eq e \; g.
 Proof. by rewrite 2!eval_gmaclane_comp eval_gmaclane_eq. Qed.
 
 Lemma eval_gmaclane_maclane s t (f: maclane s t): gmcl_maclane f ≡ hcast' (eval_maclane f) (eval_tree_gtree s) (eval_tree_gtree t).
-Proof. rewrite !eval_gmaclaneE eval_maclane_cast -hcast_iso hcastI. MacLane. Qed.
+Proof. rewrite !eval_gmaclaneE eval_maclane_cast hcastI. MacLane. Qed.
 
 End s.
 
@@ -306,11 +306,11 @@ Ltac find_gmaclane' :=
   | |- ?A ≃ ?B => 
       let a := reify_ob A in
       let b := reify_ob B in
-      refine (eval_gmaclane (@find_gMacLane _ a b _))
+      refine (iso_gmaclane (@find_gMacLane _ a b _))
   | |- ?A ~> ?B => 
       let a := reify_ob A in
       let b := reify_ob B in
-      refine (iso.sort (eval_gmaclane (@find_gMacLane _ a b _)))
+      refine (eval_gmaclane (@find_gMacLane _ a b _))
   end.
 
 Ltac find_gmaclane := by find_gmaclane'.
@@ -387,7 +387,7 @@ Proof.
   unfold gmaclane in *. 
   have: eval_maclane (cast2' rf e e') ≡ eval_maclane rg by exact/MacLane.
   rewrite eval_maclane_cast !eval_gmaclaneE 2!hcastI. 
-  cbn=><-. rewrite -hcast_iso hcastI. MacLane.
+  cbn=><-. rewrite hcastI. MacLane.
 Qed.
 Arguments MacLane_cs {_ _ _} _ _ & _. 
 
@@ -548,20 +548,20 @@ HB.instance Definition _ A B B' C f g m i j := @_mcl_cast A B B' C f g m i j.
 Proof. all: done. Defined.
 
 Program Definition _mcl_eval_gmaclane (s t: gtree 𝐂) (h: gmaclane s t)
-  := @isMacLane.Build _ (eval_gtree s) (eval_gtree t) (eval_gmaclane' h)
+  := @isMacLane.Build _ (eval_gtree s) (eval_gtree t) (eval_gmaclane h)
        s t erefl erefl
        h _.
 Next Obligation. intros. by rewrite hcastK. Qed.
 HB.instance Definition _ s t h := @_mcl_eval_gmaclane s t h.
-Definition maclane_eval_gmaclane s t (h: gmaclane s t): maclane _ _ := eval_gmaclane' h.
+Definition maclane_eval_gmaclane s t (h: gmaclane s t): maclane _ _ := eval_gmaclane h.
 
 Program Definition _mcl_eval_maclane (s t: tree 𝐂) (h: monoidal_maclane.maclane s t)
-  := @isMacLane.Build _ (eval_tree s) (eval_tree t) (eval_maclane' h)
+  := @isMacLane.Build _ (eval_tree s) (eval_tree t) (eval_maclane h)
        (tree_gtree s) (tree_gtree t) (esym (eval_tree_gtree s)) (esym (eval_tree_gtree t))
        (gmcl_maclane h) _.
 Next Obligation. intros. by rewrite eval_gmaclane_maclane hcastI hcastK. Qed.
 HB.instance Definition _ s t h := @_mcl_eval_maclane s t h.
-Definition maclane_eval_maclane s t (h: monoidal_maclane.maclane s t): maclane _ _ := eval_maclane' h.
+Definition maclane_eval_maclane s t (h: monoidal_maclane.maclane s t): maclane _ _ := eval_maclane h.
 
 End s.
 Arguments maclane_comp {_ _ _ _} _ _&.
@@ -578,7 +578,7 @@ Ltac reify_gmcl f :=
       let v := reify_gmcl g in
       uconstr:(maclane_comp u v _)
   | inv ?f =>
-      let f := (eval simpl in (bare f)) in
+      let f := (eval simpl in (f: hom _ _)) in
       let u := reify_gmcl f in
       uconstr:(maclane_inv u)
   | ?f · ?g =>
@@ -625,7 +625,7 @@ Ltac reify_gmcl f :=
       let v := reify_gmcl g in
       uconstr:(maclane_comp u v _)
   | blocked_inv ?f =>
-      let f := (eval simpl in (bare f)) in
+      let f := (eval simpl in (f: hom _ _)) in
       let u := reify_gmcl f in
       uconstr:(maclane_inv u)
   | blocked_tens ?f ?g =>
@@ -658,9 +658,9 @@ Ltac reify_gmcl f :=
   | reverse_coercion ?f _ => reify_gmcl f
   | mcl ?f => reify_gmcl f
   | eval_gmaclane ?m => constr:(maclane_eval_gmaclane m)
-  | eval_gmaclane' ?m => constr:(maclane_eval_gmaclane m)
+  | iso_gmaclane ?m => constr:(maclane_eval_gmaclane m)
   | eval_maclane ?m => constr:(maclane_eval_maclane m)
-  | eval_maclane' ?m => constr:(maclane_eval_maclane m)
+  | iso_maclane ?m => constr:(maclane_eval_maclane m)
   | Maclane.sort ?m => constr:(m)
   | _ => fail "could not reify" f "as a MacLane morphism" 
   end.

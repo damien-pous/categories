@@ -1,6 +1,7 @@
 (** * adjunctions *)
 
 Require Export functor.
+Require Import arewrite.
 
 Local Open Scope cat_scope.
 
@@ -45,27 +46,10 @@ Lemma dn_eqv {A B}: Proper (eqv ==> eqv) (@dn A B).
 Proof. move=>f f' ff. rewrite/dn. apply:comp_eqv=>//. exact/Fhom_eqv. Qed.
 HB.instance Definition _ A B := isExtensional.Build _ _ _ (@dn_eqv A B). 
 
-Goal forall A: ob 𝐂, forall f: F A ~> F A, forall g: A ~> A, f \; Fhom F A \; f ≡ f \; f \; Fhom F (g \; g).
-Proof. intros. rewrite Fidmap. rewrite Fcomp. Abort.
-
-Goal forall A: ob 𝐂, forall B: ob 𝐃, forall f: F A ~> B, Fhom F (unit A \; Fhom radj f) \; counit B ≡ Fhom F (unit A) \; Fhom F (Fhom radj f) \; counit B.
-Proof.
-  (* TOFIX: something is broken... *)
-  intros. Fail rewrite Fcomp.
-  set i := unit _. 
-  set j := Fhom radj f. 
-  set k := counit _.
-  clearbody i j k.
-  cbn in k. 
-  rewrite Fcomp. 
-Abort.
-
-Require Import arewrite.
-
 Lemma dn_up {A B} (f: F A ~> B): dn (up f) ≡ f.
 Proof.
   rewrite /dn/up/=.
-  arewrite Fcomp.
+  rewrite Fcomp.                (* FIXRW *)
   arewrite (natural counit). 
   arewrite unit_counit_l.
   cat. 
@@ -76,8 +60,8 @@ Proof. move=>H. rewrite -(dn_up f) -(dn_up f'). exact/dn_eqv. Qed.
 
 Lemma up_dn {A B} (f: A ~> radj F B): up (dn f) ≡ f.
 Proof.
-  rewrite /dn/up/=. 
-  arewrite (@Fcomp _ _ radj).
+  rewrite /dn/up/=.
+  rewrite Fcomp.                (* FIXRW *)
   arewrite -(natural unit). 
   arewrite unit_counit_r.
   cat. 

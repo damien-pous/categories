@@ -359,7 +359,7 @@ Lemma endo_exchange {F G H: 𝐂 ≈> 𝐃} {F' G' H': 𝐃 ≈> 𝐄}
   (j'⊚j) ∘ (i'⊚i) ≡ (j'∘i') ⊚ (j∘i).
 Proof.
   intro X; cbn.
-  rewrite -!compoA. apply comp_eqv=>//.
+  rewrite -!compoA. apply: comp_eqv=>//.
   normalise. by rewrite natural.
 Qed.
 
