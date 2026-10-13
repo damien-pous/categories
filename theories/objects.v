@@ -68,6 +68,12 @@ Qed.
 HB.instance Definition _ (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: Initial 𝐂) :=
   IsInitial.Build 𝐃 (F A) (adjoint_preserve_initial F initial_prop).
 
+Lemma adjoint_preserve_terminal (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: ob 𝐂) (H: is_terminal A): is_terminal (F A).
+Proof. exact: (adjoint_preserve_initial (funcop F) H). Qed.
+(* forgetful inheritance?, why? *)
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: Terminal 𝐂) :=
+  IsTerminal.Build 𝐃 (F A) (adjoint_preserve_terminal F terminal_prop).
+
 (* TODO: (right) adjoint preserve_terminal *)
 
 (** * (co)spans *)
@@ -182,25 +188,41 @@ Check fun {𝐂: Cat} {A B C: ob 𝐂} (X Y: Span A B) (f: X ~> Y) (g: (X: ob �
 Check fun {𝐂: Cat} {A B C: ob 𝐂} (X Y: Span A B) (f: X ~> Y) (g: (X: ob 𝐂) ≃ C) => inv g \; f.
 Check fun {𝐂: Cat} {A B C: ob 𝐂} (X Y: Span A B) (f: X ≃ Y) (g: (X: ob 𝐂) ≃ C) => inv g \; f¹.
 
+(* Check fun {𝐂: Cat} {A B: ob 𝐂} => unify ((Span A B)^op: PreCat) (Cospan (obop A) (obop B): PreCat). *)
+
+Definition Span' {𝐂: Cat} (A B: ob 𝐂) := (Span A B)^op.
+Definition Cospan' {𝐂: Cat} (A B: ob 𝐂) := (Cospan A B)^op.
+
 Section s.
 Context {𝐂: Cat} {A B: ob 𝐂}.
+Definition spanop (X: Span A B): Cospan (obop A) (obop B) :=
+  @mk_cospan _ (obop A) (obop B) _ (pi1 X) (pi2 X).
+Definition spanop' (X: Span A B): Cospan' (obop A) (obop B) := spanop X.
+Definition cospanop (X: Cospan A B): Span (obop A) (obop B) :=
+  @mk_span _ (obop A) (obop B) _ (in1 X) (in2 X).
+Definition cospanop' (X: Cospan A B): Span' (obop A) (obop B) := cospanop X.
+End s.
+
+Section s.
+Context {𝐂: Cat} {A B: ob 𝐂}.
+Definition span'op (X: Span' (obop A) (obop B)): Cospan A B := spanop X.
+Definition cospan'op (X: Cospan' (obop A) (obop B)): Span A B := cospanop X.
+
 Abbreviation 𝐃 := (Span A B). 
-Abbreviation 𝐄 := ((Cospan (obop A) (obop B))^op). 
-Definition spanop (X: 𝐃): 𝐄 := @mk_cospan _ (obop A) (obop B) _ (pi1 X) (pi2 X).
-Definition spanop' (X: 𝐄): 𝐃 := @mk_span 𝐂 A B _ (in1 X) (in2 X).
+Abbreviation 𝐄 := (Cospan' (obop A) (obop B)). 
 HB.instance Definition _ :=
-  @IsPreFunctor'.Build 𝐃 𝐄 spanop 
+  @IsPreFunctor'.Build 𝐃 𝐄 spanop'
     (fun X Y f => @mk_cospanhom _ _ _ (spanop Y) (spanop X) f span_hom) (fun _ _ _ _ H => H).
 HB.instance Definition _ :=
-  IsFunctor.Build 𝐃 𝐄 spanop (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  IsFunctor.Build 𝐃 𝐄 spanop' (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 HB.instance Definition _ :=
-  @IsPreFunctor'.Build 𝐄 𝐃 spanop'
-    (fun X Y f => @mk_spanhom 𝐂 A B (spanop' X) (spanop' Y) f (cospan_hom (s:=f))) (fun _ _ _ _ H => H).
+  @IsPreFunctor'.Build 𝐄 𝐃 cospan'op
+    (fun X Y f => @mk_spanhom 𝐂 A B (cospanop X) (cospanop Y) f (cospan_hom (s:=f))) (fun _ _ _ _ H => H).
 HB.instance Definition _ :=
-  IsFunctor.Build 𝐄 𝐃 spanop' (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
-HB.instance Definition _ := IsPreAdjoint.Build 𝐃 𝐄 spanop spanop'. 
-HB.instance Definition _ := IsPreAdjointF.Build 𝐃 𝐄 spanop (functor.class spanop'). 
-Program Definition _spanop_ladj := @IsLeftAdjoint.Build 𝐃 𝐄 spanop _ _ _ _.
+  IsFunctor.Build 𝐄 𝐃 cospan'op (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+HB.instance Definition _ := IsPreAdjoint.Build 𝐃 𝐄 spanop' cospan'op. 
+HB.instance Definition _ := IsPreAdjointF.Build 𝐃 𝐄 spanop' (functor.class cospan'op). 
+Program Definition _spanop_ladj := @IsLeftAdjoint.Build 𝐃 𝐄 spanop' _ _ _ _.
 Next Obligation.
   unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. repeat split; cat.
   split; split; cbn=>X Y f. cat. 
@@ -212,7 +234,7 @@ Defined.
 Next Obligation. cbn=>a. by rewrite !cats. Qed.
 Next Obligation. cbn=>a. by rewrite !cats. Qed.
 HB.instance Definition _ := _spanop_ladj.
-Program Definition _spanop_radj := @IsRightAdjoint.Build 𝐃 𝐄 spanop _ _ _ _.
+Program Definition _spanop_radj := @IsRightAdjoint.Build 𝐃 𝐄 spanop' _ _ _ _.
 Next Obligation.
   unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. repeat split; by rewrite !cats.
   split; split; cbn=>X Y f. by rewrite !cats. 
@@ -225,14 +247,27 @@ Next Obligation. cbn=>a. by rewrite !cats. Qed.
 Next Obligation. cbn=>a. by rewrite !cats. Qed.
 HB.instance Definition _ := _spanop_radj.
 
-End s.
+End s.                                 
 
 
 (** * (co)products *)
 
+Definition is_product {𝐂: PreCat} (A B: ob 𝐂) (X: Span A B) := is_terminal X.
+Definition is_coproduct {𝐂: PreCat} (A B: ob 𝐂) (X: Cospan A B) := is_initial X.
+
+Fail Check fun (C: Cat) (A B: ob C) (X: Span A B) => unify (is_product X) (is_coproduct (spanop X)). 
+
+Definition is_product_op (C: Cat) (A B: ob C) (X: Span A B) (P: is_product X): is_coproduct (spanop X)
+  := adjoint_preserve_terminal spanop' P .
+(* TODO: turn cospanop' into an adjoint equivalence *)
+Definition is_coproduct_op (C: Cat) (A B: ob C) (X: Cospan A B) (P: is_coproduct X): is_product (cospanop X).
+  Fail exact: (adjoint_preserve_initial cospanop' P).
+Admitted.
+
+
 #[primitive] 
 HB.mixin Record IsProduct {𝐂: PreCat} (A B: ob 𝐂) X of span 𝐂 A B X := {
-    #[canonical=no] productP: is_terminal (X: Span A B);
+    #[canonical=no] productP: is_product X;
   }.
 #[short(type="Product")]
 HB.structure Definition product 𝐂 A B := {X of IsProduct 𝐂 A B X &}.
@@ -245,7 +280,7 @@ Proof. exact: (span_hom (unique_morph (productP (mk_span f g)))). Qed.
 
 #[primitive] 
 HB.mixin Record IsCoproduct {𝐂: PreCat} (A B: ob 𝐂) X of cospan 𝐂 A B X := {
-    #[canonical=no] coproductP: is_initial (X: Cospan A B);
+    #[canonical=no] coproductP: is_coproduct X;
   }.
 #[short(type="Coproduct")]
 HB.structure Definition coproduct 𝐂 A B := {X of IsCoproduct 𝐂 A B X &}.
@@ -256,23 +291,20 @@ Lemma copairE{𝐂: PreCat} {A B: ob 𝐂} {X: Coproduct A B} {Y} (f: A ~> Y) (g
   in1 \; copair X f g ≡ f ∧ in2 \; copair X f g ≡ g .
 Proof. exact: (cospan_hom (unique_morph (coproductP (mk_cospan f g)))). Qed.
 
-Lemma _product_coproduct 𝐂 A B (X: @Product 𝐂 A B): @IsCoproduct (𝐂^op) (obop A) (obop B) (obop X).
-Proof. 
-  split. move: (@productP _ _ _ X).
-Admitted.
+Lemma _product_coproduct (𝐂: Cat) A B (X: @Product 𝐂 A B): @IsCoproduct (𝐂^op) (obop A) (obop B) (obop X).
+Proof. split. apply: is_product_op. exact/productP. Qed.
 HB.instance Definition _ 𝐂 A B X := @_product_coproduct 𝐂 A B X. 
-Lemma _coproduct_product 𝐂 A B (X: @Coproduct 𝐂 A B): @IsProduct (𝐂^op) (obop A) (obop B) (obop X).
-Proof. 
-  split. move: (@coproductP _ _ _ X).
-Admitted.
+Lemma _coproduct_product (𝐂: Cat) A B (X: @Coproduct 𝐂 A B): @IsProduct (𝐂^op) (obop A) (obop B) (obop X).
+Proof. split. apply: is_coproduct_op. exact/coproductP. Qed.
 HB.instance Definition _ 𝐂 A B X := @_coproduct_product 𝐂 A B X. 
 
-Lemma copairE'{𝐂: PreCat} {A B: ob 𝐂} {X: Coproduct A B} {Y} (f: A ~> Y) (g: B ~> Y):
+Lemma copairE'{𝐂: Cat} {A B: ob 𝐂} {X: Coproduct A B} {Y} (f: A ~> Y) (g: B ~> Y):
   in1 \; copair X f g ≡ f ∧ in2 \; copair X f g ≡ g .
 Proof.
   move: (@pairE (𝐂^op) _ _ (obop (X: ob _)) _ (morphop f) (morphop g))=>/=.
-  rewrite /pair/copair/=. cbn. intro H. Fail exact: H. 
-Abort.
+  rewrite /pair/copair/=. cbn. intro H. 
+  Fail exact: H.                (* maybe with cospanop finished? *)
+Admitted.
 
 
 (** * pushouts and pullbacks *)
