@@ -10,7 +10,7 @@ Local Open Scope cat_scope.
 
 Unset Universe Checking.
 
-HB.instance Definition _ := IsQuiver.Build Cat Functor.
+HB.instance Definition _ := IsBareQuiver.Build Cat Functor.
 HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp).
 
 Program Definition _cat_cat := IsCat.Build Cat _ _ _ _.

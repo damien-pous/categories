@@ -59,22 +59,41 @@ Proof. exact: initialU. Qed.
 Lemma TerminalU (𝐂: PreCat) (A B: Terminal 𝐂) (i j: A ≃ B): i¹ ≡ j¹.
 Proof. exact: terminalU. Qed.
 
-Lemma adjoint_preserve_initial (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: ob 𝐂) (H: is_initial A): is_initial (F A).
+Lemma ladj_initial (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: ob 𝐂) (H: is_initial A): is_initial (F A).
 Proof.
   move=>X. destruct (H (adj F X)) as [f _ U].
   exists (dn f)=>//g _. specialize (U (up g) I). apply: up_inj. by rewrite up_dn.
 Qed.
-(* forgetful inheritance?, why? *)
+Lemma radj_terminal (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: ob 𝐂) (H: is_terminal A): is_terminal (F A).
+Proof. exact: (ladj_initial (funcop F) H). Qed.
+Lemma cradj_initial (𝐂 𝐃: Cat) (F: CRightAdjoint 𝐂 𝐃) (A: ob 𝐂) (H: is_initial A): is_terminal (F A).
+Proof. exact: (ladj_initial (funcop2 F) H). Qed.
+Lemma cladj_terminal (𝐂 𝐃: Cat) (F: CLeftAdjoint 𝐂 𝐃) (A: ob 𝐂) (H: is_terminal A): is_initial (F A).
+Proof. exact: (ladj_initial (funcop1 F) H). Qed.
+(* TOTHINK: forgetful inheritance wrongly detected?
+   (should be fine because this is about two distinct hierarchies:
+    - the one for functors (indexed by functions [ob C -> ob D]
+    - and the one for objects (indexed by objects [ob C]
+    is this the source of confusion? )
+ *)
+#[non_forgetful_inheritance]
 HB.instance Definition _ (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: Initial 𝐂) :=
-  IsInitial.Build 𝐃 (F A) (adjoint_preserve_initial F initial_prop).
-
-Lemma adjoint_preserve_terminal (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: ob 𝐂) (H: is_terminal A): is_terminal (F A).
-Proof. exact: (adjoint_preserve_initial (funcop F) H). Qed.
-(* forgetful inheritance?, why? *)
+  IsInitial.Build 𝐃 (F A) (ladj_initial F initial_prop).
+#[non_forgetful_inheritance]
 HB.instance Definition _ (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: Terminal 𝐂) :=
-  IsTerminal.Build 𝐃 (F A) (adjoint_preserve_terminal F terminal_prop).
+  IsTerminal.Build 𝐃 (F A) (radj_terminal F terminal_prop).
+#[non_forgetful_inheritance]
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: CRightAdjoint 𝐂 𝐃) (A: Initial 𝐂) :=
+  IsTerminal.Build 𝐃 (F A) (cradj_initial F initial_prop).
+#[non_forgetful_inheritance]
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: CLeftAdjoint 𝐂 𝐃) (A: Terminal 𝐂) :=
+  IsInitial.Build 𝐃 (F A) (cladj_terminal F terminal_prop).
 
-(* TODO: (right) adjoint preserve_terminal *)
+Check fun (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: Terminal 𝐂) => F A: Terminal _.
+(* TOFIX: HB does not register the required things...
+   use a tag above to adhere to its discipline? *)
+Fail Check fun (𝐂 𝐃: Cat) (F: AdjointEquivalence 𝐂 𝐃) (A: Terminal 𝐂) => F A: Terminal _.
+
 
 (** * (co)spans *)
 
@@ -106,7 +125,7 @@ HB.instance Definition _ 𝐂 A B (X: @Span 𝐂 A B) := IsCospan.Build 𝐂^op 
 HB.instance Definition _ 𝐂 A B (X: @Cospan 𝐂 A B) := IsSpan.Build 𝐂^op (obop A) (obop B) (obop X) in1 in2. 
 
 #[primitive] 
-HB.mixin Record IsSpanHom (𝐂: PreCat) (A B: ob 𝐂) (X Y: Span A B) (f: X ~> Y) := {
+HB.mixin Record IsSpanHom {𝐂: PreCat} {A B: ob 𝐂} (X Y: Span A B) (f: X ~> Y) := {
     #[canonical=no] span_hom: f \; pi1 ≡ pi1 ∧ f \; pi2 ≡ pi2
   }.
 #[short(type="SpanHom")]
@@ -115,7 +134,7 @@ Arguments span_hom {_ _ _ _ _ _}, {_ _ _ _ _} _.
 Definition mk_spanhom {𝐂: PreCat} {A B: ob 𝐂} {X Y: Span A B} (f: X ~> Y) (H: f \; pi1 ≡ pi1 ∧ f \; pi2 ≡ pi2): SpanHom X Y := HB.pack f (@IsSpanHom.Build 𝐂 A B X Y f H). 
 
 #[primitive] 
-HB.mixin Record IsCospanHom (𝐂: PreCat) (A B: ob 𝐂) (X Y: Cospan A B) (f: X ~> Y) := {
+HB.mixin Record IsCospanHom {𝐂: PreCat} {A B: ob 𝐂} (X Y: Cospan A B) (f: X ~> Y) := {
     #[canonical=no] cospan_hom: in1 \; f ≡ in1 ∧ in2 \; f ≡ in2;
   }.
 #[short(type="CospanHom")]
@@ -190,64 +209,164 @@ Check fun {𝐂: Cat} {A B C: ob 𝐂} (X Y: Span A B) (f: X ≃ Y) (g: (X: ob �
 
 (* Check fun {𝐂: Cat} {A B: ob 𝐂} => unify ((Span A B)^op: PreCat) (Cospan (obop A) (obop B): PreCat). *)
 
-Definition Span' {𝐂: Cat} (A B: ob 𝐂) := (Span A B)^op.
-Definition Cospan' {𝐂: Cat} (A B: ob 𝐂) := (Cospan A B)^op.
+Module A.
+
+Definition spanop {𝐂: BareQuiver} {A B: ob 𝐂} (X: Span A B): @Cospan (𝐂^op) A B :=
+  @mk_cospan 𝐂^op A B X (pi1 X) (pi2 X).
+Definition cospanop {𝐂: BareQuiver} {A B: ob 𝐂} (X: Cospan A B): @Span (𝐂^op) A B :=
+  @mk_span 𝐂^op A B X (in1 X) (in2 X).
 
 Section s.
-Context {𝐂: Cat} {A B: ob 𝐂}.
-Definition spanop (X: Span A B): Cospan (obop A) (obop B) :=
-  @mk_cospan _ (obop A) (obop B) _ (pi1 X) (pi2 X).
-Definition spanop' (X: Span A B): Cospan' (obop A) (obop B) := spanop X.
-Definition cospanop (X: Cospan A B): Span (obop A) (obop B) :=
-  @mk_span _ (obop A) (obop B) _ (in1 X) (in2 X).
-Definition cospanop' (X: Cospan A B): Span' (obop A) (obop B) := cospanop X.
+  Context {𝐂: PreCat} {A B: ob 𝐂}.
+  Definition spanhomop [X Y: Span A B] (f: SpanHom X Y): CospanHom (spanop Y) (spanop X)
+    := mk_cospanhom (f:=morphop f) (span_hom f).
+  Definition cospanhomop [X Y: Cospan A B] (f: CospanHom X Y): SpanHom (cospanop Y) (cospanop X)
+  := mk_spanhom (f:=morphop f) (cospan_hom f).
+
+  HB.instance Definition _ :=
+    IsBarePreContravariantFunctor.Build (Span A B) (@Cospan 𝐂^op A B) spanop spanhomop.
+  HB.instance Definition _ :=
+    IsPreContravariantFunctor'.Build (Span A B) (@Cospan 𝐂^op A B) spanop (fun _ _ _ _ H => H).
+  
+  HB.instance Definition _ :=
+    IsBarePreContravariantFunctor.Build (Cospan A B) (@Span 𝐂^op A B) cospanop cospanhomop.
+  HB.instance Definition _ :=
+    IsPreContravariantFunctor'.Build (Cospan A B) (@Span 𝐂^op A B) cospanop (fun _ _ _ _ H => H).
+End s.
+Section s.
+  Context {𝐂: Cat} {A B: ob 𝐂}.
+  HB.instance Definition _ :=
+    IsContravariantFunctor.Build (Span A B) (@Cospan 𝐂^op A B) spanop
+      (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  HB.instance Definition _ :=
+    IsContravariantFunctor.Build (Cospan A B) (@Span 𝐂^op A B) cospanop
+      (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  (* HB.instance Definition _ := *)
+  (*   IsPreAdjoint.Build (Span A B) (@Cospan 𝐂^op A B) spanop cospanop. *)
+  (* HB.instance Definition _ := *)
+  (*   IsPreAdjoint.Build (Cospan A B) (@Span 𝐂^op A B) cospanop spanop. *)
+End s.
+Section s.
+  Context {𝐂: Cat} {A B: ob 𝐂}.
+  (* ARG: cospanop: C^op -> C^op^op instead of C^op -> C *)
+  Fail HB.instance Definition _ :=
+    IsPreAdjointCF'.Build (Span A B) (@Cospan 𝐂^op A B) spanop cospanop.
 End s.
 
+End A.
+
+Definition Fspan {𝐂 𝐃: BareQuiver} (F: ob 𝐂 -> ob 𝐃) {A B: ob 𝐂} (X: Span A B): ob 𝐃 := F X.
+HB.instance Definition _ 𝐂 𝐃 (F: BarePreFunctor 𝐂 𝐃) (A B: ob 𝐂) (X: Span A B) :=
+  IsSpan.Build 𝐃 (F A) (F B) (Fspan F X) (Fhom F (pi1 X)) (Fhom F (pi2 X)).
+HB.instance Definition _ 𝐂 𝐃 (F: BarePreContravariantFunctor 𝐂 𝐃) (A B: ob 𝐂) (X: Span A B) :=
+  IsCospan.Build 𝐃 (F A) (F B) (Fspan F X) (Fhom' F (pi1 X)) (Fhom' F (pi2 X)).
+
+Definition Fspan_hom {𝐂 𝐃: PreCat} (F: BarePreFunctor 𝐂 𝐃) {A B: ob 𝐂} {X Y: Span A B} (f: SpanHom X Y): Fspan F X ~> Fspan F Y := Fhom F f.
+Lemma is_span_hom_Fspan {𝐂 𝐃: PreCat} {F: Functor 𝐂 𝐃} {A B: ob 𝐂} (X Y: Span A B) (f: SpanHom X Y):
+  IsSpanHom 𝐃 (F A) (F B) (Fspan F X) (Fspan F Y) (Fspan_hom F f).
+Proof. split; split; cbn; rewrite -Fcomp; apply: Fhom_eqv; apply (span_hom f). Qed.
+HB.instance Definition _ 𝐂 𝐃 F A B X Y f := @is_span_hom_Fspan 𝐂 𝐃 F A B X Y f. 
+
+Definition Fspan_hom' {𝐂 𝐃: PreCat} (F: BarePreContravariantFunctor 𝐂 𝐃) {A B: ob 𝐂} {X Y: Span A B} (f: SpanHom X Y): Fspan F Y ~> Fspan F X := Fhom' F f.
+Lemma is_cospan_hom_Fspan' {𝐂 𝐃: PreCat} {F: ContravariantFunctor 𝐂 𝐃} {A B: ob 𝐂} (X Y: Span A B) (f: SpanHom X Y):
+  IsCospanHom 𝐃 (F A) (F B) (Fspan F Y) (Fspan F X) (Fspan_hom' F f).
+Proof. split; split; cbn; rewrite -Fcomp'; apply: Fhom'_eqv; apply (span_hom f). Qed.
+HB.instance Definition _ 𝐂 𝐃 F A B X Y f := @is_cospan_hom_Fspan' 𝐂 𝐃 F A B X Y f. 
+
+Definition Fcospan {𝐂 𝐃: BareQuiver} (F: ob 𝐂 -> ob 𝐃) {A B: ob 𝐂} (X: Cospan A B): ob 𝐃 := F X.
+HB.instance Definition _ 𝐂 𝐃 (F: BarePreFunctor 𝐂 𝐃) (A B: ob 𝐂) (X: Cospan A B) :=
+  IsCospan.Build 𝐃 (F A) (F B) (Fcospan F X) (Fhom F (in1 X)) (Fhom F (in2 X)).
+HB.instance Definition _ 𝐂 𝐃 (F: BarePreContravariantFunctor 𝐂 𝐃) (A B: ob 𝐂) (X: Cospan A B) :=
+  IsSpan.Build 𝐃 (F A) (F B) (Fcospan F X) (Fhom' F (in1 X)) (Fhom' F (in2 X)).
+
+Definition Fcospan_hom {𝐂 𝐃: PreCat} (F: BarePreFunctor 𝐂 𝐃) {A B: ob 𝐂} {X Y: Cospan A B} (f: CospanHom X Y): Fcospan F X ~> Fcospan F Y := Fhom F f.
+Lemma is_cospan_hom_Fcospan {𝐂 𝐃: PreCat} {F: Functor 𝐂 𝐃} {A B: ob 𝐂} (X Y: Cospan A B) (f: CospanHom X Y):
+  IsCospanHom 𝐃 (F A) (F B) (Fcospan F X) (Fcospan F Y) (Fcospan_hom F f).
+Proof. split; split; cbn; rewrite -Fcomp; apply: Fhom_eqv; apply (cospan_hom f). Qed.
+HB.instance Definition _ 𝐂 𝐃 F A B X Y f := @is_cospan_hom_Fcospan 𝐂 𝐃 F A B X Y f. 
+
+Definition Fcospan_hom' {𝐂 𝐃: PreCat} (F: BarePreContravariantFunctor 𝐂 𝐃) {A B: ob 𝐂} {X Y: Cospan A B} (f: CospanHom X Y): Fcospan F Y ~> Fcospan F X := Fhom' F f.
+Lemma is_span_hom_Fcospan' {𝐂 𝐃: PreCat} {F: ContravariantFunctor 𝐂 𝐃} {A B: ob 𝐂} (X Y: Cospan A B) (f: CospanHom X Y):
+  IsSpanHom 𝐃 (F A) (F B) (Fcospan F Y) (Fcospan F X) (Fcospan_hom' F f).
+Proof. split; split; cbn; rewrite -Fcomp'; apply: Fhom'_eqv; apply (cospan_hom f). Qed.
+HB.instance Definition _ 𝐂 𝐃 F A B X Y f := @is_span_hom_Fcospan' 𝐂 𝐃 F A B X Y f. 
+
+Definition Fspan_ {𝐂 𝐃} (F: BarePreContravariantFunctor 𝐂 𝐃) {A B: ob 𝐂} (X: Span A B): Cospan (F A) (F B) := Fspan F X.
+HB.instance Definition _ {𝐂 𝐃: PreCat} {F: ContravariantFunctor 𝐂 𝐃} {A B: ob 𝐂} :=
+  IsBarePreContravariantFunctor.Build (Span A B) (Cospan (F A) (F B)) (Fspan_ F)
+    (fun X Y f => Fspan_hom' F f: CospanHom _ _).
+HB.instance Definition _ {𝐂 𝐃: PreCat} {F: ContravariantFunctor 𝐂 𝐃} {A B: ob 𝐂} :=
+  IsPreContravariantFunctor'.Build (Span A B) (Cospan (F A) (F B)) (Fspan_ F) (fun _ _ _ _ H => @Fhom'_eqv _ _ F _ _ _ _ H).
+HB.instance Definition _ {𝐂 𝐃: Cat} {F: ContravariantFunctor 𝐂 𝐃} {A B: ob 𝐂} :=
+  IsContravariantFunctor.Build (Span A B) (Cospan (F A) (F B)) (Fspan_ F) (fun _ => Fidmap') (fun _ _ _ _ _ => Fcomp' _ _).
+
+Definition Fspan' {𝐂 𝐃} (F: PreAdjointCF 𝐂 𝐃) {A B: ob 𝐂} (X: Cospan (F A) (F B)): ob 𝐂 := adj F X.
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: CLeftAdjoint 𝐂 𝐃) (A B: ob 𝐂) (X: Cospan (F A) (F B)) :=
+  IsSpan.Build 𝐂 A B (Fspan' X) (up (F:=funcop1 F) (in1 X)) (up (F:=funcop1 F) (in2 X)).
+
 Section s.
-Context {𝐂: Cat} {A B: ob 𝐂}.
-Definition span'op (X: Span' (obop A) (obop B)): Cospan A B := spanop X.
-Definition cospan'op (X: Cospan' (obop A) (obop B)): Span A B := cospanop X.
+Context {𝐂 𝐃: Cat} {F: CLeftAdjoint 𝐂 𝐃} {A B: ob 𝐂}.
+Definition Fspan'_hom {X Y: Cospan (F A) (F B)} (f: CospanHom X Y): Fspan' Y ~> Fspan' X := Fhom' (adj F) f.
+Lemma is_span_hom_Fspan' (X Y: Cospan (F A) (F B)) (f: CospanHom X Y):
+  IsSpanHom 𝐂 A B (Fspan' Y) (Fspan' X) (Fspan'_hom f).
+Proof.
+  split; split; cbn; rewrite /Fspan'_hom/=.
+Admitted.
+HB.instance Definition _ X Y f := @is_span_hom_Fspan' X Y f. 
 
-Abbreviation 𝐃 := (Span A B). 
-Abbreviation 𝐄 := (Cospan' (obop A) (obop B)). 
+Definition Fspan'_ (X: Cospan (F A) (F B)): Span A B := Fspan' X.
 HB.instance Definition _ :=
-  @IsPreFunctor'.Build 𝐃 𝐄 spanop'
-    (fun X Y f => @mk_cospanhom _ _ _ (spanop Y) (spanop X) f span_hom) (fun _ _ _ _ H => H).
+  IsBarePreContravariantFunctor.Build (Cospan (F A) (F B)) (Span A B) Fspan'_ (fun X Y f => Fspan'_hom f: SpanHom _ _).
 HB.instance Definition _ :=
-  IsFunctor.Build 𝐃 𝐄 spanop' (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  IsPreContravariantFunctor'.Build (Cospan (F A) (F B)) (Span A B) Fspan'_ (fun _ _ _ _ H => @Fhom'_eqv _ _ (adj F) _ _ _ _ H).
 HB.instance Definition _ :=
-  @IsPreFunctor'.Build 𝐄 𝐃 cospan'op
-    (fun X Y f => @mk_spanhom 𝐂 A B (cospanop X) (cospanop Y) f (cospan_hom (s:=f))) (fun _ _ _ _ H => H).
-HB.instance Definition _ :=
-  IsFunctor.Build 𝐄 𝐃 cospan'op (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
-HB.instance Definition _ := IsPreAdjoint.Build 𝐃 𝐄 spanop' cospan'op. 
-HB.instance Definition _ := IsPreAdjointF.Build 𝐃 𝐄 spanop' (functor.class cospan'op). 
-Program Definition _spanop_ladj := @IsLeftAdjoint.Build 𝐃 𝐄 spanop' _ _ _ _.
-Next Obligation.
-  unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. repeat split; cat.
-  split; split; cbn=>X Y f. cat. 
-Defined.
-Next Obligation.
-  unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. split; split; split; by rewrite !cats.
-  split; split; cbn=>X Y f. by rewrite !cats. 
-Defined.
-Next Obligation. cbn=>a. by rewrite !cats. Qed.
-Next Obligation. cbn=>a. by rewrite !cats. Qed.
-HB.instance Definition _ := _spanop_ladj.
-Program Definition _spanop_radj := @IsRightAdjoint.Build 𝐃 𝐄 spanop' _ _ _ _.
-Next Obligation.
-  unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. repeat split; by rewrite !cats.
-  split; split; cbn=>X Y f. by rewrite !cats. 
-Defined.
-Next Obligation.
-  unshelve esplit. cbn=>X/=. unshelve esplit. cbn. exact: idmap. repeat split; by rewrite !cats.
-  split; split; cbn=>X Y f. by rewrite !cats. 
-Defined.
-Next Obligation. cbn=>a. by rewrite !cats. Qed.
-Next Obligation. cbn=>a. by rewrite !cats. Qed.
-HB.instance Definition _ := _spanop_radj.
+  IsContravariantFunctor.Build (Cospan (F A) (F B)) (Span A B) Fspan'_ (fun _ => Fidmap') (fun _ _ _ _ _ => Fcomp' _ _).
 
-End s.                                 
+HB.instance Definition _ :=
+  IsPreAdjointCF'.Build (Span A B) (Cospan (F A) (F B)) (Fspan_ F) Fspan'_ .
+HB.instance Definition _ :=
+  IsPreAdjointCF'.Build (Cospan (F A) (F B)) (Span A B) Fspan'_ (Fspan_ F).
+
+Lemma _Fspan_cleftAdjoint: IsCLeftAdjoint (Span A B) (Cospan (F A) (F B)) (Fspan_ F).
+Proof.
+  split. unshelve esplit. 2: unshelve esplit.
+  - unshelve esplit. intro X. cbn. exists (unit' (adj (funcop1 F)) X). split; cbn. split; cbn. 
+    sorry.
+    split; split. exact: (natural (unit' (adj (funcop1 F)))). 
+  - unshelve esplit. intro X. cbn. exists (counit' (adj (funcop1 F)) X). split; cbn. split; cbn. 
+    sorry.
+    split; split. exact: (natural (counit' (adj (funcop1 F)))).
+  - cbn; split=>X/=.
+    exact: (unit_counit_l_at' (adj (funcop1 F))).
+    exact: (unit_counit_r_at' (adj (funcop1 F))).
+Qed.
+HB.instance Definition _ := _Fspan_cleftAdjoint.
+End s.     
+
+Section s.
+Context {𝐂 𝐃: Cat} {F: CAdjointEquivalence 𝐂 𝐃} {A B: ob 𝐂}.
+Lemma _Fspan_crightAdjoint: IsCRightAdjoint (Span A B) (Cospan (F A) (F B)) (Fspan_ F).
+Proof.
+  split. unshelve esplit. 2: unshelve esplit.
+  - unshelve esplit. intro X. cbn. exists (unit' (funcop1 F) X). split; cbn. split; cbn. 
+    sorry.
+    split; split. exact: (natural (unit' (funcop1 F))). 
+  - unshelve esplit. intro X. cbn. exists (counit' (funcop1 F) X). split; cbn. split; cbn. 
+    sorry.
+    split; split. exact: (natural (counit' (funcop1 F))).
+  - cbn; split=>X/=.
+    exact: (unit_counit_l_at' (funcop1 F)).
+    exact: (unit_counit_r_at' (funcop1 F)).
+Qed.
+HB.instance Definition _ := _Fspan_crightAdjoint.
+End s.
+
+Definition spanop {𝐂 A B} := @Fspan_ 𝐂 _ obop A B.
+(* TODO: dualise *)
+Fail Definition cospanop {𝐂 A B} := @Fcospan_ 𝐂 _ obop A B.
+HB.instance Definition _ (𝐂: Cat) (A B: ob 𝐂) := cadjointEquivalence.on (@spanop _ A B).
+(* TODO: dualise *)
+Fail HB.instance Definition _ (𝐂: Cat) (A B: ob 𝐂) := cadjointEquivalence.on (@cospanop _ A B).
 
 
 (** * (co)products *)
@@ -258,12 +377,12 @@ Definition is_coproduct {𝐂: PreCat} (A B: ob 𝐂) (X: Cospan A B) := is_init
 Fail Check fun (C: Cat) (A B: ob C) (X: Span A B) => unify (is_product X) (is_coproduct (spanop X)). 
 
 Definition is_product_op (C: Cat) (A B: ob C) (X: Span A B) (P: is_product X): is_coproduct (spanop X)
-  := adjoint_preserve_terminal spanop' P .
-(* TODO: turn cospanop' into an adjoint equivalence *)
-Definition is_coproduct_op (C: Cat) (A B: ob C) (X: Cospan A B) (P: is_coproduct X): is_product (cospanop X).
-  Fail exact: (adjoint_preserve_initial cospanop' P).
-Admitted.
+  := cladj_terminal spanop P .
+(* TODO: dualise *)
+Fail Definition is_coproduct_op (C: Cat) (A B: ob C) (X: Cospan A B) (P: is_coproduct X): is_product (cospanop X)
+  := cradj_initial cospanop P.
 
+  
 
 #[primitive] 
 HB.mixin Record IsProduct {𝐂: PreCat} (A B: ob 𝐂) X of span 𝐂 A B X := {

@@ -212,6 +212,7 @@ Fixpoint app {A B} (u: hom_list A B): forall {C}, hom_list B C -> hom_list A C :
   | nil => fun _ v => v
   | cons f u => fun _ v => cons f (app u v)
   end.
+Definition snoc {A B C} (u: hom_list A B) (f: B ~> C): hom_list A C := app u (single f).
 Lemma eval_nil {A}: eval (@nil A) ≡ idmap.
 Proof. done. Qed.
 Lemma eval_cons {A B C} f u: eval (@cons C A B f u) ≡ f \; eval u.
@@ -224,6 +225,8 @@ Proof.
   by rewrite eval_nil comp1o.
   by rewrite 2!eval_cons IH compoA.
 Qed.
+Lemma eval_snoc {A B C} u f: eval (@snoc A B C u f) ≡ eval u \; f.
+Proof. by rewrite eval_app eval_single. Qed.
   
 Structure reified A B := reify {
     term:> A ~> B;
