@@ -88,10 +88,9 @@ Proof. rewrite exchange. cat. Qed.
   Proper (eqv ==> eqv ==> eqv) (@tensor22 𝐂 A B C D).
 Proof. typeclasses eauto. Qed.
 
-Definition _iso_tens {A A' B B'} (i: A ≃ A') (j: B ≃ B'): IsIso _ (A⊗B) (A'⊗B') (i · j) :=  
-  @_functor_iso _ _ tensor (A,B) (A',B') (pair_iso i j). 
-HB.instance Definition _ {A A' B B'} (i: A ≃ A') (j: B ≃ B') := _iso_tens i j. 
 
+HB.instance Definition _ {A A' B B'} (i: A ≃ A') (j: B ≃ B') :=
+  iso.copy (i·j) (Fhom tensor (pair_iso i j)).
 
 Definition assoc A B C: (A ⊗ B) ⊗ C ~> A ⊗ (B ⊗ C) := (assoc_ A B C)¹.
 Definition unitl A: unit ⊗ A ~> A := (unitl_ A)¹.
