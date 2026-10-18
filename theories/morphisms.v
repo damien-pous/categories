@@ -19,6 +19,7 @@ HB.mixin Record IsEpi (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
 HB.structure Definition EPI 𝐂 A B := { f of IsEpi 𝐂 A B f }.
 Infix "↠" := Epi: cat_scope. 
 Arguments epiP {_ _ _}.
+HB.instance Definition _ 𝐂 A B := Setoid.copy (@Epi 𝐂 A B) (kernel (@EPI.sort 𝐂 A B)).
 
 HB.mixin Record IsMono (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
     #[canonical=no] monoP: is_mono f;
@@ -27,6 +28,7 @@ HB.mixin Record IsMono (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
 HB.structure Definition MONO 𝐂 A B := { f of IsMono 𝐂 A B f }.
 Infix "↪" := Mono: cat_scope.
 Arguments monoP {_ _ _}.
+HB.instance Definition _ 𝐂 A B := Setoid.copy (@Mono 𝐂 A B) (kernel (@MONO.sort 𝐂 A B)).
 
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: A ↪ B) :=
   IsEpi.Build 𝐂^op B A (morphop f) (monoP f).
@@ -64,9 +66,9 @@ HB.instance Definition _ (𝐂: Cat) (A B C: ob 𝐂) (f: A ↪ B) (g: B ↪ C) 
  *)
 
 Definition is_equalizer (𝐂: PreCat) (A B C: ob 𝐂) (f g: A ~> B) (e: C ~> A) :=
-  e \; f ≡ e \; g ∧ forall D (e': D ~> A), e' \; f ≡ e' \; g -> Σ! h: D ~> C, h \; e ≡ e'.  
+  e \; f ≡ e \; g ∧ forall D (e': D ~> A), e' \; f ≡ e' \; g -> Σ! h: D ~> C, h \; e ≡ e'.
 Definition is_coequalizer (𝐂: PreCat) (A B C: ob 𝐂) (f g: A ~> B) (e: B ~> C) :=
-  f \; e ≡ g \; e ∧ forall D (e': B ~> D), f \; e' ≡ g \; e' -> Σ! h: C ~> D, e \; h ≡ e'.  
+  f \; e ≡ g \; e ∧ forall D (e': B ~> D), f \; e' ≡ g \; e' -> Σ! h: C ~> D, e \; h ≡ e'.
 
 Definition is_regepi (𝐂: PreCat) (A B: ob 𝐂) (e: A ~> B) :=
   { C & {f: C~>A & {g: C~>A & is_coequalizer f g e }}}.
@@ -79,6 +81,11 @@ HB.mixin Record _IsRegEpi (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
 #[short(type="RegEpi")]
 HB.structure Definition REGEPI 𝐂 A B := { f of _IsRegEpi 𝐂 A B f & EPI _ f }.
 Arguments regepiP {_ _ _}.
+(** [is_regepi] quantifies on objects and return a Type,
+    so that regular epis live in a universe which is at least that of objects, wich must be strictly above that of setoids since we want the category of setoids
+    thus we cannot declare a setoid structure on regepis (and regmonos, and isos) until we get universe polymorphic setoids
+ *)
+HB.instance Definition _ 𝐂 A B := Setoid.copy (@RegEpi 𝐂 A B) (kernel (@REGEPI.sort 𝐂 A B)).
 
 HB.mixin Record _IsRegMono (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
     #[canonical=no] regmonoP: is_regmono f;
@@ -86,6 +93,7 @@ HB.mixin Record _IsRegMono (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
 #[short(type="RegMono")]
 HB.structure Definition REGMONO 𝐂 A B := { f of _IsRegMono 𝐂 A B f & MONO _ f }.
 Arguments regmonoP {_ _ _}.
+HB.instance Definition _ 𝐂 A B := Setoid.copy (@RegMono 𝐂 A B) (kernel (@REGMONO.sort 𝐂 A B)).
 
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: RegMono A B) :=
   _IsRegEpi.Build 𝐂^op B A (morphop f) (regmonoP f).
@@ -188,6 +196,7 @@ HB.mixin Record _HasLeftInverse (𝐂: PreCat) (A B: ob 𝐂) f of HasInverseOp 
   }.
 #[short(type="SplitEpi")]
 HB.structure Definition SPLITEPI 𝐂 A B := { f of REGEPI _ f & INVERTIBLE _ f & _HasLeftInverse 𝐂 A B f }.
+HB.instance Definition _ 𝐂 A B := Setoid.copy (SplitEpi A B) (kernel (@SPLITEPI.sort 𝐂  A B)).
 HB.factory Record HasLeftInverse' (𝐂: Cat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
     #[canonical=no] invKl: has_left_inverse f;
   }.
@@ -209,6 +218,7 @@ HB.mixin Record _HasRightInverse (𝐂: PreCat) (A B: ob 𝐂) f of HasInverseOp
   }.
 #[short(type="SplitMono")]
 HB.structure Definition SPLITMONO 𝐂 A B := { f of REGMONO _ f & INVERTIBLE _ f & _HasRightInverse 𝐂 A B f }.
+HB.instance Definition _ 𝐂 A B := Setoid.copy (SplitMono A B) (kernel (@SPLITMONO.sort 𝐂 A B)).
 HB.factory Record HasRightInverse' (𝐂: Cat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
     #[canonical=no] invKr: has_right_inverse f;
   }.
@@ -273,6 +283,7 @@ HB.instance Definition _ (𝐂: Cat) (A B C: ob 𝐂) (f: SplitMono A B) (g: Spl
 Infix "≃" := Iso: cat_scope.
 Notation "A ≃_ 𝐂 B" := (@Iso 𝐂 A B) (only parsing): cat_scope.
 Notation "f ¹" := (ISO.sort f): cat_scope.
+HB.instance Definition _ 𝐂 A B := Setoid.copy (A ≃ B) (kernel (@ISO.sort 𝐂 A B)).
 
 HB.factory Record IsIso' (𝐂: Cat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
     invKl: has_left_inverse f;
@@ -377,10 +388,10 @@ Proof. by rewrite -(epiP' i) -compoA invKr cats. Qed.
 Lemma iso_src_l A A' B (f: A ~> B) (g: A' ~> B) (i: A' ≃ A): i \; f ≡ g <-> f ≡ i⁻¹ \; g.
 Proof. split=>H; exact/eqv_sym/iso_src_r/eqv_sym. Qed.
 
-Lemma inv_eqv A B (i j: A ≃ B): i ≡ j -> i⁻¹ ≡ j⁻¹.
+Lemma inv_eqv A B (i j: A ≃ B): i¹ ≡ j¹ -> i⁻¹ ≡ j⁻¹.
 Proof. move=>ij. apply/(epiP i). by rewrite /= invKr ij invKr. Qed.
 
-Lemma inv_inj A B (i j: A ≃ B): i⁻¹ ≡ j⁻¹ -> i ≡ j.
+Lemma inv_inj A B (i j: A ≃ B): i⁻¹ ≡ j⁻¹ -> i¹ ≡ j¹.
 Proof. by move=>/inv_eqv. Qed.
 
 End s.

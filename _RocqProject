@@ -11,7 +11,6 @@ theories/arewrite.v			   # rewriting/reflexivity modulo associativity
 theories/morphisms.v                       # hierarchy of morphisms
 theories/airewrite.v			   # rewriting/reflexivity modulo associativity and inverses
 theories/arity.v                           # lists of objects
-theories/cast.v                            # casting operations
 theories/functor.v                         # functors, natural transformations, adjunctions
 theories/bifunctor.v                       # bifunctors
 theories/span.v                            # spans
@@ -27,6 +26,7 @@ theories/cat_bicat.v                       # Cat: BiCat (needs universe polymorp
 # below: compiles but to be evolved
 theories/cone.v                            # cones for generic limits
 theories/algebra.v                         # (co)algebras
+theories/cast.v                            # casting operations
 theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors
 theories/cartesian.v                       # (co)cartesian monoidal categories

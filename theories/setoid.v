@@ -1,21 +1,24 @@
 (** * the category of setoids *)
 
 Require Import cat morphisms.
-From Stdlib Require Import CMorphisms.
 
 Local Open Scope cat_scope.
 
+(*
+  the rest of the library requires OBJECT < SETOID
+  to equip isomorphisms and natural transformations with a setoid structure
+
+  thus it clashes here were we need SETOID < OBJECT 
+ *)
 Unset Universe Checking.
 
+
+
 HB.instance Definition _ := IsQuiver.Build Setoid.type setoid_morphism.type.
-
 HB.instance Definition _ := IsPreCat.Build Setoid.type (fun _ => setoid_id) (fun _ _ _ f g => setoid_comp g f).
-
 Lemma _setoid_cat: IsCat Setoid.type.
 Proof. split=>//*??????. exact/setoid_comp_eqv. Qed.
-
 HB.instance Definition _ := _setoid_cat.
-
 
 (** ** characterisation of epis/monos in setoids  *)
 

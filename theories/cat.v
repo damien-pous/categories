@@ -11,7 +11,7 @@ Local Open Scope cat_scope.
 
 (** ** quivers *)
 #[primitive] HB.mixin Record IsBareQuiver 𝐂 := {
-    #[canonical=no] hom: ob 𝐂 -> ob 𝐂 -> Type
+    #[canonical=no] hom: ob 𝐂 -> ob 𝐂 -> TYPE
 }.
 #[short(type="BareQuiver")]
 HB.structure Definition BAREQUIVER := { 𝐂 of IsBareQuiver 𝐂 }.
@@ -70,7 +70,7 @@ Elpi Accumulate coercion.db lp:{{
 }}.
 Check fun (C: PreCat) (a: ob C) => a ≡ a.
 Module _test.
-  Parameters (C: PreCat) (a: ob C) (T: Type) (f: T -> (a ~> a)).
+  Parameters (C: PreCat) (a: ob C) (T: TYPE) (f: T -> (a ~> a)).
   Coercion f: T >-> hom.
   Check fun t: T => t ≡ t. 
 End _test.
@@ -105,7 +105,7 @@ Proof. symmetry. exact/compoA. Qed.
 Definition cats := (@compo1, @comp1o, @compoA)%core.
 
 (** the category of setoids and extensional functions  *)
-(* TOFIX: how to avoid universe inconsistencies with fullsub below? *)
+(** disabled for now for lack of universe polymorphism  *)
 (* HB.instance Definition _ := IsQuiver.Build Setoid.type setoid_morphism.type. *)
 (* HB.instance Definition _ := IsPreCat.Build Setoid.type (fun _ => setoid_id) (fun _ _ _ f g => setoid_comp g f). *)
 (* Lemma _setoid_cat: IsCat Setoid.type. *)

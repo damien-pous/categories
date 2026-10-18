@@ -1,4 +1,3 @@
-
 From PartialOrders Require Export setoid.
 From Stdlib Require Import CMorphisms.
 
@@ -68,8 +67,37 @@ Infix "∧" := prod (at level 80).
 Axiom sorry: forall {A: Type}, A.
 Ltac sorry := exact: sorry. 
 
+(** casting morphism-like types *)
+Definition cast2' {A} {T: A -> A -> Type} [a b a' b'] (x: T a b) (aa: a = a') (bb: b = b'): T a' b' :=
+  eq_rect _ (fun a => T a b') (eq_rect _ _ x _ bb) _ aa.
+Arguments cast2' {_ _} [_ _ _ _] _ & !_ !_.
+Abbreviation cast2 a' b' f := (@cast2' _ _ _ _ a' b' f _ _).
+
+(** types with UIP on lists (TO be removed, eventually) *)
+#[primitive] HB.mixin Record HasUIP X := {
+    #[canonical=no] UIP_ob_list: forall n m: list X,
+      forall p q: n = m, p = q;
+  }.
+#[short(type="Uip")]
+HB.structure Definition UIP := { X of HasUIP X }.
+Lemma UIP_ob (X: Uip): forall A B: X, forall p q: A = B, p = q.
+Proof.
+  have L: forall A B: X, forall p: A=B,
+      f_equal (fun h => match h with cons B _ => B | _ => A end)
+        (f_equal (cons^~ nil) p) = p.
+  by destruct p. 
+  move=>A B p q.
+  rewrite -(L _ _ p) -(L _ _ q). f_equal. exact/UIP_ob_list.
+Qed.
+
+(** helpers to track universe issues *)
+Universe OBJECT.
+Universe SETOID.
+(* Constraint SETOID < OBJECT. *)
+Definition TYPE := Type@{SETOID}.
+
 (** tag for objects in categories *)
-Definition ob (𝐂: Type) := 𝐂. 
+Definition ob (𝐂: Type@{OBJECT}) := 𝐂. 
 
 
 (** * complements to the partial order library (TO be moved there) *)
@@ -119,3 +147,19 @@ Lemma unique_sig_eqv (X: Setoid.type) P Q (H: forall x: X, P x <-> Q x): unique_
 Proof. split; apply: unique_sig_impl=>//. firstorder. Defined.
 
 Notation "Σ! x .. y , P" := (unique_sig (fun x => .. (unique_sig (fun y => P)) ..)). 
+
+
+(*
+Section s.
+Variables (X: Setoid.type) (P: X -> Prop). 
+Record unique_sig := uexist { uval:> X; unique_sigP: P uval; unicity_sig: forall x y, P x -> P y -> x ≡ y }.
+Lemma mk_unique_sig (x: X) (p: P x) (H: forall y, P y -> x ≡ y): unique_sig.
+Proof. exists x=>//. abstract (move=>y z; transitivity x; [symmetry; exact/H|exact/H]). Defined.
+End s.
+
+Lemma unique_sig_impl (X: Setoid.type) P Q (H: forall x: X, P x <-> Q x): unique_sig P -> unique_sig Q.
+Proof.
+  intro U. exists (uval U). apply H, unique_sigP.
+  intros x y Px Py. by apply: (unicity_sig U); apply H.
+Defined.
+*)

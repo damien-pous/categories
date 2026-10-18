@@ -1,7 +1,7 @@
 (** * Functors, natural transformations, adjunctions *)
 
 Require Export morphisms.
-Require Import cast arewrite.
+Require Import arewrite.
 
 Local Open Scope cat_scope.
 
