@@ -75,8 +75,8 @@ End s.
 End Internals.
 
 
-Local Abbreviation barequiver_of_cat := cat_cat__to__cat_barequiver.
-Local Abbreviation bareprecat_of_cat := cat_cat__to__cat_bareprecat.
+Local Abbreviation barequiver_of_cat := cat_CAT__to__cat_BAREQUIVER.
+Local Abbreviation bareprecat_of_cat := cat_CAT__to__cat_BAREPRECAT.
 
 (* Elpi code for areflexivity *)
 

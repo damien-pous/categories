@@ -13,16 +13,16 @@ Local Open Scope cat_scope.
    #[canonical=no] Fhom: forall A B: ob 𝐂, (A ~> B) -> (F A ~> F B);
   }.
 #[short(type="BarePreFunctor")]
-HB.structure Definition bareprefunctor 𝐂 𝐃 :=
+HB.structure Definition BAREPREFUNCTOR 𝐂 𝐃 :=
   { F of IsBarePreFunctor 𝐂 𝐃 F }.
 Arguments Fhom {_ _} _ {_ _}. 
 
 (** prefunctor: a functor without laws *)
-#[primitive] HB.mixin Record IsPreFunctor' (𝐂 𝐃: Quiver) F of @bareprefunctor 𝐂 𝐃 F := {
+#[primitive] HB.mixin Record IsPreFunctor' (𝐂 𝐃: Quiver) F of @BAREPREFUNCTOR 𝐂 𝐃 F := {
    #[canonical=no] _Fhom_eqv: forall A B: ob 𝐂, Proper (eqv ==> eqv) (@Fhom _ _ F A B);
   }.
 #[short(type="PreFunctor")]
-HB.structure Definition prefunctor 𝐂 𝐃 :=
+HB.structure Definition PREFUNCTOR 𝐂 𝐃 :=
   { F of IsPreFunctor' 𝐂 𝐃 F & }.
 Arguments Fhom {_ _} _ {_ _}. 
 Instance Fhom_eqv {𝐂 𝐃: Quiver} {F: PreFunctor 𝐂 𝐃} {A B: ob 𝐂}: Proper (eqv ==> eqv) (Fhom F) := _Fhom_eqv A B. 
@@ -39,12 +39,12 @@ HB.builders Context 𝐂 𝐃 F of @IsPreFunctor 𝐂 𝐃 F.
 HB.end.
 
 (** functor: prefunctor + laws *)
-#[primitive] HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @prefunctor 𝐂 𝐃 F := {
+#[primitive] HB.mixin Record IsFunctor (𝐂 𝐃: PreCat) F of @PREFUNCTOR 𝐂 𝐃 F := {
     #[canonical=no] _Fidmap: forall A: ob 𝐂, Fhom F A ≡ F A;
     #[canonical=no] _Fcomp: forall (A B C: ob 𝐂) (f: A ~> B) (g: B ~> C), Fhom F (f \; g) ≡ Fhom F f \; Fhom F g;
   }.
 #[short(type="Functor")]
-HB.structure Definition functor (𝐂 𝐃: PreCat) :=
+HB.structure Definition FUNCTOR (𝐂 𝐃: PreCat) :=
   { F of IsFunctor 𝐂 𝐃 F & }.
 Definition Fidmap {𝐂 𝐃: PreCat} {F: Functor 𝐂 𝐃} {A: ob 𝐂}: Fhom F A ≡ F A := _Fidmap A.
 Definition Fcomp {𝐂 𝐃: PreCat} {F: Functor 𝐂 𝐃} {A B C: ob 𝐂} (f: A ~> B) (g: B ~> C): Fhom F (f \; g) ≡ Fhom F f \; Fhom F g := _Fcomp _ _ _ f g. 
@@ -64,15 +64,15 @@ HB.end.
 (** * faithful functors *)
 
 (** faithful (pre)functor: + injectivity on morphisms *)
-#[primitive] HB.mixin Record IsFaithful (𝐂 𝐃: Quiver) F of @prefunctor 𝐂 𝐃 F := {
+#[primitive] HB.mixin Record IsFaithful (𝐂 𝐃: Quiver) F of @PREFUNCTOR 𝐂 𝐃 F := {
     #[canonical=no] Fhom_inj: forall {A B} (f g: A ~> B), Fhom F f ≡ Fhom F g -> f ≡ g;
   }.
 #[short(type="FaithfulPreFunctor")]
-HB.structure Definition faithfulprefunctor 𝐂 𝐃 :=
-  { F of @prefunctor 𝐂 𝐃 F & IsFaithful 𝐂 𝐃 F }.
+HB.structure Definition FAITHFULPREFUNCTOR 𝐂 𝐃 :=
+  { F of @PREFUNCTOR 𝐂 𝐃 F & IsFaithful 𝐂 𝐃 F }.
 #[short(type="FaithfulFunctor")]
-HB.structure Definition faithfulfunctor 𝐂 𝐃 :=
-  { F of @functor 𝐂 𝐃 F & IsFaithful 𝐂 𝐃 F }.
+HB.structure Definition FAITHFULFUNCTOR 𝐂 𝐃 :=
+  { F of @FUNCTOR 𝐂 𝐃 F & IsFaithful 𝐂 𝐃 F }.
 Arguments Fhom_inj {_ _} _ {_ _}.
 
 Lemma Fhom_bij 𝐂 𝐃 (F: FaithfulPreFunctor 𝐂 𝐃) {A B: ob 𝐂} (f g: A ~> B):
@@ -90,7 +90,7 @@ HB.builders Context 𝐂 𝐃 F of @IsFaithfulPreFunctor 𝐂 𝐃 F.
 HB.end.
 
 (** getting category laws from faithful functors *)
-HB.factory Record FaithfulSubCat (𝐃: Cat)  𝐂 of precat 𝐂 := { F: FaithfulFunctor 𝐂 𝐃 }.
+HB.factory Record FaithfulSubCat (𝐃: Cat)  𝐂 of PRECAT 𝐂 := { F: FaithfulFunctor 𝐂 𝐃 }.
 HB.builders Context 𝐃 𝐂 of FaithfulSubCat 𝐃 𝐂.
 Program Definition _faithfulsubcat := IsCat.Build 𝐂 _ _ _ _.
 Next Obligation. move=>A B f. apply: (Fhom_inj F). rewrite Fcomp Fidmap. cat. Qed.
@@ -111,16 +111,16 @@ HB.end.
    #[canonical=no] Fhom': forall A B: ob 𝐂, (A ~> B) -> (F B ~> F A);
   }.
 #[short(type="BarePreContravariantFunctor")]
-HB.structure Definition bareprecontravariantfunctor 𝐂 𝐃 :=
+HB.structure Definition BAREPRECONTRAVARIANTFUNCTOR 𝐂 𝐃 :=
   { F of IsBarePreContravariantFunctor 𝐂 𝐃 F }.
 Arguments Fhom' {_ _} _ {_ _}. 
 
 (** contravariant prefunctor: a contravariant functor without laws *)
-#[primitive] HB.mixin Record IsPreContravariantFunctor' (𝐂 𝐃: Quiver) F of @bareprecontravariantfunctor 𝐂 𝐃 F := {
+#[primitive] HB.mixin Record IsPreContravariantFunctor' (𝐂 𝐃: Quiver) F of @BAREPRECONTRAVARIANTFUNCTOR 𝐂 𝐃 F := {
    #[canonical=no] _Fhom'_eqv: forall A B: ob 𝐂, Proper (eqv ==> eqv) (@Fhom' _ _ F A B);
   }.
 #[short(type="PreContravariantFunctor")]
-HB.structure Definition precontravariantfunctor 𝐂 𝐃 :=
+HB.structure Definition PRECONTRAVARIANTFUNCTOR 𝐂 𝐃 :=
   { F of IsPreContravariantFunctor' 𝐂 𝐃 F & }.
 Instance Fhom'_eqv {𝐂 𝐃} {F: PreContravariantFunctor 𝐂 𝐃} {A B: ob 𝐂}: Proper (eqv ==> eqv) (Fhom' F) := _Fhom'_eqv A B. 
 HB.instance Definition _ 𝐂 𝐃 (F: PreContravariantFunctor 𝐂 𝐃) A B :=
@@ -136,12 +136,12 @@ HB.builders Context 𝐂 𝐃 F of @IsPreContravariantFunctor 𝐂 𝐃 F.
 HB.end.
 
 (** contravariant: add laws *)
-#[primitive] HB.mixin Record IsContravariantFunctor (𝐂 𝐃: PreCat) F of @precontravariantfunctor 𝐂 𝐃 F := {
+#[primitive] HB.mixin Record IsContravariantFunctor (𝐂 𝐃: PreCat) F of @PRECONTRAVARIANTFUNCTOR 𝐂 𝐃 F := {
     #[canonical=no] _Fidmap': forall A: ob 𝐂, Fhom' F A ≡ F A;
     #[canonical=no] _Fcomp': forall (A B C: ob 𝐂) (f: A ~> B) (g: B ~> C), Fhom' F (f \; g) ≡ Fhom' F g \; Fhom' F f;
   }.
 #[short(type="ContravariantFunctor")]
-HB.structure Definition contravariantfunctor 𝐂 𝐃 :=
+HB.structure Definition CONTRAVARIANTFUNCTOR 𝐂 𝐃 :=
   { F of IsContravariantFunctor 𝐂 𝐃 F & }.
 Definition Fidmap' {𝐂 𝐃} {F: ContravariantFunctor 𝐂 𝐃} {A: ob 𝐂}: Fhom' F A ≡ F A := _Fidmap' A.
 Definition Fcomp' {𝐂 𝐃} {F: ContravariantFunctor 𝐂 𝐃} {A B C: ob 𝐂} (f: A ~> B) (g: B ~> C): Fhom' F (f \; g) ≡ Fhom' F g \; Fhom' F f := _Fcomp' _ _ _ f g. 
@@ -232,17 +232,17 @@ Check fun 𝐂 𝐃 (F: Functor 𝐂 𝐃) =>
 
 Definition funcop {A B} (F: ob A -> ob B): ob (A^op) -> ob (B^op) := funcop2 (funcop1 F). 
 HB.instance Definition _ 𝐂 𝐃 (F: BarePreFunctor 𝐂 𝐃) :=
-  bareprefunctor.on (funcop F).
+  BAREPREFUNCTOR.on (funcop F).
 HB.instance Definition _ 𝐂 𝐃 (F: PreFunctor 𝐂 𝐃) :=
-  prefunctor.on (funcop F).
+  PREFUNCTOR.on (funcop F).
 HB.instance Definition _ 𝐂 𝐃 (F: Functor 𝐂 𝐃) :=
-  functor.on (funcop F). 
+  FUNCTOR.on (funcop F). 
 HB.instance Definition _ 𝐂 𝐃 (F: BarePreContravariantFunctor 𝐂 𝐃) :=
-  bareprecontravariantfunctor.on (funcop F).
+  BAREPRECONTRAVARIANTFUNCTOR.on (funcop F).
 HB.instance Definition _ 𝐂 𝐃 (F: PreContravariantFunctor 𝐂 𝐃) :=
-  precontravariantfunctor.on (funcop F).
+  PRECONTRAVARIANTFUNCTOR.on (funcop F).
 HB.instance Definition _ 𝐂 𝐃 (F: ContravariantFunctor 𝐂 𝐃) :=
-  contravariantfunctor.on (funcop F).
+  CONTRAVARIANTFUNCTOR.on (funcop F).
 (* TODO: faithful contravariant functors *)
 HB.instance Definition _ 𝐂 𝐃 (F: FaithfulPreFunctor 𝐂 𝐃) :=
   IsFaithful.Build 𝐂^op 𝐃^op (funcop F) (fun A B => @Fhom_inj _ _ F B A).
@@ -252,17 +252,17 @@ HB.instance Definition _ 𝐂 𝐃 (F: FaithfulFunctor 𝐂 𝐃) :=
 
 Definition funcop' {A B} (F: ob (A^op) -> ob (B^op)): ob A -> ob B := funcop1' (funcop2' F). 
 HB.instance Definition _ (𝐂 𝐃: BareQuiver) (F: BarePreFunctor _ _) :=
-  bareprefunctor.on (@funcop' 𝐂 𝐃 F).
+  BAREPREFUNCTOR.on (@funcop' 𝐂 𝐃 F).
 HB.instance Definition _ (𝐂 𝐃: Quiver) (F: PreFunctor _ _) :=
-  prefunctor.on (@funcop' 𝐂 𝐃 F).
+  PREFUNCTOR.on (@funcop' 𝐂 𝐃 F).
 HB.instance Definition _ (𝐂 𝐃: PreCat) (F: Functor _ _) :=
-  functor.on (@funcop' 𝐂 𝐃 F). 
+  FUNCTOR.on (@funcop' 𝐂 𝐃 F). 
 HB.instance Definition _ (𝐂 𝐃: BareQuiver) (F: BarePreContravariantFunctor _ _) :=
-  bareprecontravariantfunctor.on (@funcop' 𝐂 𝐃 F).
+  BAREPRECONTRAVARIANTFUNCTOR.on (@funcop' 𝐂 𝐃 F).
 HB.instance Definition _ (𝐂 𝐃: Quiver) (F: PreContravariantFunctor _ _) :=
-  precontravariantfunctor.on (@funcop' 𝐂 𝐃 F).
+  PRECONTRAVARIANTFUNCTOR.on (@funcop' 𝐂 𝐃 F).
 HB.instance Definition _ (𝐂 𝐃: PreCat) (F: ContravariantFunctor _ _) :=
-  contravariantfunctor.on (@funcop' 𝐂 𝐃 F).
+  CONTRAVARIANTFUNCTOR.on (@funcop' 𝐂 𝐃 F).
 (* TODO: faithful contravariant functors *)
 
 (** extension of the normalisation tactic to deal with functors *)
@@ -314,11 +314,6 @@ HB.instance Definition _ (𝐂: PreCat) :=
   IsFunctor.Build 𝐂 𝐂 idfun (fun=> eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
 (** duality contravariant functors *)
-Arguments obop {_}.
-Arguments morphop {_} [_ _].
-Definition obop' {𝐂: BareQuiver} (a: ob (𝐂^op)): ob 𝐂 := a.
-Definition morphop' {𝐂: BareQuiver} (a b: ob (𝐂^op)) (f: a ~> b): obop' b ~> obop' a := f.
-Definition morphop'' {𝐂: BareQuiver} (a b: ob 𝐂) (f: obop a ~> obop b): b ~> a := f.
 HB.instance Definition _ (𝐂: BareQuiver) :=
   IsBarePreContravariantFunctor.Build 𝐂 𝐂^op obop morphop.
 HB.instance Definition _ (𝐂: Quiver) :=
@@ -363,19 +358,19 @@ HB.instance Definition _ 𝐂 𝐃 𝐄 F G := @_comp_contravariantfunctor 𝐂 
 
 (** composition of contravariant functors *)
 HB.instance Definition _ 𝐂 𝐃 𝐄 {F: BarePreContravariantFunctor 𝐂 𝐃} {G: BarePreContravariantFunctor 𝐃 𝐄} :=
-  bareprefunctor.on (catcomp' F G). 
+  BAREPREFUNCTOR.on (catcomp' F G). 
 HB.instance Definition _ 𝐂 𝐃 𝐄 {F: PreContravariantFunctor 𝐂 𝐃} {G: PreContravariantFunctor 𝐃 𝐄} :=
-  prefunctor.on (catcomp' F G). 
+  PREFUNCTOR.on (catcomp' F G). 
 HB.instance Definition _ 𝐂 𝐃 𝐄 {F: ContravariantFunctor 𝐂 𝐃} {G: ContravariantFunctor 𝐃 𝐄} :=
-  functor.on (catcomp' F G).
+  FUNCTOR.on (catcomp' F G).
 
 (** composition of a functor and a contravariant functor *)
 HB.instance Definition _ 𝐂 𝐃 𝐄 {F: BarePreFunctor 𝐂 𝐃} {G: BarePreContravariantFunctor 𝐃 𝐄} :=
-  bareprecontravariantfunctor.on (catcomp' F G).
+  BAREPRECONTRAVARIANTFUNCTOR.on (catcomp' F G).
 HB.instance Definition _ 𝐂 𝐃 𝐄 {F: PreFunctor 𝐂 𝐃} {G: PreContravariantFunctor 𝐃 𝐄} :=
-  precontravariantfunctor.on (catcomp' F G).
+  PRECONTRAVARIANTFUNCTOR.on (catcomp' F G).
 HB.instance Definition _ 𝐂 𝐃 𝐄 {F: Functor 𝐂 𝐃} {G: ContravariantFunctor 𝐃 𝐄} :=
-  contravariantfunctor.on (catcomp' F G).
+  CONTRAVARIANTFUNCTOR.on (catcomp' F G).
 
 (** constant functor / contravariantfunctor *)
 Definition cst {𝐂 𝐃: BareQuiver} (D: ob 𝐃) := fun of 𝐂 => D.
@@ -442,7 +437,7 @@ Identity Coercion TX_app: TX >-> Funclass.
 #[primitive] HB.mixin Record IsNatural {𝐂: BareQuiver} {𝐃: PreCat} (F G: BarePreFunctor 𝐂 𝐃) (n: TX F G) :=
   { #[canonical=no] natural: forall (X Y: ob 𝐂) (f: X ~> Y), n Y ∘ Fhom F f ≡ Fhom G f ∘ n X }.
 #[short(type="NTX")]
-HB.structure Definition Natural 𝐂 𝐃 F G :=
+HB.structure Definition NATURAL 𝐂 𝐃 F G :=
   { n of @IsNatural 𝐂 𝐃 F G n }.
 Arguments natural {_ _ _ _} _ [_ _] _.
 Definition mk_ntx {𝐂: BareQuiver} {𝐃: PreCat} (F G: BarePreFunctor 𝐂 𝐃)
@@ -454,7 +449,7 @@ Arguments mk_ntx {_ _} _ _ _ _.
 #[primitive] HB.mixin Record IsNatural' {𝐂: BareQuiver} {𝐃: PreCat} (F G: BarePreContravariantFunctor 𝐂 𝐃) (n: TX F G) :=
   { #[canonical=no] natural': forall (X Y: ob 𝐂) (f: X ~> Y), n X ∘ Fhom' F f ≡ Fhom' G f ∘ n Y }.
 #[short(type="NTX'")]
-HB.structure Definition Natural' 𝐂 𝐃 F G :=
+HB.structure Definition NATURAL' 𝐂 𝐃 F G :=
   { n of @IsNatural' 𝐂 𝐃 F G n }.
 Arguments natural' {_ _ _ _} _ [_ _] _.
 
@@ -486,20 +481,20 @@ HB.instance Definition _ 𝐂 (𝐃: PreCat) (F G: BarePreFunctor _ _) (n: NTX F
   IsNatural'.Build 𝐂 𝐃 (funcop2' G) (funcop2' F) (ntxop2' n) (fun _ _ f => eqv_sym _ _ (natural n f)).
 
 HB.instance Definition _ 𝐂 (𝐃: PreCat) (F G: BarePreFunctor 𝐂 𝐃) (n: NTX F G) :=
-  Natural.on (ntxop n).
+  NATURAL.on (ntxop n).
 HB.instance Definition _ (𝐂: BareQuiver) (𝐃: PreCat) (F G: BarePreContravariantFunctor _ _) (n: NTX' F G) :=
-  Natural'.on (@ntxop' 𝐂 𝐃 F G n).
+  NATURAL'.on (@ntxop' 𝐂 𝐃 F G n).
 HB.instance Definition _ 𝐂 (𝐃: PreCat) (F G: BarePreContravariantFunctor 𝐂 𝐃) (n: NTX' F G) :=
-  Natural'.on (ntxop n).
+  NATURAL'.on (ntxop n).
 HB.instance Definition _ (𝐂: BareQuiver) (𝐃: PreCat) (F G: BarePreFunctor _ _) (n: NTX F G) :=
-  Natural.on (@ntxop' 𝐂 𝐃 F G n).
+  NATURAL.on (@ntxop' 𝐂 𝐃 F G n).
 
 
 (** setoid structure on natural transformations *)
 HB.instance Definition _ 𝐂 (𝐃: PreCat) (F G: BarePreFunctor 𝐂 𝐃) :=
-  Setoid.copy (NTX F G) (kernel (@Natural.sort 𝐂 𝐃 F G)).
+  Setoid.copy (NTX F G) (kernel (@NATURAL.sort 𝐂 𝐃 F G)).
 HB.instance Definition _ 𝐂 (𝐃: PreCat) (F G: BarePreContravariantFunctor 𝐂 𝐃) :=
-  Setoid.copy (NTX' F G) (kernel (@Natural'.sort 𝐂 𝐃 F G)).
+  Setoid.copy (NTX' F G) (kernel (@NATURAL'.sort 𝐂 𝐃 F G)).
 
 (** ** categories of (pre)functors and natural transformations *)
 HB.instance Definition _  𝐂 (𝐃: PreCat) :=
@@ -594,7 +589,7 @@ Notation "h ⊚ k" := (ntx_comp' k h): cat_scope. (* TODO: reverse this notation
 HB.mixin Record IsPreAdjoint {𝐂 𝐃: Type} (F: ob 𝐂 -> ob 𝐃) :=
   { #[canonical=no] adj: ob 𝐃 -> ob 𝐂 }.
 #[short(type="PreAdjoint")]
-HB.structure Definition preAdjoint 𝐂 𝐃 := {F of IsPreAdjoint 𝐂 𝐃 F & }.
+HB.structure Definition PREADJOINT 𝐂 𝐃 := {F of IsPreAdjoint 𝐂 𝐃 F & }.
 Arguments adj {_ _}.
 
 HB.instance Definition _ {𝐂 𝐃: Type} (F: PreAdjoint 𝐂 𝐃) :=
@@ -613,22 +608,22 @@ HB.instance Definition _ {𝐂: BareQuiver} := IsPreAdjoint.Build 𝐂^op 𝐂 o
 HB.instance Definition _ {𝐂 𝐃 𝐄: Type} (F: PreAdjoint 𝐂 𝐃) (G: PreAdjoint 𝐃 𝐄) :=
   IsPreAdjoint.Build 𝐂 𝐄 (catcomp F G) (catcomp (adj G) (adj F)).
 HB.instance Definition _ {𝐂 𝐃 𝐄: Type} (F: PreAdjoint 𝐂 𝐃) (G: PreAdjoint 𝐃 𝐄) :=
-  preAdjoint.on (catcomp' F G).
+  PREADJOINT.on (catcomp' F G).
 
 (** ** functors with an adjoint candidate *)
 
 #[primitive] 
-HB.mixin Record IsPreAdjointF {𝐂 𝐃: PreCat} F of @preAdjoint 𝐂 𝐃 F :=
-  { #[canonical=no] _adj_functor: @functor.axioms_ _ _ (adj F) }.
+HB.mixin Record IsPreAdjointF {𝐂 𝐃: PreCat} F of @PREADJOINT 𝐂 𝐃 F :=
+  { #[canonical=no] _adj_functor: @FUNCTOR.axioms_ _ _ (adj F) }.
 #[short(type="PreAdjointF")]
-HB.structure Definition preAdjointF 𝐂 𝐃 := {F of @functor 𝐂 𝐃 F & IsPreAdjointF _ _ F & IsPreAdjoint _ _ F}.
+HB.structure Definition PREADJOINTF 𝐂 𝐃 := {F of @FUNCTOR 𝐂 𝐃 F & IsPreAdjointF _ _ F & IsPreAdjoint _ _ F}.
 HB.instance Definition _ 𝐂 𝐃 F := @_adj_functor 𝐂 𝐃 F. 
 
-HB.factory Record IsPreAdjointF' 𝐂 𝐃 F of @functor 𝐂 𝐃 F :=
+HB.factory Record IsPreAdjointF' 𝐂 𝐃 F of @FUNCTOR 𝐂 𝐃 F :=
   { adj: Functor 𝐃 𝐂 }.
 HB.builders Context 𝐂 𝐃 F of IsPreAdjointF' 𝐂 𝐃 F. 
   HB.instance Definition _ := IsPreAdjoint.Build 𝐂 𝐃 F adj. 
-  HB.instance Definition _ := IsPreAdjointF.Build 𝐂 𝐃 F (functor.class adj).
+  HB.instance Definition _ := IsPreAdjointF.Build 𝐂 𝐃 F (FUNCTOR.class adj).
 HB.end.
 
 HB.instance Definition _ 𝐂 𝐃 (F: PreAdjointF 𝐂 𝐃) :=
@@ -637,17 +632,17 @@ HB.instance Definition _ 𝐂 𝐃 (F: PreAdjointF 𝐂 𝐃) :=
 (** ** contravariants functors with an adjoint candidate *)
 
 #[primitive] 
-HB.mixin Record IsPreAdjointCF {𝐂 𝐃: PreCat} F of @preAdjoint 𝐂 𝐃 F :=
-  { #[canonical=no] _adj_contravariantfunctor: @contravariantfunctor.axioms_ _ _ (adj F) }.
+HB.mixin Record IsPreAdjointCF {𝐂 𝐃: PreCat} F of @PREADJOINT 𝐂 𝐃 F :=
+  { #[canonical=no] _adj_contravariantfunctor: @CONTRAVARIANTFUNCTOR.axioms_ _ _ (adj F) }.
 #[short(type="PreAdjointCF")]
-HB.structure Definition preAdjointCF 𝐂 𝐃 := {F of @contravariantfunctor 𝐂 𝐃 F & IsPreAdjointCF _ _ F & IsPreAdjoint _ _ F}.
+HB.structure Definition PREADJOINTCF 𝐂 𝐃 := {F of @CONTRAVARIANTFUNCTOR 𝐂 𝐃 F & IsPreAdjointCF _ _ F & IsPreAdjoint _ _ F}.
 HB.instance Definition _ 𝐂 𝐃 F := @_adj_contravariantfunctor 𝐂 𝐃 F. 
 
-HB.factory Record IsPreAdjointCF' 𝐂 𝐃 F of @contravariantfunctor 𝐂 𝐃 F :=
+HB.factory Record IsPreAdjointCF' 𝐂 𝐃 F of @CONTRAVARIANTFUNCTOR 𝐂 𝐃 F :=
   { adj: ContravariantFunctor 𝐃 𝐂 }.
 HB.builders Context 𝐂 𝐃 F of IsPreAdjointCF' 𝐂 𝐃 F. 
   HB.instance Definition _ := IsPreAdjoint.Build 𝐂 𝐃 F adj. 
-  HB.instance Definition _ := IsPreAdjointCF.Build 𝐂 𝐃 F (contravariantfunctor.class adj).
+  HB.instance Definition _ := IsPreAdjointCF.Build 𝐂 𝐃 F (CONTRAVARIANTFUNCTOR.class adj).
 HB.end.
 
 HB.instance Definition _ 𝐂 𝐃 (F: PreAdjointCF 𝐂 𝐃) :=
@@ -768,10 +763,10 @@ End Adj.
 
 (** ** left adjoints (= functors with a right adjoint) *)
 
-#[primitive] HB.mixin Record IsLeftAdjoint {𝐂 𝐃: PreCat} F of @preAdjointF 𝐂 𝐃 F :=
+#[primitive] HB.mixin Record IsLeftAdjoint {𝐂 𝐃: PreCat} F of @PREADJOINTF 𝐂 𝐃 F :=
   { #[canonical=no] ladjP: Adj.type F (adj F) }.
 #[short(type="LeftAdjoint")]
-HB.structure Definition leftAdjoint 𝐂 𝐃 := {F of IsLeftAdjoint 𝐂 𝐃 F & }.
+HB.structure Definition LEFTADJOINT 𝐂 𝐃 := {F of IsLeftAdjoint 𝐂 𝐃 F & }.
 Infix "⊣" := LeftAdjoint (at level 79): cat_scope.
 Section s.
 Context {𝐂 𝐃} (F: 𝐂 ⊣ 𝐃).
@@ -791,10 +786,10 @@ End s.
 
 (** ** right adjoints (= functors with a left adjoint) *)
 
-#[primitive] HB.mixin Record IsRightAdjoint {𝐂 𝐃: PreCat} F of @preAdjointF 𝐂 𝐃 F :=
+#[primitive] HB.mixin Record IsRightAdjoint {𝐂 𝐃: PreCat} F of @PREADJOINTF 𝐂 𝐃 F :=
   { #[canonical=no] radjP: Adj.type (adj F) F }.
 #[short(type="RightAdjoint")]
-HB.structure Definition rightAdjoint 𝐂 𝐃 := {F of IsRightAdjoint 𝐂 𝐃 F & }.
+HB.structure Definition RIGHTADJOINT 𝐂 𝐃 := {F of IsRightAdjoint 𝐂 𝐃 F & }.
 Infix "⊢" := RightAdjoint (at level 79): cat_scope.
 Section s.
 Context {𝐂 𝐃} (F: 𝐂 ⊢ 𝐃).
@@ -814,28 +809,28 @@ End s.
 (** ** adjoint equivalences (= functors which are both left and right adjoints) *)
 
 #[short(type="AdjointEquivalence")]
-HB.structure Definition adjointEquivalence 𝐂 𝐃 :=
-  {F of @leftAdjoint 𝐂 𝐃 F & @rightAdjoint 𝐂 𝐃 F }.
+HB.structure Definition ADJOINTEQUIVALENCE 𝐂 𝐃 :=
+  {F of @LEFTADJOINT 𝐂 𝐃 F & @RIGHTADJOINT 𝐂 𝐃 F }.
 
 (** ** contravariant left adjoints (= contravariant functors with a right adjoint) *)
 
-#[primitive] HB.mixin Record IsCLeftAdjoint 𝐂 𝐃 F of @preAdjointCF 𝐂 𝐃 F :=
+#[primitive] HB.mixin Record IsCLeftAdjoint 𝐂 𝐃 F of @PREADJOINTCF 𝐂 𝐃 F :=
   { #[canonical=no] cladjP: Adj.type (funcop1 F) (funcop2 (adj F)) }.
 #[short(type="CLeftAdjoint")]
-HB.structure Definition cleftAdjoint 𝐂 𝐃 := {F of IsCLeftAdjoint 𝐂 𝐃 F & }.
+HB.structure Definition CLEFTADJOINT 𝐂 𝐃 := {F of IsCLeftAdjoint 𝐂 𝐃 F & }.
 
 (** ** contravariant right adjoints (= contravariant functors with a left adjoint) *)
 
-#[primitive] HB.mixin Record IsCRightAdjoint 𝐂 𝐃 F of @preAdjointCF 𝐂 𝐃 F :=
+#[primitive] HB.mixin Record IsCRightAdjoint 𝐂 𝐃 F of @PREADJOINTCF 𝐂 𝐃 F :=
   { #[canonical=no] cradjP: Adj.type (funcop2 (adj F)) (funcop1 F) }.
 #[short(type="CRightAdjoint")]
-HB.structure Definition crightAdjoint 𝐂 𝐃 := {F of IsCRightAdjoint 𝐂 𝐃 F & }.
+HB.structure Definition CRIGHTADJOINT 𝐂 𝐃 := {F of IsCRightAdjoint 𝐂 𝐃 F & }.
 
 (** ** contravariant adjoint equivalences (= contravariant functors which are both left and right adjoints) *)
 
 #[short(type="CAdjointEquivalence")]
-HB.structure Definition cadjointEquivalence 𝐂 𝐃 :=
-  {F of @cleftAdjoint 𝐂 𝐃 F & @crightAdjoint 𝐂 𝐃 F }.
+HB.structure Definition CADJOINTEQUIVALENCE 𝐂 𝐃 :=
+  {F of @CLEFTADJOINT 𝐂 𝐃 F & @CRIGHTADJOINT 𝐂 𝐃 F }.
 
 
 (** * adjunction instances *)
@@ -888,9 +883,9 @@ HB.instance Definition _ 𝐂 𝐃 (F: CLeftAdjoint 𝐂 𝐃) :=
 
 (* LA <-funcop-> RA *)
 HB.instance Definition _ 𝐂 𝐃 (F: 𝐂 ⊣ 𝐃) :=
-  rightAdjoint.on (funcop F).
+  RIGHTADJOINT.on (funcop F).
 HB.instance Definition _ 𝐂 𝐃 (F: 𝐂 ⊢ 𝐃) :=
-  leftAdjoint.on (funcop F).
+  LEFTADJOINT.on (funcop F).
 
 (** ** identity adjunctions *)
 HB.instance Definition _ (𝐂: Cat) := IsLeftAdjoint.Build 𝐂 𝐂 idfun Adj.id.
@@ -908,13 +903,13 @@ HB.instance Definition _ (𝐂 𝐃 𝐄: Cat) (F: CRightAdjoint 𝐂 𝐃) (G: 
   IsCRightAdjoint.Build 𝐂 𝐄 (catcomp F G) (Adj.comp radjP cradjP).
 (* catcomp' *)
 HB.instance Definition _ (𝐂 𝐃 𝐄: Cat) (F: CRightAdjoint 𝐂 𝐃) (G: CLeftAdjoint 𝐃 𝐄) :=
- leftAdjoint.on (catcomp' F G).
+ LEFTADJOINT.on (catcomp' F G).
 HB.instance Definition _ (𝐂 𝐃 𝐄: Cat) (F: CLeftAdjoint 𝐂 𝐃) (G: CRightAdjoint 𝐃 𝐄) :=
- rightAdjoint.on (catcomp' F G).
+ RIGHTADJOINT.on (catcomp' F G).
 HB.instance Definition _ (𝐂 𝐃 𝐄: Cat) (F: RightAdjoint 𝐂 𝐃) (G: CLeftAdjoint 𝐃 𝐄) :=
- cleftAdjoint.on (catcomp' F G).
+ CLEFTADJOINT.on (catcomp' F G).
 HB.instance Definition _ (𝐂 𝐃 𝐄: Cat) (F: LeftAdjoint 𝐂 𝐃) (G: CRightAdjoint 𝐃 𝐄) :=
- crightAdjoint.on (catcomp' F G).
+ CRIGHTADJOINT.on (catcomp' F G).
 
 
 (** ** duality (contravariant) adjunction  *)
@@ -930,10 +925,10 @@ HB.saturate funcop.
 HB.saturate catcomp. 
 HB.saturate catcomp'. 
 (* we emulate them using the following asymmetric declarations *)
-HB.instance Definition _ C D (F: AdjointEquivalence C D) := leftAdjoint.on (adj F).
-HB.instance Definition _ C D (F: AdjointEquivalence C D) := leftAdjoint.on (funcop F).
-HB.instance Definition _ (C D E: Cat) (F: AdjointEquivalence C D) (G: AdjointEquivalence D E) := leftAdjoint.on (catcomp F G).
-HB.instance Definition _ (C D E: Cat) (F: CAdjointEquivalence C D) (G: CAdjointEquivalence D E) := leftAdjoint.on (catcomp' F G).
+HB.instance Definition _ C D (F: AdjointEquivalence C D) := LEFTADJOINT.on (adj F).
+HB.instance Definition _ C D (F: AdjointEquivalence C D) := LEFTADJOINT.on (funcop F).
+HB.instance Definition _ (C D E: Cat) (F: AdjointEquivalence C D) (G: AdjointEquivalence D E) := LEFTADJOINT.on (catcomp F G).
+HB.instance Definition _ (C D E: Cat) (F: CAdjointEquivalence C D) (G: CAdjointEquivalence D E) := LEFTADJOINT.on (catcomp' F G).
 
 Check fun (C D: Cat) (F: AdjointEquivalence C D) => adj F: AdjointEquivalence D C. 
 Check fun (C D: Cat) (F: AdjointEquivalence C D) => funcop F: AdjointEquivalence (C^op) (D^op). 
@@ -942,11 +937,11 @@ Check fun (C: Cat) (F G: CAdjointEquivalence C C) => catcomp' F G: AdjointEquiva
 
 (** ** adjoint equivalence of C and C^op^op *)
 Definition opI {𝐂: BareQuiver}: ob 𝐂 -> ob (𝐂^op^op) := catcomp' obop obop.
-HB.instance Definition _ (𝐂: Cat) := adjointEquivalence.on (@opI 𝐂). 
+HB.instance Definition _ (𝐂: Cat) := ADJOINTEQUIVALENCE.on (@opI 𝐂). 
 
 
 (** * additional factories *)
-HB.factory Record IsAdjointEquivalence {𝐂 𝐃: Cat} F of @preAdjointF 𝐂 𝐃 F :=
+HB.factory Record IsAdjointEquivalence {𝐂 𝐃: Cat} F of @PREADJOINTF 𝐂 𝐃 F :=
   { adjKl: functor_comp (adj F) F ≃ functor_id;
     adjKr: functor_comp F (adj F) ≃ functor_id;
     unit_counit_l_at: forall A, Fhom F (adjKr⁻¹ A) \; adjKl¹ (F A) ≡ F A;
@@ -985,20 +980,18 @@ HB.instance Definition _ A B := isExtensional.Build _ _ _ (@dn_eqv A B).
 
 Lemma dn_up {A B} (f: F A ~> B): dn (up f) ≡ f.
 Proof.
-  rewrite /dn/up/=.
-  rewrite Fcomp.                (* FIXRW *)
+  rewrite /dn/up/=Fcomp.
   arewrite (natural counit). 
   arewrite (unit_counit_l_at F).
   cat. 
 Qed.
 
-Lemma up_inj {A B} (f f': F A ~> B): up f ≡ up f' -> f ≡ f'.
-Proof. move=>H. rewrite -(dn_up f) -(dn_up f'). exact/dn_eqv. Qed.
+Lemma up_inj {A B}: injective (@up A B).
+Proof. move=>f g H. rewrite -(dn_up f) -(dn_up g). exact/dn_eqv. Qed.
 
 Lemma up_dn {A B} (f: A ~> adj F B): up (dn f) ≡ f.
 Proof.
-  rewrite /dn/up/=.
-  rewrite Fcomp.                (* FIXRW *)
+  rewrite /dn/up/=Fcomp.
   arewrite -(natural unit). 
   arewrite (unit_counit_r_at F).
   cat. 
@@ -1007,7 +1000,42 @@ Qed.
 Lemma dn_inj {A B} (f f': A ~> adj F B): dn f ≡ dn f' -> f ≡ f'.
 Proof. move=>H. rewrite -(up_dn f) -(up_dn f'). exact/up_eqv. Qed.
 
+(** left adjoints preserve initial objects *)
+Theorem ladj_initial (A: ob 𝐂) (H: initial A): initial (F A).
+Proof. move=>X. apply: (unique_impl dn up_inj). exact/H. Defined.
+
 End theory.
+
+Lemma radj_terminal (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: ob 𝐂) (H: terminal A): terminal (F A).
+Proof. exact: (ladj_initial (funcop F) H). Defined.
+Lemma cradj_initial (𝐂 𝐃: Cat) (F: CRightAdjoint 𝐂 𝐃) (A: ob 𝐂) (H: initial A): terminal (F A).
+Proof. exact: (ladj_initial (funcop2 F) H). Defined.
+Lemma cladj_terminal (𝐂 𝐃: Cat) (F: CLeftAdjoint 𝐂 𝐃) (A: ob 𝐂) (H: terminal A): initial (F A).
+Proof. exact: (ladj_initial (funcop1 F) H). Defined.
+(* TOTHINK: forgetful inheritance wrongly detected?
+   (should be fine because this is about two distinct hierarchies:
+    - the one for functors (indexed by functions [ob C -> ob D]
+    - and the one for objects (indexed by objects [ob C]
+    is this the source of confusion? )
+ *)
+#[non_forgetful_inheritance]
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: 𝐂 ⊣ 𝐃) (A: Initial 𝐂) :=
+  IsInitial.Build 𝐃 (F A) (ladj_initial F initialP).
+#[non_forgetful_inheritance]
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: Terminal 𝐂) :=
+  IsTerminal.Build 𝐃 (F A) (radj_terminal F terminalP).
+#[non_forgetful_inheritance]
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: CRightAdjoint 𝐂 𝐃) (A: Initial 𝐂) :=
+  IsTerminal.Build 𝐃 (F A) (cradj_initial F initialP).
+#[non_forgetful_inheritance]
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: CLeftAdjoint 𝐂 𝐃) (A: Terminal 𝐂) :=
+  IsInitial.Build 𝐃 (F A) (cladj_terminal F terminalP).
+
+Check fun (𝐂 𝐃: Cat) (F: 𝐂 ⊢ 𝐃) (A: Terminal 𝐂) => F A: Terminal _.
+(* TOFIX: HB does not register the required things...
+   use a tag above to adhere to its discipline? *)
+Fail Check fun (𝐂 𝐃: Cat) (F: AdjointEquivalence 𝐂 𝐃) (A: Terminal 𝐂) => F A: Terminal _.
+
 
 
 (** ** functor equivalence (i.e., natural isomorphisms) *)
@@ -1020,7 +1048,7 @@ Definition functor_equiv := F ≃ G.
 Program Definition iso_ntx'
   (i: forall X, F X ≃ G X) (n: F ~> G)
   (H: forall X, n X ≡ i X): functor_equiv :=
-  mk_iso n (mk_ntx G F (fun X => (i X)⁻¹) _) _ _.
+  iso_ n (mk_ntx G F (fun X => (i X)⁻¹) _) _ _.
 Next Obligation.
   intros=>/=. rewrite -iso_src.
   rewrite -H -compoA -natural.
@@ -1050,7 +1078,7 @@ Defined.
 
 (** natural isomorphisms pointwise yield isomorphisms *)
 Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X :=
-  mk_iso (i¹ X) (i⁻¹ X) (invKl i X) (invKr i X). 
+  iso_ (i¹ X) (i⁻¹ X) (invKl i X) (invKr i X). 
 
 (* Definition iso_ntx_pw_ (i: functor_equiv): forall X, F X ~> G X := fun X => (i¹ X). *)
 (* HB.instance Definition _ (i: functor_equiv) X := *)
@@ -1092,7 +1120,11 @@ Proof. intro X; cbn. by rewrite !cats. Qed.
 
 Lemma ntx_comp'_eqv {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}:
   Proper (eqv ==> eqv ==> eqv) (@ntx_comp' _ _ _ F G F' G').
-Proof. intros i i' ii j j' jj X. by rewrite /= (ii _) (jj _). Qed.
+Proof.
+  intros i i' ii j j' jj X=>/=.
+  Fail by rewrite /= (ii _) (jj _).  (* FIXRW *)
+  apply: comp_eqv. apply: Fhom_eqv. exact: ii. exact: jj. 
+Qed.
 
 (* Lemma functor_comp_eqv: *)
 (*   Proper (eqv ==> eqv ==> eqv) (@functor_comp 𝐂 𝐃 𝐄). *)
@@ -1105,13 +1137,3 @@ Proof. intros i i' ii j j' jj X. by rewrite /= (ii _) (jj _). Qed.
 (*   etransitivity. exact: (ntx_comp'_eqv (invKr i) (invKr j)). by rewrite -ntx_id_comp.  *)
 (* Qed. *)
 End strict.
-
-(*TMP-UNIV 
-Program Definition _cat_cat := IsCat.Build Cat _ _ _ _.
-Next Obligation. split. exact: same_functor. Qed.
-Next Obligation. split. exact: same_functor. Qed.
-Next Obligation. split. exact: same_functor. Qed.
-Next Obligation. intros. exact: functor_comp_eqv. Qed.
-HB.instance Definition _ := _cat_cat.
-*)
-

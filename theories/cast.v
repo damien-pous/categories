@@ -62,7 +62,7 @@ Lemma icastI A A' A'' B B' B'' (f: A ≃ B)
 Proof. by destruct a2; destruct b2. Qed.
 
 (* already for cast2' on setoids *)
-HB.instance Definition _ A B := Setoid.copy (A ≃ B) (kernel (@iso.sort _ A B)).
+HB.instance Definition _ A B := Setoid.copy (A ≃ B) (kernel (@ISO.sort _ A B)).
 #[export] Instance icast_eqv {A A' B B'} {a: A=A'} {b: B=B'}: Proper (eqv ==> eqv) (@icast _ _ _ _ _ a b).
 Proof. by destruct a; destruct b. Qed.
 Lemma icast_inj A A' B B' (a: A=A') (b: B=B') (f g: A ≃ B):
@@ -244,12 +244,12 @@ Arguments eqv_trans_cast' {_ _ _ _ _ _ _} [_] _ [_ _ _]&_ _.
     #[canonical=no] UIP_ob_list: forall n m: list X,
       forall p q: n = m, p = q;
   }.
-#[short(type="UIP")]
-HB.structure Definition uip := { X of HasUIP X }.
+#[short(type="Uip")]
+HB.structure Definition UIP := { X of HasUIP X }.
 #[short(type="PreCatUIP")]
-HB.structure Definition precat_uip := { 𝐂 of uip 𝐂 & precat 𝐂 }.
+HB.structure Definition PRECAT_UIP := { 𝐂 of UIP 𝐂 & PRECAT 𝐂 }.
 
-Lemma UIP_ob (X: UIP): forall A B: X, forall p q: A = B, p = q.
+Lemma UIP_ob (X: Uip): forall A B: X, forall p q: A = B, p = q.
 Proof.
   have L: forall A B: X, forall p: A=B,
       f_equal (fun h => match h with cons B _ => B | _ => A end)

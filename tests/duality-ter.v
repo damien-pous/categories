@@ -189,35 +189,6 @@ End s.
    so that we can get dual definitions is_product/is_coproduct
    and declare the instances product->terminal and coproduct->initial
  *)
-Definition initial {C: Quiver} (x: ob C) := forall y, unique (hom x y).
-#[primitive] HB.mixin Record IsInitial (C: Quiver) (x: ob C) :=
-  {#[canonical=no]initialP: initial x}.
-#[short(type=Initial)]
-HB.structure Definition INITIAL C := {x of IsInitial C x}. 
-Section s.
-Context {C: Quiver}.
-Definition init (x: Initial C) y: hom x y := (initialP y).1. 
-Definition initU (x: Initial C) y (f g: hom x y): f = g := (initialP y).2 f g. 
-End s.
-
-Definition terminal {C: Quiver} (x: ob C) := forall y, unique (hom y x).
-#[primitive] HB.mixin Record IsTerminal (C: Quiver) (x: ob C) :=
-  {#[canonical=no]terminalP: terminal x}.
-#[short(type=Terminal)]
-HB.structure Definition TERMINAL C := {x of IsTerminal C x}. 
-Section s.
-Context {C: Quiver}.
-Definition term (x: Terminal C) y: hom y x := (terminalP y).1. 
-Definition termU (x: Terminal C) y (f g: hom y x): f = g := (terminalP y).2 f g. 
-End s.
-
-Definition terminal_op C x (H: @terminal C x): @initial (op C) (obop x) := H.
-Definition initial_op C x (H: @initial C x): @terminal (op C) (obop x) := H.
-
-HB.instance Definition _ C (x: Initial C) := IsTerminal.Build (op C) (obop x) (@initialP _ x).
-HB.instance Definition _ C (x: Initial _) := IsTerminal.Build C (obop' x) (@initialP _ x).
-HB.instance Definition _ C (x: Terminal C) := IsInitial.Build (op C) (obop x) (@terminalP _ x).
-HB.instance Definition _ C (x: Terminal _) := IsInitial.Build C (obop' x) (@terminalP _ x).
 
 Section s.
 Context {C: PreCat} (a b x: ob C) (p: hom x a) (q: hom x b).

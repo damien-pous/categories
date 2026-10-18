@@ -92,16 +92,16 @@ End correct.
 
 End Internals.
 
-Local Abbreviation barequiver_of_cat := cat_cat__to__cat_barequiver.
-Local Abbreviation bareprecat_of_cat := cat_cat__to__cat_bareprecat.
-Local Abbreviation precat_of_cat := cat_cat__to__cat_precat.
+Local Abbreviation barequiver_of_cat := cat_CAT__to__cat_BAREQUIVER.
+Local Abbreviation bareprecat_of_cat := cat_CAT__to__cat_BAREPRECAT.
+Local Abbreviation precat_of_cat := cat_CAT__to__cat_PRECAT.
 
 Local Abbreviation inverse_of_mono C a b mono :=
-  (inv (@morphisms_splitmono__to__morphisms_invertible C a b mono)).
+  (inv (@morphisms_SPLITMONO__to__morphisms_INVERTIBLE C a b mono)).
 Local Abbreviation inverse_of_epi C a b epi :=
-  (inv (@morphisms_splitepi__to__morphisms_invertible C a b epi)).
+  (inv (@morphisms_SPLITEPI__to__morphisms_INVERTIBLE C a b epi)).
 Local Abbreviation mono_of_epi C a b epi :=
-  (@morphisms_inv__canonical__morphisms_splitmono C a b epi).
+  (@morphisms_inv__canonical__morphisms_SPLITMONO C a b epi).
 
 
 (* Elpi code for aireflexivity *)

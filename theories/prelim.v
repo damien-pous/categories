@@ -46,6 +46,9 @@ Reserved Notation "f ∘∘ g" (at level 40, left associativity).
 Reserved Notation "f '⁻¹'" (at level 1, format "f '⁻¹'").
 Reserved Notation "f '¹'" (at level 1, format "f '¹'").
 
+(** product *)
+Reserved Notation "f × g" (at level 30).
+
 (** tensor (in monoidal categories) *)
 Reserved Notation "X ⊗ Y" (at level 31, right associativity). (* objects *)
 Reserved Notation "f · g" (at level 30, right associativity). (* morphisms *)
@@ -67,3 +70,52 @@ Ltac sorry := exact: sorry.
 
 (** tag for objects in categories *)
 Definition ob (𝐂: Type) := 𝐂. 
+
+
+(** * complements to the partial order library (TO be moved there) *)
+
+Section s.
+Context [A B: Setoid.type] (f: A -> B).
+Definition injective := forall x y, f x ≡ f y -> x ≡ y.
+Definition surjective := forall b, exists a, f a ≡ b.
+Definition bijective := injective /\ surjective.
+End s.
+
+(** Unique existence *)
+
+(* TODO: move to partialorders lib *)
+Definition unique (X: Setoid.type) := X ∧ (forall x y: X, x ≡ y).
+Coercion unique_elt X (x: unique X): X := x.1.
+Definition unicity (X: Setoid.type) (U: unique X): forall x y: X, x ≡ y := U.2.
+Lemma mk_unique (X: Setoid.type) (x: X) (H: forall y, x ≡ y): unique X.
+Proof. split. exact: x. abstract (move=>y z; by rewrite -(H y)). Defined.
+
+Lemma unique_impl (X Y: Setoid.type) (f: X -> Y) (g: Y -> X) (I: injective g):
+  unique X -> unique Y.
+Proof.
+  move=>x. split. exact: (f x).
+  move=>y y'. apply: I. exact: unicity. 
+Defined.
+
+Section s.
+Variables (X: Setoid.type) (P: X -> Prop). 
+Definition unique_sig := unique (sig P).
+Coercion unique_sig_elt (x: unique_sig): X := sval x.1.
+Lemma unique_sigP (x: unique_sig): P x. Proof. exact: proj2_sig. Defined.
+Definition unicity_sig (U: unique_sig) x y: P x -> P y -> x ≡ y.
+Proof. move=>p q. exact: (unicity U (exist _ x p) (exist _ y q)). Qed.
+Lemma mk_unique_sig (x: X) (p: P x) (H: forall y, P y -> x ≡ y): unique_sig.
+Proof. unshelve apply: mk_unique. by exists x. abstract (move=>[y q]; exact: H y q). Defined.
+End s.
+
+Lemma unique_sig_impl (X: Setoid.type) P Q (H: forall x: X, P x <-> Q x): unique_sig P -> unique_sig Q.
+Proof.
+  unshelve apply: unique_impl. 
+  1,2: move=>x; exists (sval x); by apply H, proj2_sig.
+  by move=>[??][??]. 
+Defined.
+
+Lemma unique_sig_eqv (X: Setoid.type) P Q (H: forall x: X, P x <-> Q x): unique_sig P ⇆ unique_sig Q.
+Proof. split; apply: unique_sig_impl=>//. firstorder. Defined.
+
+Notation "Σ! x .. y , P" := (unique_sig (fun x => .. (unique_sig (fun y => P)) ..)). 

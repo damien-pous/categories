@@ -5,11 +5,11 @@ Require Export morphisms.
 Local Open Scope cat_scope.
 
 (** * bicategories *)
-#[primitive] HB.mixin Record HomCats 𝐂 of barequiver 𝐂  := {
-    #[canonical=no] hom_cat: forall a b: ob 𝐂, cat.axioms_ (hom a b)
+#[primitive] HB.mixin Record HomCats 𝐂 of BAREQUIVER 𝐂  := {
+    #[canonical=no] hom_cat: forall a b: ob 𝐂, CAT.axioms_ (hom a b)
 }.
 #[short(type="CatQuiver")]
-HB.structure Definition catquiver := { 𝐂 of HomCats 𝐂 & }.
+HB.structure Definition CATQUIVER := { 𝐂 of HomCats 𝐂 & }.
 HB.instance Definition _ (𝐂: CatQuiver) (a b: ob 𝐂) := hom_cat a b. 
 
 HB.factory Record IsCatQuiver 𝐂 := {
@@ -17,10 +17,10 @@ HB.factory Record IsCatQuiver 𝐂 := {
 }.
 HB.builders Context 𝐂 of IsCatQuiver 𝐂.
   HB.instance Definition _ := IsBareQuiver.Build 𝐂 hom. 
-  HB.instance Definition _ := HomCats.Build 𝐂 (fun a b => cat.class (hom a b)). 
+  HB.instance Definition _ := HomCats.Build 𝐂 (fun a b => CAT.class (hom a b)). 
 HB.end.
 
-#[primitive] HB.mixin Record IsBiCat 𝐂 of bareprecat 𝐂 & catquiver 𝐂  := {
+#[primitive] HB.mixin Record IsBiCat 𝐂 of BAREPRECAT 𝐂 & CATQUIVER 𝐂  := {
     (* comp'22 a bifunctor *)
     #[canonical=no] comp'22: forall {a b c: ob 𝐂} {f f': a ~> b} {g g': b ~> c},
       (f ~> f') -> (g ~> g') -> (f \; g) ~> (f' \; g');
@@ -43,7 +43,7 @@ HB.end.
     (* missing coherence axioms (triangle and pentagon) *)
   }.
 #[short(type="BiCat")]
-HB.structure Definition bicat := { 𝐂 of IsBiCat 𝐂 & }.
+HB.structure Definition BICAT := { 𝐂 of IsBiCat 𝐂 & }.
 
 Arguments comp'22 {_ _ _ _ _ _ _ _}.
 Infix "·" := comp'22: cat_scope. 

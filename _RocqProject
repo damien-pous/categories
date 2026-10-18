@@ -13,16 +13,27 @@ theories/airewrite.v			   # rewriting/reflexivity modulo associativity and inver
 theories/arity.v                           # lists of objects
 theories/cast.v                            # casting operations
 theories/functor.v                         # functors, natural transformations, adjunctions
-theories/objects.v                         # hierarchy of objects
-theories/algebra.v                         # (co)algebras
-theories/setoid.v                          # the category of setoids
+theories/bifunctor.v                       # bifunctors
 theories/span.v                            # spans
+theories/cospan.v                          # cospans
 theories/product.v                         # products
-theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
+theories/coproduct.v                       # coproducts
+theories/pullback.v                        # pullbacks
+theories/pushout.v                         # pushouts
+theories/setoid.v                          # the category of setoids (strangely needs universe polymorphism, hence type:type for now)
 theories/bicat.v                           # bicategories
 theories/cat_bicat.v                       # Cat: BiCat (needs universe polymorphism, hence type:type for now)
+
+# below: compiles but to be evolved
+theories/cone.v                            # cones for generic limits
+theories/algebra.v                         # (co)algebras
 theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors
+theories/cartesian.v                       # (co)cartesian monoidal categories
+
+# below: to be ported
+theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
+theories/span_duality.v                    # hierarchy of objects
 theories/monoidal_maclane.v                # MacLane theorem for monoidal categories
 theories/monoidal_gmaclane.v               # extended MacLane theorem + inferrence of MacLane isomorphisms
 theories/monoidal_tactic.v                 # decision procedure for monoidal cats

@@ -10,22 +10,22 @@
 % [C], and returns its monomorphism instance [Mono] and the inverse [E].
 func mono->epi term, term, term, term -> term, term.
 mono->epi C X Y M {{ mono_of_epi lp:C' lp:Y lp:X lp:Epi }}
-                  {{ @splitepi.sort lp:C lp:Y lp:X lp:Epi }} :-
+                  {{ @SPLITEPI.sort lp:C lp:Y lp:X lp:Epi }} :-
   coq.unify-eq C {{ precat_of_cat lp:C' }} ok, 
   coq.unify-eq M {{ inverse_of_epi lp:C lp:Y lp:X lp:Epi }} ok,
   !.
 mono->epi C X Y M Mono {{ inverse_of_mono lp:C lp:X lp:Y lp:Mono }} :-
-  coq.unify-eq M {{ @splitmono.sort lp:C lp:X lp:Y lp:Mono }} ok, !.
+  coq.unify-eq M {{ @SPLITMONO.sort lp:C lp:X lp:Y lp:Mono }} ok, !.
 
 % [epi->mono C X Y E Mono M] takes a epimorphism [E] from [X] to [Y] in PreCat
 % [C], and returns its inverse monomorphism instance [Mono] and the inverse [M].
 func epi->mono term, term, term, term -> term, term.
-epi->mono C X Y E Mono {{ @splitmono.sort lp:C lp:Y lp:X lp:Mono }} :-
+epi->mono C X Y E Mono {{ @SPLITMONO.sort lp:C lp:Y lp:X lp:Mono }} :-
   coq.unify-eq E {{ inverse_of_mono lp:C lp:Y lp:X lp:Mono }} ok, !.
 epi->mono C X Y E {{ mono_of_epi lp:C' lp:X lp:Y lp:Epi }}
                   {{ inverse_of_epi lp:C lp:X lp:Y lp:Epi }} :-
   coq.unify-eq C {{ precat_of_cat lp:C' }} ok, 
-  coq.unify-eq E {{ @splitepi.sort lp:C lp:X lp:Y lp:Epi }} ok, 
+  coq.unify-eq E {{ @SPLITEPI.sort lp:C lp:X lp:Y lp:Epi }} ok, 
   !.
 
 % [mkrocqlist T In Out] takes an (Elpi) list [In] of terms of type [T], and

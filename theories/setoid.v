@@ -5,7 +5,7 @@ From Stdlib Require Import CMorphisms.
 
 Local Open Scope cat_scope.
 
-(* Unset Universe Checking. *)
+Unset Universe Checking.
 
 HB.instance Definition _ := IsQuiver.Build Setoid.type setoid_morphism.type.
 
@@ -22,9 +22,7 @@ HB.instance Definition _ := _setoid_cat.
 Section s.
 Context [A B: Setoid.type] (f: A ~> B).
 
-Definition injective := forall x y, f x ≡ f y -> x ≡ y.
-
-Lemma setoid_is_mono: is_mono f <-> injective.
+Lemma setoid_is_mono: is_mono f <-> injective f.
 Proof.
   split.
   - move=>M x y eq.
@@ -37,9 +35,7 @@ Qed.
 (*   split. *)
 (* Admitted. *)
 
-Definition surjective := forall b, exists a, f a ≡ b.
-
-Lemma setoid_is_epi: is_epi f <-> surjective.
+Lemma setoid_is_epi: is_epi f <-> surjective f.
 Proof.
   split.
   - move=>E b.
@@ -59,9 +55,9 @@ Qed.
 
 End s.
 
-Lemma setoid_mono [A B: Setoid.type] (f: A ↪ B): injective f.
-Proof. exact/setoid_is_mono/mono_prop. Qed.
+Lemma setoid_mono [A B: Setoid.type] (f: A ↪ B): injective (MONO.sort f).
+Proof. exact/setoid_is_mono/monoP. Qed.
 
-Lemma setoid_epi [A B: Setoid.type] (f: A ↠ B): surjective f.
-Proof. exact/setoid_is_epi/epi_prop. Qed.
+Lemma setoid_epi [A B: Setoid.type] (f: A ↠ B): surjective (EPI.sort f).
+Proof. exact/setoid_is_epi/epiP. Qed.
 

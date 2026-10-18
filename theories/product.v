@@ -1,247 +1,226 @@
-(** * terminal objects, products, cartesian (monoidal) categories *)
+(** * products *)
 
-Require Export span functor.
-Require Export morphisms.
+Require Export span.
+Require Import arewrite.
 
 Local Open Scope cat_scope.
 
-(** Terminal objects *)
+(** ** products *)
 
-Definition isTerminal {𝐂: Quiver} (Z: ob 𝐂) :=
-  forall X, Unique_morph (fun _: X~>Z => True).
-Structure Terminal (𝐂: Quiver) := {
-    terminal:> 𝐂;
-    terminalP: isTerminal terminal;
-  }.
+Section s.
+Context {𝐂: PreCat} (a b x: ob 𝐂) (p: x ~> a) (q: x ~> b).
 
-(** Products *)
+Definition product := forall y (p': y ~> a ) (q': y ~> b), unique_sig (spanhom p' q' p q).
 
-Definition isProduct {𝐂: PreCat} (A B: ob 𝐂) := @isTerminal (Span A B).
-Arguments isProduct {_}. 
-Definition Product {𝐂: PreCat} (A B: ob 𝐂) := @Terminal (Span A B).
-Coercion ob_Product{𝐂: PreCat} (A B: ob 𝐂) (X: Product A B): 𝐂 := span_ob (terminal X). 
+Lemma product_terminal: product -> terminal (span_ p q).
+Proof. move=>P y. exact: (P y pi1 pi2). Defined.
 
-Section PROD.
-Context {𝐂: Cat} {A B: ob 𝐂} {AB: Product A B}.
-Implicit Types X Y: ob 𝐂.
-Let AB' := ob_Product AB.
-Definition fst: AB' ~> A := spanl.
-Definition snd: AB' ~> B := spanr.
-Definition pair {X} (f: X ~> A) (g: X ~> B): X ~> AB'.
-  eapply (terminalP AB (span f g)).
+Lemma terminal_product: terminal (span_ p q) -> product.
+Proof. move=>T y p' q'; exact: (T (span_ p' q')). Defined.
+
+End s.
+Arguments product {_}.
+
+#[primitive] HB.mixin Record IsProduct (𝐂: PreCat) a b x of SPAN 𝐂 a b x :=
+  {#[canonical=no]productP: product a b x pi1 pi2}.
+#[short(type=Product)]
+HB.structure Definition PRODUCT 𝐂 a b := {x of IsProduct 𝐂 a b x&}. 
+
+Section s.
+Context {𝐂: PreCat} (a b: ob 𝐂).
+
+Definition mk_product (x: ob 𝐂) (p: x ~> a) (q: x ~> b) (P: product a b x p q) := span p q.
+HB.instance Definition _ x p q H := SPAN.on (@mk_product x p q H). 
+HB.instance Definition _ x p q H := IsProduct.Build 𝐂 a b (@mk_product x p q H) H.
+Definition mk_product_ x p q H: Product a b := @mk_product x p q H.
+
+Lemma productC x p q: product a b x p q -> product b a x q p.
+Proof.
+  move=>P y p' q'. move:P=>/(_ y q' p'). apply: unique_sig_impl.
+  split; exact: swap_pair.
 Defined.
-Lemma fst_pair {X} (f: X ~> A) (g: X ~> B): fst ∘ pair f g ≡ f.
-Proof.
-  rewrite /pair. 
-  destruct (unique_elt (terminalP AB (span f g))) as [? [H _]].
-  apply H. 
-Qed.  
-Lemma snd_pair {X} (f: X ~> A) (g: X ~> B):
-  snd ∘ pair f g ≡ g.
-Proof.
-  rewrite /pair. 
-  destruct (unique_elt (terminalP AB (span f g))) as [? [_ H]].
-  apply H. 
-Qed.  
-Lemma pairU {X} (f: X ~> A) (g: X ~> B) (h: X ~> AB'):
-  fst ∘ h ≡ f -> snd ∘ h ≡ g -> h ≡ pair f g.
+
+Section s.
+Variable (x: Product a b).
+
+(* TOTHINK: fragile instance declaration, almost non-forgetful *)
+HB.instance Definition _ :=
+  IsTerminal.Build (Span a b) (x: Span _ _) (product_terminal productP).
+
+HB.instance Definition _ :=
+  IsProduct.Build 𝐂 b a (spanC x) (productC productP).
+Definition ProductC: Product b a := spanC x. 
+
+Section s.
+Variables (y: ob 𝐂) (f: y ~> a) (g: y ~> b).
+Definition pair: y ~> x := unique_sig_elt (productP y f g). 
+
+Lemma pairE: pair \; pi1 ≡ f ∧ pair \; pi2 ≡ g.
+Proof. exact: (unique_sigP (productP y f g)). Qed.
+
+Lemma pair1: pair \; pi1 ≡ f.
+Proof. apply pairE. Qed.
+
+Lemma pair2: pair \; pi2 ≡ g.
+Proof. apply pairE. Qed.
+
+End s.
+
+Lemma pairU {y} (f: y ~> a) (g: y ~> b) (h: y ~> x):
+  h \; pi1 ≡ f -> h \; pi2 ≡ g -> h ≡ pair f g.
 Proof.
   move=>F G. symmetry.
-  by unshelve eapply (uniqueness (terminalP AB (span f g)) (exist _ h _)).
+  apply: unicity_sig. apply: productP=>//=. exact/pairE.
+  by split. 
 Qed.
-Lemma pair_ext {X} (h: X ~> AB'): h ≡ pair (fst ∘ h) (snd ∘ h).
-Proof. by apply pairU. Qed.
-Instance pair_eqv {X}: Proper (eqv ==> eqv ==> eqv) (@pair X).
+
+#[export] Instance pair_eqv {y}: Proper (eqv ==> eqv ==> eqv) (@pair y).
 Proof.
   move=>f f' ff g g' gg.
-  apply pairU; rewrite -?ff -?gg.
-  apply fst_pair. apply snd_pair.
+  apply: pairU; rewrite -?ff -?gg.
+  exact/pair1. exact/pair2.
 Qed.
-Lemma prod_ext {X} (f g: X ~> AB'): fst ∘ f ≡ fst ∘ g -> snd ∘ f ≡ snd ∘ g -> f ≡ g.
-Proof. move=>F G. rewrite (pair_ext g). by apply pairU. Qed.
-End PROD.
 
-(** Categories with all finite products (i.e., cartesian monoidal) *)
+Lemma pair_ext' y (h: y ~> x): h ≡ pair (h \; pi1) (h \; pi2).
+Proof. by apply pairU. Qed.
 
-#[primitive] HB.mixin Record IsCartesian 𝐂 of precat 𝐂 := {
-    #[canonical=no] top_: Terminal 𝐂;
-    #[canonical=no] prod_: forall A B: ob 𝐂, Product A B;    
+End s.
+End s.
+Arguments pair {_} [_ _ _ _] _ _.
+
+Section s.
+Context {𝐂: Cat}.
+Implicit Types a b c d: ob 𝐂.
+
+Section s.
+Variables (a b: ob 𝐂) (x: Product a b).
+Definition ProductU_Span (y: Product a b): (x: Span a b) ≃ (y: Span a b) :=
+  TerminalU _ _.
+Definition ProductU (y: Product a b): x ≃ y :=
+  Spaniso_sort (ProductU_Span y).
+Lemma ProductUH (y: Product a b): @spanhom _ a b x y pi1 pi2 pi1 pi2 (ProductU y)¹.
+Proof. exact: SpanH. Qed.
+
+Lemma pair_ext: pair pi1 pi2 ≡ x.
+Proof. symmetry. apply: pairU; cat. Qed.
+
+Lemma prod_ext y (f g: y ~> x): f \; pi1 ≡ g \; pi1 -> f \; pi2 ≡ g \; pi2 -> f ≡ g.
+Proof. move=>F G. rewrite (pair_ext' g). exact: pairU. Qed.
+End s.
+
+Lemma productUr a (u: Terminal 𝐂): product a u a a (term u a).
+Proof.
+  move=>y p' q'. unshelve apply: mk_unique_sig=>/=. exact: p'.
+  split=>/=. cat. exact: termU.
+  move=>h [/=<- _]. cat.
+Qed.
+
+Lemma productUl a (u: Terminal 𝐂): product u a a (term u a) a.
+Proof. apply productC, productUr. Qed.
+
+Lemma productA a b c (ab: Product a b) (bc: Product b c) (x: Product ab c):
+  product a bc x (pi1\;pi1) (pair (pi1\;pi2) pi2).
+Proof.
+(* TODO: finish *)
+  move=>y p q. unshelve apply: mk_unique_sig.
+  exact: (pair (pair p (q\;pi1)) (q\;pi2)).
+  split.
+   arewrite pair1; exact: pair1.
+   sorry.
+  move=>/=h [H1 H2].
+  sorry.
+Qed.
+
+(* Definition prod_assoc X Y Z: (X×Y)×Z ≃ X×(Y×Z). *)
+(* Proof. *)
+(*   apply: (mk_iso (pair (fst∘fst) (pair (snd∘fst) snd)) *)
+(*             (pair (pair fst (fst∘snd)) (snd∘snd))). *)
+(*   - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o. *)
+(*     by rewrite -compoA !fst_pair. *)
+(*     apply prod_ext; rewrite compoA ?(fst_pair,snd_pair)//. *)
+(*     by rewrite -compoA fst_pair snd_pair. *)
+(*   - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o. *)
+(*     apply prod_ext; rewrite compoA ?(fst_pair,snd_pair)//. *)
+(*     by rewrite -compoA snd_pair fst_pair. *)
+(*     by rewrite -compoA !snd_pair. *)
+(* Defined. *)
+
+
+Lemma productA' a b c (ab: Product a b) (bc: Product b c) (x: Product a bc):
+  product ab c x (pair pi1 (pi2 \; pi1)) (pi2 \; pi2).
+Proof. exact: (productC (@productA c b a (ProductC bc) (ProductC ab) (ProductC x))). Qed.
+  
+End s.
+
+
+(** ** categories with terminal objects / binary products / finite products *)
+#[primitive] HB.mixin Record Has1 𝐂 of QUIVER 𝐂 := {
+    #[canonical=no] one: Terminal 𝐂;
+}.
+#[short(type="Cat1")]
+HB.structure Definition CAT1 := { 𝐂 of CAT 𝐂 & Has1 𝐂}.
+
+#[primitive] HB.mixin Record HasBinaryProducts 𝐂 of PRECAT 𝐂 := {
+    #[canonical=no] prod: forall a b: ob 𝐂, Product a b;
   }.
-#[short(type="PreCCat")]
-HB.structure Definition preccat := { 𝐂 of IsCartesian 𝐂 & }.
-Definition top {𝐂: PreCCat}: ob 𝐂 := terminal top_.
-Definition prod {𝐂: PreCCat} (A B: ob 𝐂): ob 𝐂 := span_ob (terminal (prod_ A B)).
-Infix "×" := prod (at level 30).
 
-#[short(type="CCat")]
-HB.structure Definition ccat := { 𝐂 of preccat 𝐂 & cat 𝐂 }.
+#[short(type="CatBProd")]
+HB.structure Definition CATBPROD := { 𝐂 of CAT 𝐂 & HasBinaryProducts 𝐂}.
+Infix "×" := prod: cat_scope.
 
-Section prod.
-  Context {𝐂: CCat}.
-  Implicit Types X Y Z T: ob 𝐂.
-  Definition pair' {X Y Z T} (f: X ~> Y) (g: Z ~> T): X×Z ~> Y×T :=
-    pair (f∘fst) (g∘snd).
+(** also called Cartesian (monoidal) categories *)
+#[short(type="CatProd")]
+HB.structure Definition CATPROD := { 𝐂 of CAT1 𝐂 & CATBPROD 𝐂}.
 
-  Definition PROD (X: ob 𝐂*ob 𝐂): ob 𝐂 := X.1 × X.2. 
-  Program Definition _PROD_functor := @IsFunctor'.Build _ _ PROD (fun A B f => pair' f.1 f.2) _ _ _.
-  Next Obligation.
-    move=>/=A B f g [fg1 fg2]; apply: pair_eqv; by rewrite ?fg1 ?fg2. 
-  Qed.
-  Next Obligation.
-    symmetry. apply: pairU; by rewrite comp1o compo1.
-  Qed.
-  Next Obligation.
-    symmetry; apply: pairU=>/=;
-      rewrite !compoA ?(fst_pair,snd_pair); 
-      rewrite -!compoA ?(fst_pair,snd_pair)//.
-  Qed.
-  HB.instance Definition _ := _PROD_functor. 
+Section s.
+Context {𝐂: CatBProd}.
+Implicit Types a b c d: ob 𝐂.
 
-  Lemma pair'_iso {X Y X' Y'} (i: X ≃ X') (j: Y ≃ Y'): X×Y ≃ X'×Y'.
-  Proof.
-   apply: (mk_iso (pair' i j) (pair' i⁻¹ j⁻¹));
-     abstract by apply: prod_ext; rewrite compoA ?(fst_pair,snd_pair)
-                                  -compoA ?(fst_pair,snd_pair)
-                                     compoA ?(invKl,invKr); cat.
-  Defined.
-    
-  Definition prod_sym X Y: X×Y ≃ Y×X.
-  Proof.
-   apply: (mk_iso (pair snd fst) (pair snd fst)).
-   - by apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o.
-   - by apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o.
-  Defined.
+Definition prodP a b: product a b (a×b) pi1 pi2 := productP. 
 
-  Definition prod_assoc X Y Z: (X×Y)×Z ≃ X×(Y×Z).
-  Proof.
-    apply: (mk_iso (pair (fst∘fst) (pair (snd∘fst) snd))
-              (pair (pair fst (fst∘snd)) (snd∘snd))).
-    - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o.
-      by rewrite -compoA !fst_pair.
-      apply prod_ext; rewrite compoA ?(fst_pair,snd_pair)//.
-      by rewrite -compoA fst_pair snd_pair.
-    - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o.
-      apply prod_ext; rewrite compoA ?(fst_pair,snd_pair)//.
-      by rewrite -compoA snd_pair fst_pair.
-      by rewrite -compoA !snd_pair.
-  Defined.
+Definition pair' a b c d (f: a~>c) (g: b~>d): a×b ~> c×d := pair (pi1\;f) (pi2\;g).
 
-  Definition UNIT (X: Cat1): 𝐂 := top. 
-  Program Definition _UNIT_functor := @IsFunctor'.Build _ _ UNIT (fun A B f => unique_elt (terminalP _ _)) _ _ _.
-  Next Obligation.
-    move=>/=A B f g fg/=. exact: uniqueness. 
-  Qed.
-  Next Obligation. intro. exact: (uniqueness (terminalP _ _)). Qed.
-  Next Obligation. intros. exact: (uniqueness (terminalP _ _)). Qed.
-  HB.instance Definition _ := _UNIT_functor. 
-  
-  Definition prod_unitl X: top×X ≃ X.
-  Proof.
-    apply: (mk_iso snd (pair (unique_elt (terminalP _ X)) idmap)).
-    - apply snd_pair.
-    - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) ?compo1 comp1o//.
-      exact: (unicity (terminalP top_ _)).
-  Defined.
-  
-  Definition prod_unitr X: X×top ≃ X.
-  Proof.
-    apply: (mk_iso fst (pair idmap (unique_elt (terminalP _ X)))).
-    - apply fst_pair.
-    - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) ?compo1 comp1o//.
-      exact: (unicity (terminalP top_ _)).
-  Defined.
-  
-End prod.
+Lemma pair'_id a b: pair' a b ≡ idmap.
+Proof. symmetry. apply: pairU; cat. Qed.
 
+Lemma pair'_comp a a' a'' b b' b'' (f: a~>a') (f': a'~>a'') (g: b~>b') (g': b'~>b''):
+  pair' (f\;f') (g\;g') ≡ pair' f g \; pair' f' g'.
+Proof.
+  symmetry; apply: pairU=>/=;
+    rewrite !compoA pairE; 
+    rewrite -!compoA pairE//.
+Qed.
 
-(*TMP-UNIV
-Definition cat_top: Terminal Cat.
-  exists (Cat1: Cat)=>X.
-  unshelve eexists=>//.
-  exact (functor_cst (tt: Cat1)).
-  move=>F _/=. split.
-  repeat unshelve eexists. 
-Defined.
-*)
+(* Note: could be defined already in PreCatBProd *)
+Definition diag a: a ~> a×a := pair a a.
 
-Program Definition _fst_functor (C D: Cat) :=
-  @IsFunctor'.Build (C*D: Cat)%type C Datatypes.fst (fun A B f => f.1) _ _ _.
-Next Obligation. cbn=>*. exact/extensional. Qed.
-Next Obligation. done. Qed.
-Next Obligation. done. Qed.
-HB.instance Definition _ C D := _fst_functor C D.
+Definition prodC a b: a×b ≃ b×a :=
+  ProductU (ProductC _) _.
 
-Program Definition _snd_functor (C D: Cat) :=
-  @IsFunctor'.Build (C*D: Cat)%type D Datatypes.snd (fun A B f => f.2) _ _ _.
-Next Obligation. cbn=>*. exact/extensional. Qed.
-Next Obligation. done. Qed.
-Next Obligation. done. Qed.
-HB.instance Definition _ C D := _snd_functor C D.
+Definition prodCH a b: spanhom _ _ _ _ (prodC a b)¹ :=
+  ProductUH (ProductC _) _.
 
+Definition prodA a b c: (a×b)×c ≃ a×(b×c) :=
+  ProductU (mk_product_ (productA _)) _.
 
-Definition types_pair' {C A B} (F: C -> A) (G: C -> B) X := (F X, G X). 
-Program Definition _types_pair'_functor (C A B: Cat) (F: C ≈> A) (G: C ≈> B) :=
-  @IsFunctor'.Build C (A*B: Cat)%type (types_pair' F G) (fun _ _ h => (Fhom F h, Fhom G h)) _ _ _.
-Next Obligation. split; exact: Fhom_eqv. Qed.
-Next Obligation. split; exact: Fidmap. Qed.
-Next Obligation. split; exact: Fcomp. Qed.
-HB.instance Definition _ C A B F G := @_types_pair'_functor C A B F G.
+Definition prodAH a b c: spanhom _ _ _ _ (prodA a b c)¹ :=
+  ProductUH (mk_product_ (productA _)) _.
 
-Definition types_pair'_ntx {C A B: Cat} (F F': C ≈> A) (G G': C ≈> B)
-  (f: F ~> F') (g: G ~> G'): (types_pair' F G: Functor _ _) ~> (types_pair' F' G': Functor _ _).
-  exists (fun X => (f X, g X)).
-  split; split; split; cbn; exact: natural.
-Defined.
-Definition types_pair'_iso {C A B: Cat} (F F': C ≈> A) (G G': C ≈> B)
-  (f: F ≃ F') (g: G ≃ G'): (types_pair' F G: Functor _ _) ≃ (types_pair' F' G': Functor _ _).
-  apply: (mk_iso (types_pair'_ntx f¹ g¹) (types_pair'_ntx f⁻¹ g⁻¹)).
-  { split.
-    - exact: (invKl (iso_ntx_pw f _)).
-    - exact: (invKl (iso_ntx_pw g _)). }
-  { split.
-    - exact: (invKr (iso_ntx_pw f _)).
-    - exact: (invKr (iso_ntx_pw g _)). }
-Defined.
+End s.
 
-(*TMP-UNIV
-Definition cat_prod (C D: Cat): Product C D.
-  unshelve eexists.
-  exists (C * D: Cat)%type.
-  exact: (Datatypes.fst: Functor _ _). 
-  exact: (Datatypes.snd: Functor _ _).
-  unshelve eexists=>//. 
-  exists ((types_pair' (spanl (s:=X)) (spanr (s:=X))): Functor _ _).
-  split; split; exact: same_functor.
-  destruct X as [X L R]=>/=[[F [[HL] [HR]]]] _. cbn. split.
-  apply: iso_trans. apply: types_pair'_iso; apply: iso_sym; eassumption.
-  clear. unshelve apply: mk_iso.
-  { unshelve eexists.
-    - split; exact: idmap; split; split; split=>/=; cat.
-    - repeat split=>/=; cat. }
-  { unshelve eexists.
-    - split; exact: idmap; split; split; split=>/=; cat.
-    - repeat split=>/=; cat. }
-  split=>/=; cat. 
-  split=>/=; cat. 
-Defined.
-HB.instance Definition _ := IsCartesian.Build Cat cat_top cat_prod.
- *)
+Section s.
+Context {𝐂: CatProd}.
+Implicit Types a b c d: ob 𝐂.
 
-(** Bifunctors *)
+Definition prodUl a: one×a ≃ a :=
+  ProductU _ (mk_product_ (@productUl _ _ _)).
 
-(*TMP-UNIV: * -> × *)
-Definition app11 {A B D: Cat} (F: (A*B)%type ≈> D) (X: ob A) (Y: ob B): D := F(X,Y).
-(*TMP-UNIV: * -> × *)
-Definition app22 {A B D: Cat} (F: (A*B)%type ≈> D) {X X' Y Y'}
-  (f: A X X') (g: B Y Y'): app11 F X Y ~> app11 F X' Y' :=
-  @Fhom _ _ F (X,Y) (X',Y') (f,g).
-Instance app22_eqv {A B D F X X' Y Y'}: Proper (eqv ==> eqv ==> eqv) (@app22 A B D F X X' Y Y').
-Proof. intros ??? ???. exact/extensional. Qed.
+Definition prodUlH a: spanhom _ _ _ _ (prodUl a)¹ :=
+  ProductUH _ (mk_product_ (@productUl _ _ _)).
 
-(*TMP-UNIV
-Definition times {X X' Y Y': Cat}
-  (f: X ≈> X') (g: Y ≈> Y'): X×Y ≈> X'×Y' :=
-  app22 (@PROD Cat: Functor _ _) f g.
-Instance times_eqv {X X' Y Y'}: Proper (eqv ==> eqv ==> eqv) (@times X X' Y Y').
-Proof. apply (app22_eqv (F:=@PROD Cat: Functor _ _)). Qed.
- *)
+Definition prodUr a: a×one ≃ a :=
+  ProductU _ (mk_product_ (@productUr _ _ _)).
+
+Definition prodUrH a: spanhom _ _ _ _ (prodUr a)¹ :=
+  ProductUH _ (mk_product_ (@productUr _ _ _)).
+End s.

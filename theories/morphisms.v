@@ -13,25 +13,29 @@ Arguments is_epi {_ _ _} _/.
 Arguments is_mono {_ _ _} _/. 
 
 HB.mixin Record IsEpi (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
-    #[canonical=no] epi_prop: is_epi f;
+    #[canonical=no] epiP: is_epi f;
 }.
 #[short(type="Epi")]
-HB.structure Definition epi 𝐂 A B := { f of IsEpi 𝐂 A B f }.
+HB.structure Definition EPI 𝐂 A B := { f of IsEpi 𝐂 A B f }.
 Infix "↠" := Epi: cat_scope. 
-Arguments epi_prop {_ _ _}.
+Arguments epiP {_ _ _}.
 
 HB.mixin Record IsMono (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
-    #[canonical=no] mono_prop: is_mono f;
+    #[canonical=no] monoP: is_mono f;
 }.
 #[short(type="Mono")]
-HB.structure Definition mono 𝐂 A B := { f of IsMono 𝐂 A B f }.
+HB.structure Definition MONO 𝐂 A B := { f of IsMono 𝐂 A B f }.
 Infix "↪" := Mono: cat_scope.
-Arguments mono_prop {_ _ _}.
+Arguments monoP {_ _ _}.
 
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: A ↪ B) :=
-  IsEpi.Build 𝐂^op B A (morphop f) (mono_prop f).
+  IsEpi.Build 𝐂^op B A (morphop f) (monoP f).
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂^op) (f: A ↪ B) :=
+  IsEpi.Build 𝐂 B A (morphop' f) (monoP f).
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: A ↠ B) :=
-  IsMono.Build 𝐂^op B A (morphop f) (epi_prop f).
+  IsMono.Build 𝐂^op B A (morphop f) (epiP f).
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂^op) (f: A ↠ B) :=
+  IsMono.Build 𝐂 B A (morphop' f) (epiP f).
 
 Lemma id_is_epi (𝐂: Cat) (A: ob 𝐂): is_epi A. 
 Proof. move=>B f g. by rewrite !cats. Qed.
@@ -42,7 +46,7 @@ HB.instance Definition _ (𝐂: Cat) (A: ob 𝐂) := IsEpi.Build _ _ _ idmap (@i
 HB.instance Definition _ (𝐂: Cat) (A: ob 𝐂) := IsMono.Build _ _ _ idmap (@id_is_mono _ A). 
 
 Lemma comp_is_epi (𝐂: Cat) (A B C: ob 𝐂) (f: A ↠ B) (g: B ↠ C): is_epi (f \; g). 
-Proof. move=>D i j. rewrite !cats=>H. exact/(epi_prop g)/(epi_prop f). Qed.
+Proof. move=>D i j. rewrite !cats=>H. exact/(epiP g)/(epiP f). Qed.
 Lemma comp_is_mono (𝐂: Cat) (A B C: ob 𝐂) (f: A ↪ B) (g: B ↪ C): is_mono (f \; g). 
 Proof. exact: (comp_is_epi (f:=morphop g) (g:=morphop f)). Qed.
 
@@ -60,9 +64,9 @@ HB.instance Definition _ (𝐂: Cat) (A B C: ob 𝐂) (f: A ↪ B) (g: B ↪ C) 
  *)
 
 Definition is_equalizer (𝐂: PreCat) (A B C: ob 𝐂) (f g: A ~> B) (e: C ~> A) :=
-  prod (e \; f ≡ e \; g) (forall D (e': D ~> A), e' \; f ≡ e' \; g -> Σ! h: D ~> C, h \; e ≡ e').  
+  e \; f ≡ e \; g ∧ forall D (e': D ~> A), e' \; f ≡ e' \; g -> Σ! h: D ~> C, h \; e ≡ e'.  
 Definition is_coequalizer (𝐂: PreCat) (A B C: ob 𝐂) (f g: A ~> B) (e: B ~> C) :=
-  prod (f \; e ≡ g \; e) (forall D (e': B ~> D), f \; e' ≡ g \; e' -> Σ! h: C ~> D, e \; h ≡ e').  
+  f \; e ≡ g \; e ∧ forall D (e': B ~> D), f \; e' ≡ g \; e' -> Σ! h: C ~> D, e \; h ≡ e'.  
 
 Definition is_regepi (𝐂: PreCat) (A B: ob 𝐂) (e: A ~> B) :=
   { C & {f: C~>A & {g: C~>A & is_coequalizer f g e }}}.
@@ -70,54 +74,58 @@ Definition is_regmono (𝐂: PreCat) (A B: ob 𝐂) (m: A ~> B) :=
   { C & {f: B~>C & {g: B~>C & is_equalizer f g m }}}.
 
 HB.mixin Record _IsRegEpi (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
-    #[canonical=no] regepi_prop: is_regepi f;
+    #[canonical=no] regepiP: is_regepi f;
 }.
 #[short(type="RegEpi")]
-HB.structure Definition regepi 𝐂 A B := { f of _IsRegEpi 𝐂 A B f & epi _ f }.
-Arguments regepi_prop {_ _ _}.
+HB.structure Definition REGEPI 𝐂 A B := { f of _IsRegEpi 𝐂 A B f & EPI _ f }.
+Arguments regepiP {_ _ _}.
 
 HB.mixin Record _IsRegMono (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
-    #[canonical=no] regmono_prop: is_regmono f;
+    #[canonical=no] regmonoP: is_regmono f;
 }.
 #[short(type="RegMono")]
-HB.structure Definition regmono 𝐂 A B := { f of _IsRegMono 𝐂 A B f & mono _ f }.
-Arguments regmono_prop {_ _ _}.
-                                                       
+HB.structure Definition REGMONO 𝐂 A B := { f of _IsRegMono 𝐂 A B f & MONO _ f }.
+Arguments regmonoP {_ _ _}.
+
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: RegMono A B) :=
-  _IsRegEpi.Build 𝐂^op B A (morphop f) (regmono_prop f).
+  _IsRegEpi.Build 𝐂^op B A (morphop f) (regmonoP f).
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂^op) (f: RegMono A B) :=
+  _IsRegEpi.Build 𝐂 B A (morphop' f) (regmonoP f).
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: RegEpi A B) :=
-  _IsRegMono.Build 𝐂^op B A (morphop f) (regepi_prop f).
+  _IsRegMono.Build 𝐂^op B A (morphop f) (regepiP f).
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂^op) (f: RegEpi A B) :=
+  _IsRegMono.Build 𝐂 B A (morphop' f) (regepiP f).
 
 Lemma regepi_epi (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B): is_regepi f -> is_epi f.
 Proof.
   move=>[D [a [b [P U]]]] C i j H.
-  apply: unicity. apply: U. all: cbn. 2: exact: H. 2: done.
+  apply: unicity_sig. apply: U. all: cbn. 2: exact: H. 2: done.
   arewrite P; cat. 
 Qed.
 Lemma regmono_mono (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B): is_regmono f -> is_mono f.
 Proof. exact: (regepi_epi (f:=morphop f)). Qed.
 
 HB.factory Record IsRegEpi (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B) := {
-    regepi_prop: is_regepi f;
+    regepiP: is_regepi f;
 }.
 HB.builders Context 𝐂 A B f of IsRegEpi 𝐂 A B f.
-HB.instance Definition _ := IsEpi.Build _ _ _ f (regepi_epi regepi_prop).
-HB.instance Definition _ := _IsRegEpi.Build _ _ _ f regepi_prop.
+HB.instance Definition _ := IsEpi.Build _ _ _ f (regepi_epi regepiP).
+HB.instance Definition _ := _IsRegEpi.Build _ _ _ f regepiP.
 HB.end.
 
 HB.factory Record IsRegMono (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B) := {
-    regmono_prop: is_regmono f;
+    regmonoP: is_regmono f;
 }.
 HB.builders Context 𝐂 A B f of IsRegMono 𝐂 A B f.
-HB.instance Definition _ := IsMono.Build _ _ _ f (regmono_mono regmono_prop).
-HB.instance Definition _ := _IsRegMono.Build _ _ _ f regmono_prop.
+HB.instance Definition _ := IsMono.Build _ _ _ f (regmono_mono regmonoP).
+HB.instance Definition _ := _IsRegMono.Build _ _ _ f regmonoP.
 HB.end.
 
   
 Lemma id_is_regepi (𝐂: Cat) (A: ob 𝐂): is_regepi A. 
 Proof.
   exists A, idmap, idmap. split=>//.
-  move=>D e' _. exists e'. cat.
+  move=>D e' _. apply mk_unique_sig with e'. cat.
   move=>h. rewrite cats. exact/eqv_sym. 
 Qed.
 Lemma id_is_regmono (𝐂: Cat) (A: ob 𝐂): is_regmono A. 
@@ -135,14 +143,16 @@ HB.mixin Record HasInverseOp (𝐂: BareQuiver) (A B: ob 𝐂) (f: A ~> B) := {
     #[canonical=no] inv: B ~> A;
 }.
 #[short(type="Invertible")]
-HB.structure Definition invertible 𝐂 A B := { f of HasInverseOp 𝐂 A B f }.
+HB.structure Definition INVERTIBLE 𝐂 A B := { f of HasInverseOp 𝐂 A B f }.
 Arguments inv {_ _ _}.
 Notation "f ⁻¹" := (inv f): cat_scope.
 
 HB.instance Definition _ (𝐂: BareQuiver) (A B: ob 𝐂) (f: Invertible A B) :=
   HasInverseOp.Build 𝐂 B A (f⁻¹) f. 
 HB.instance Definition _ (𝐂: BareQuiver) (A B: ob 𝐂) (f: Invertible A B) :=
-  HasInverseOp.Build (𝐂^op) B A (morphop f) (f⁻¹). 
+  HasInverseOp.Build 𝐂^op B A (morphop f) (f⁻¹). 
+HB.instance Definition _ (𝐂: BareQuiver) (A B: ob 𝐂^op) (f: Invertible A B) :=
+  HasInverseOp.Build 𝐂 B A (morphop' f) (f⁻¹). 
 
 HB.instance Definition _ (𝐂: BarePreCat) (A: ob 𝐂) :=
   HasInverseOp.Build 𝐂 A A A A. 
@@ -167,7 +177,7 @@ Proof. exact: (left_inverse_epi (f:=morphop f)). Qed.
 Lemma left_inverse_regepi (𝐂: Cat) (A B: ob 𝐂) (f: Invertible A B): has_left_inverse f -> is_regepi f.
 Proof.
   move=>K. exists A, (f\;f⁻¹), idmap. split. arewrite K. cat.
-  move=>D e H. exists (f⁻¹\;e). arewrite H. cat.
+  move=>D e H. apply mk_unique_sig with (f⁻¹\;e). arewrite H. cat.
   move=>h <-. arewrite K. cat.
 Qed.
 Lemma right_inverse_regmono (𝐂: Cat) (A B: ob 𝐂) (f: Invertible A B): has_right_inverse f -> is_regmono f.
@@ -177,7 +187,7 @@ HB.mixin Record _HasLeftInverse (𝐂: PreCat) (A B: ob 𝐂) f of HasInverseOp 
     #[canonical=no] invKl: has_left_inverse f;
   }.
 #[short(type="SplitEpi")]
-HB.structure Definition splitepi 𝐂 A B := { f of regepi _ f & invertible _ f & _HasLeftInverse 𝐂 A B f }.
+HB.structure Definition SPLITEPI 𝐂 A B := { f of REGEPI _ f & INVERTIBLE _ f & _HasLeftInverse 𝐂 A B f }.
 HB.factory Record HasLeftInverse' (𝐂: Cat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
     #[canonical=no] invKl: has_left_inverse f;
   }.
@@ -198,7 +208,7 @@ HB.mixin Record _HasRightInverse (𝐂: PreCat) (A B: ob 𝐂) f of HasInverseOp
     #[canonical=no] invKr: has_right_inverse f;
   }.
 #[short(type="SplitMono")]
-HB.structure Definition splitmono 𝐂 A B := { f of regmono _ f & invertible _ f & _HasRightInverse 𝐂 A B f }.
+HB.structure Definition SPLITMONO 𝐂 A B := { f of REGMONO _ f & INVERTIBLE _ f & _HasRightInverse 𝐂 A B f }.
 HB.factory Record HasRightInverse' (𝐂: Cat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
     #[canonical=no] invKr: has_right_inverse f;
   }.
@@ -224,8 +234,12 @@ Definition isoK' := @invKr.
 
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: SplitMono A B) :=
   _HasLeftInverse.Build 𝐂^op B A (morphop f) invKr.
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂^op) (f: SplitMono A B) :=
+  _HasLeftInverse.Build 𝐂 B A (morphop' f) (invKr (s:=f)).
 HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) (f: SplitEpi A B) :=
   _HasRightInverse.Build 𝐂^op B A (morphop f) invKl.
+HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂^op) (f: SplitEpi A B) :=
+  _HasRightInverse.Build 𝐂 B A (morphop' f) (invKl (s:=f)).
 
 HB.instance Definition _ (𝐂: Cat) (A B: ob 𝐂) (f: SplitMono A B) :=
   HasLeftInverse.Build 𝐂 B A (f⁻¹) invKr.
@@ -255,10 +269,10 @@ HB.instance Definition _ (𝐂: Cat) (A B C: ob 𝐂) (f: SplitMono A B) (g: Spl
 (** * isomorphisms *)
 
 #[short(type="Iso")]
-  HB.structure Definition iso (𝐂: PreCat) (A B: ob 𝐂) := { f of @splitepi 𝐂 A B f & splitmono _ f }.
+  HB.structure Definition ISO (𝐂: PreCat) (A B: ob 𝐂) := { f of @SPLITEPI 𝐂 A B f & SPLITMONO _ f }.
 Infix "≃" := Iso: cat_scope.
 Notation "A ≃_ 𝐂 B" := (@Iso 𝐂 A B) (only parsing): cat_scope.
-Notation "f ¹" := (iso.sort f): cat_scope.
+Notation "f ¹" := (ISO.sort f): cat_scope.
 
 HB.factory Record IsIso' (𝐂: Cat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
     invKl: has_left_inverse f;
@@ -288,10 +302,10 @@ HB.saturate morphop.
 
 (** * additional properties *)
 
-Lemma epiP {𝐂: Cat} {A B: ob 𝐂} (e: A ↠ B) C (f g: B ~> C): e \; f ≡ e \; g <-> f ≡ g.
-Proof. split. exact/epi_prop. exact/comp_eqv. Qed.
-Lemma monoP {𝐂: Cat} {A B: ob 𝐂} (m: A ↪ B) C (f g: C ~> A): f \; m ≡ g \; m <-> f ≡ g.
-Proof. exact: (epiP (morphop m)). Qed.
+Lemma epiP' {𝐂: Cat} {A B: ob 𝐂} (e: A ↠ B) C (f g: B ~> C): e \; f ≡ e \; g <-> f ≡ g.
+Proof. split. exact/epiP. exact/comp_eqv. Qed.
+Lemma monoP' {𝐂: Cat} {A B: ob 𝐂} (m: A ↪ B) C (f g: C ~> A): f \; m ≡ g \; m <-> f ≡ g.
+Proof. exact: (epiP' (morphop m)). Qed.
 
 Lemma epi_compK {𝐂: Cat} {A B C: ob 𝐂} (f: A ~> B) (g: B ~> C): is_epi (f \; g) -> is_epi g.
 Proof. move=>E D i j H. apply/E. by rewrite !cats H. Qed.
@@ -305,40 +319,39 @@ Proof. move=>M/=. apply/M. arewrite invKl. cat. Qed.
 Lemma splitmono_epi_left_inverse {𝐂: Cat} {A B: ob 𝐂} (f: SplitMono A B): is_epi f -> has_left_inverse f.
 Proof. exact: (splitepi_mono_right_inverse (f:=morphop f)). Qed.
 
-HB.factory Record SplitEpi_Mono_isIso (𝐂: Cat) (A B: ob 𝐂) f of @splitepi _ A B f & mono _ f := {}.
+HB.factory Record SplitEpi_Mono_isIso (𝐂: Cat) (A B: ob 𝐂) f of @SPLITEPI _ A B f & MONO _ f := {}.
 HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of SplitEpi_Mono_isIso 𝐂 A B f.
-HB.instance Definition _ := HasRightInverse.Build _ _ _ f (splitepi_mono_right_inverse (mono_prop f)).
+HB.instance Definition _ := HasRightInverse.Build _ _ _ f (splitepi_mono_right_inverse (monoP f)).
 HB.end.
 
-HB.factory Record SplitMono_Epi_isIso (𝐂: Cat) (A B: ob 𝐂) f of @splitmono _ A B f & epi _ f := {}.
+HB.factory Record SplitMono_Epi_isIso (𝐂: Cat) (A B: ob 𝐂) f of @SPLITMONO _ A B f & EPI _ f := {}.
 HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of SplitMono_Epi_isIso 𝐂 A B f.
-HB.instance Definition _ := HasLeftInverse.Build _ _ _ f (splitmono_epi_left_inverse (epi_prop f)).
+HB.instance Definition _ := HasLeftInverse.Build _ _ _ f (splitmono_epi_left_inverse (epiP f)).
 HB.end.
 
 
 Lemma regepi_mono_right_inverse {𝐂: Cat} {A B: ob 𝐂} (f: RegEpi A B): is_mono f -> { g & f \; g ≡ idmap }.
 Proof.
-  move=>M/=. move: (regepi_prop f)=>[C [i [j [P U]]]].
-  destruct (U _ idmap) as [g Pg _]. by rewrite 2!cats; apply M in P.
-  by exists g.
+  move=>M/=. move: (regepiP f)=>[C [i [j [P U]]]].
+  apply: (U _ idmap _).1. by rewrite 2!cats; apply M in P.
 Qed.
 Lemma regmono_epi_left_inverse {𝐂: Cat} {A B: ob 𝐂} (f: RegMono A B): is_epi f -> { g & g \; f ≡ idmap }.
 Proof. exact: (regepi_mono_right_inverse (f:=morphop f)). Qed.
 
-HB.factory Record RegEpi_Mono_isIso (𝐂: Cat) (A B: ob 𝐂) f of @regepi _ A B f & mono _ f := {}.
+HB.factory Record RegEpi_Mono_isIso (𝐂: Cat) (A B: ob 𝐂) f of @REGEPI _ A B f & MONO _ f := {}.
 HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of RegEpi_Mono_isIso 𝐂 A B f.
-Definition regepi_mono_inv := projT1 (regepi_mono_right_inverse (mono_prop f)).
+Definition regepi_mono_inv := projT1 (regepi_mono_right_inverse (monoP f)).
 Opaque regepi_mono_inv.
 HB.instance Definition _ := HasInverseOp.Build _ _ _ f regepi_mono_inv.
-HB.instance Definition _ := HasRightInverse.Build _ _ _ f (projT2 (regepi_mono_right_inverse (mono_prop f))).
+HB.instance Definition _ := HasRightInverse.Build _ _ _ f (projT2 (regepi_mono_right_inverse (monoP f))).
 HB.end.
 
-HB.factory Record RegMono_Epi_isIso (𝐂: Cat) (A B: ob 𝐂) f of @regmono _ A B f & epi _ f := {}.
+HB.factory Record RegMono_Epi_isIso (𝐂: Cat) (A B: ob 𝐂) f of @REGMONO _ A B f & EPI _ f := {}.
 HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of RegMono_Epi_isIso 𝐂 A B f.
-Definition regmono_epi_inv := projT1 (regmono_epi_left_inverse (epi_prop f)).
+Definition regmono_epi_inv := projT1 (regmono_epi_left_inverse (epiP f)).
 Opaque regmono_epi_inv.
 HB.instance Definition _ := HasInverseOp.Build _ _ _ f regmono_epi_inv.
-HB.instance Definition _ := HasLeftInverse.Build _ _ _ f (projT2 (regmono_epi_left_inverse (epi_prop f))).
+HB.instance Definition _ := HasLeftInverse.Build _ _ _ f (projT2 (regmono_epi_left_inverse (epiP f))).
 HB.end.
 
 
@@ -359,7 +372,7 @@ Lemma inv_comp A B C (i: A ≃ B) (j: B ≃ C): (j∘i)⁻¹ ≡ i⁻¹∘j⁻¹
 Proof. done. Qed.
 
 Lemma iso_src_r A A' B (f: A ~> B) (g: A' ~> B) (i: A ≃ A'): f ≡ i \; g <-> i⁻¹ \; f ≡ g.
-Proof. by rewrite -(epiP i) -compoA invKr cats. Qed.
+Proof. by rewrite -(epiP' i) -compoA invKr cats. Qed.
 
 Lemma iso_src_l A A' B (f: A ~> B) (g: A' ~> B) (i: A' ≃ A): i \; f ≡ g <-> f ≡ i⁻¹ \; g.
 Proof. split=>H; exact/eqv_sym/iso_src_r/eqv_sym. Qed.
@@ -380,14 +393,22 @@ Proof. exact: (iso_src_l _ _ (morphop i)). Qed.
 Definition iso_tgt := (@iso_tgt_l, @iso_tgt_r)%core.
 
 (** forging isomorphisms from scratch (TODO: same for other concepts) *)
-Definition mk_iso {𝐂: Cat} {A B: ob 𝐂} (i: A ~> B) (j: B ~> A) (_: j \; i ≡ idmap) (_: i \; j ≡ idmap) := i.
-Arguments mk_iso {_ _ _}. 
-HB.instance Definition _ 𝐂 A B i j ji ij := @IsIso.Build 𝐂 A B (@mk_iso 𝐂 A B i j ji ij) j ji ij. 
-Definition mk_iso' {𝐂: Cat} {A B: ob 𝐂} (i: A ~> B) (j: B ~> A) ji ij: A ≃ B := mk_iso i j ji ij. 
-Arguments mk_iso' {_ _ _}.
+Definition iso {𝐂: Cat} {A B: ob 𝐂} (i: A ~> B) (j: B ~> A) (_: j \; i ≡ idmap) (_: i \; j ≡ idmap) := i.
+Arguments iso {_ _ _}. 
+HB.instance Definition _ 𝐂 A B i j ji ij := @IsIso.Build 𝐂 A B (@iso 𝐂 A B i j ji ij) j ji ij. 
+Definition iso_ {𝐂: Cat} {A B: ob 𝐂} (i: A ~> B) (j: B ~> A) ji ij: A ≃ B := iso i j ji ij. 
+Arguments iso_ {_ _ _}.
 
 (** isomorphisms in product categories *)
 Program Definition pair_iso {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B'): (A,B) ≃ (A',B')
-  := @mk_iso (𝐂*𝐃)%type (A,B) (A',B') (i,j) (i⁻¹, j⁻¹)  _ _.
+  := @iso_ (𝐂*𝐃)%type (A,B) (A',B') (i,j) (i⁻¹, j⁻¹)  _ _.
 Next Obligation. split; exact: invKl. Qed.
 Next Obligation. split; exact: invKr. Qed.
+
+
+(**  unicity of initial/terminal objects, up to (unique) isomorphism *)
+Definition InitialU {𝐂: Cat} (a b: Initial 𝐂): a ≃ b :=
+  iso_ (init _ _) (init _ _) (initU _ _) (initU _ _).
+
+Definition TerminalU {𝐂: Cat} (a b: Terminal 𝐂): a ≃ b :=
+  iso_ (term _ _) (term _ _) (termU _ _) (termU _ _).

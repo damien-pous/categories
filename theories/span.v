@@ -1,39 +1,86 @@
 (** * spans *)
 
-Require Export cat.
+Require Export morphisms.
 
 Local Open Scope cat_scope.
 
-Record Span {𝐂: Quiver} (A B: ob 𝐂) :=
-  span
-    {
-      span_ob:> ob 𝐂;
-      spanl: span_ob ~> A;
-      spanr: span_ob ~> B;
-    }.
-Arguments span {_ _ _ _}.
-Arguments spanl {_ _ _ _}. 
-Arguments spanr {_ _ _ _}. 
+(** ** spans *)
 
-Definition Span_morphism {𝐂: PreCat} {A B: ob 𝐂} (X Y: Span A B) :=
-  { h: X ~> Y | spanl ∘ h ≡ spanl /\ spanr ∘ h ≡ spanr }.
-HB.instance Definition _ (𝐂: PreCat) (A B: ob 𝐂) :=
-  IsQuiver.Build (Span A B) Span_morphism. 
+#[primitive] HB.mixin Record IsSpan (𝐂: BareQuiver) (a b: ob 𝐂) (x: ob 𝐂) := {
+    #[canonical=no] pi1: x ~> a;
+    #[canonical=no] pi2: x ~> b;
+  }.
+#[short(type=Span)]
+HB.structure Definition SPAN 𝐂 a b := {x of IsSpan 𝐂 a b x}. 
 
-Program Definition _span_precat (𝐂: Cat) (A B: ob 𝐂) :=
-  IsPreCat.Build (Span A B)
-    (fun X => exist _ idmap _)
-    (fun X Y Z h g => exist _ (g ∘ h) _).
-Next Obligation. intros; cbn. by rewrite 2!comp1o. Qed.
-Next Obligation.
-  intros?????? [h [Hl Hr]] [g [Gl Gr]]; cbn. by rewrite 2!compoA Gl Gr.
+Section s.
+Context {𝐂: BareQuiver} (a b: ob 𝐂).
+
+Definition span (x: ob 𝐂) (f: x ~> a) (g: x ~> b) := x.
+HB.instance Definition _ x f g := IsSpan.Build 𝐂 a b (@span x f g) f g.
+Definition span_ (x: ob 𝐂) (f: x ~> a) (g: x ~> b): Span a b := span f g.
+
+(** reversing a span *)
+Definition spanC (x: Span a b): ob 𝐂 := x.
+HB.instance Definition _ x := IsSpan.Build 𝐂 b a (spanC x) pi2 pi1.
+
+End s.
+
+(** ** span homomorphisms *)
+
+Section s.
+Context {𝐂: PreCat}.
+Implicit Types a b: ob 𝐂.
+
+Definition spanhom a b (x y: ob 𝐂) (x1: x ~> a) (x2: x ~> b) (y1: y ~> a) (y2: y ~> b) (f: x ~> y) :=
+  f \; y1 ≡ x1 ∧ f \; y2 ≡ x2.
+Definition Spanhom {a b} (x y: Span a b) := sig (fun f: x ~> y => spanhom pi1 pi2 pi1 pi2 f).
+Coercion Spanhom_sort a b x y (f: @Spanhom a b x y): x ~> y := sval f.
+Definition SpanH a b x y (f: @Spanhom a b x y): f \; pi1 ≡ pi1 ∧ f \; pi2 ≡ pi2 := proj2_sig f.
+HB.instance Definition _ a b := IsQuiver.Build (Span a b) Spanhom.
+
+Definition span_homC a b (x y: Span a b) (f: Spanhom x y): Spanhom (spanC x) (spanC y).
+Proof. exists f. apply: swap_pair. exact: (SpanH f). Defined.
+Definition span_homC' a b (x y: Span b a) (f: Spanhom (spanC x) (spanC y)): Spanhom x y.
+Proof. exact: (span_homC f). Defined.
+Definition span_homC1 a b (x: Span b a) (y: Span a b) (f: Spanhom (spanC x) y): Spanhom x (spanC y).
+Proof. exact: (span_homC f). Defined.
+Definition span_homC2 a b (x: Span a b) (y: Span b a) (f: Spanhom x (spanC y)): Spanhom (spanC x) y.
+Proof. exact: (span_homC f). Defined.
+
+End s.
+
+(** ** the category of spans *)
+
+Section s.
+Context {𝐂: Cat} (a b: ob 𝐂).
+
+Program Definition Span_id (x: Span a b): x ~> x := @exist _ _ idmap _.
+Next Obligation. intro; split; exact: comp1o. Qed.
+
+Program Definition Span_comp (x y z: Span a b) (f: x ~> y) (g: y ~> z): x ~> z :=
+@exist _ _ (f \; g) _.
+Next Obligation. intros; split; by rewrite compoA 2!SpanH. Qed.
+HB.instance Definition _ := IsPreCat.Build (Span a b) Span_id Span_comp. 
+
+Lemma _span_cat: IsCat (Span a b).
+Proof.
+  split=>*.
+  - exact: comp1o. 
+  - exact: compo1. 
+  - exact: compoA. 
+  - intros??????; exact: comp_eqv.
 Qed.
-HB.instance Definition _ 𝐂 A B := @_span_precat 𝐂 A B.
+HB.instance Definition _ := _span_cat. 
 
-Program Definition _span_cat (𝐂: Cat) (A B: ob 𝐂) :=
-  IsCat.Build (Span A B) _ _ _ _.
-Next Obligation. intros. apply: comp1o. Qed.
-Next Obligation. intros. apply: compo1. Qed.
-Next Obligation. intros. apply: compoA. Qed.
-Next Obligation. repeat intro. exact: comp_eqv. Qed.
-HB.instance Definition _ 𝐂 A B := @_span_cat 𝐂 A B.
+Definition Spaniso_sort (x y: Span a b) (i: x ≃ y): x ≃_𝐂 y :=
+  iso_ (Spanhom_sort i¹) (Spanhom_sort i⁻¹) (invKl i) (invKr i). 
+
+Lemma spanhom_inv (x y: Span a b) (i: x ≃_𝐂 y) (H: spanhom pi1 pi2 pi1 pi2 i¹):
+  spanhom pi1 pi2 pi1 pi2 i⁻¹.
+Proof. by split; rewrite iso_src H. Qed.
+
+Definition spaniso_ (x y: Span a b) (i: x ≃_𝐂 y) (H: spanhom pi1 pi2 pi1 pi2 i¹): x ≃ y :=
+  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (spanhom_inv H)) (invKl i) (invKr i).
+
+End s.

@@ -1,25 +1,25 @@
 (** * monoidal categories *)
 
-Require Export cat cast functor product.
+Require Export cat cast bifunctor.
 
 Local Open Scope cat_scope.
 
 (** ** premonoidal categories (i.e., without coherence) *)
 
 (* we define them in several steps in order to setup notations along the way *)
-#[primitive] HB.mixin Record HasMonoidalOps 𝐂 of cat 𝐂 := {
+#[primitive] HB.mixin Record HasMonoidalOps 𝐂 of CAT 𝐂 := {
     #[canonical=no] unit: ob 𝐂;
-    #[canonical=no] tensor: Functor (𝐂*𝐂)%type 𝐂;
+    #[canonical=no] tensor: Functor (𝐂∧𝐂) 𝐂;
   }.
 #[short(type="MonoidalOpsCat")]
-HB.structure Definition monoidalopscat := { 𝐂 of cat 𝐂 & HasMonoidalOps 𝐂 }.
+HB.structure Definition MONOIDALOPSCAT := { 𝐂 of CAT 𝐂 & HasMonoidalOps 𝐂 }.
 
 Definition tensor11 {𝐂: MonoidalOpsCat} (A B: ob 𝐂): ob 𝐂 := app11 tensor A B.
 Infix "⊗" := tensor11: cat_scope.
 Definition tensor22 {𝐂: MonoidalOpsCat} {A B C D: ob 𝐂} (f: A~>B) (g: C~>D): A⊗C ~> B⊗D := app22 tensor f g.
 Infix "·" := tensor22: cat_scope.
 
-#[primitive] HB.mixin Record IsPreMonoidal 𝐂 of monoidalopscat 𝐂 := {
+#[primitive] HB.mixin Record IsPreMonoidal 𝐂 of MONOIDALOPSCAT 𝐂 := {
     (* w.r.t nlab: https://ncatlab.org/nlab/show/monoidal+category
        assoc = α, unitl = λ, unitr = ρ *)
     #[canonical=no] assoc_: forall A B C: ob 𝐂, (A⊗B)⊗C ≃ A⊗(B⊗C);
@@ -34,13 +34,13 @@ Infix "·" := tensor22: cat_scope.
       unitr_ A' ∘ f · unit ≡ f ∘ unitr_ A ;
   }.
 #[short(type="PreMonoidalCat")]
-HB.structure Definition premonoidalcat := { 𝐂 of uip 𝐂 & monoidalopscat 𝐂 & IsPreMonoidal 𝐂 }.
+HB.structure Definition PREMONOIDALCAT := { 𝐂 of UIP 𝐂 & MONOIDALOPSCAT 𝐂 & IsPreMonoidal 𝐂 }.
 
 (** extension of the normalisation tactic from cat.v *)
 
 Module HL.
   Export HL.
-  Definition r_tens {𝐂 A B C D} := r_sym2 (@tensor22 𝐂 A B C D) _.
+  Definition r_tens {𝐂 A B C D} := r_sym2 (@tensor22 𝐂 A B C D) app22_eqv.
 End HL.
 Canonical HL.r_tens.
 
@@ -90,7 +90,7 @@ Proof. typeclasses eauto. Qed.
 
 
 HB.instance Definition _ {A A' B B'} (i: A ≃ A') (j: B ≃ B') :=
-  iso.copy (i·j) (Fhom tensor (pair_iso i j)).
+  ISO.copy (i·j) (Fhom tensor (pair_iso i j)).
 
 Definition assoc A B C: (A ⊗ B) ⊗ C ~> A ⊗ (B ⊗ C) := (assoc_ A B C)¹.
 Definition unitl A: unit ⊗ A ~> A := (unitl_ A)¹.
@@ -98,9 +98,9 @@ Definition unitr A: A ⊗ unit ~> A := (unitr_ A)¹.
 Arguments assoc: simpl never.
 Arguments unitl: simpl never.
 Arguments unitr: simpl never.
-HB.instance Definition _ A B C := iso.on (assoc A B C). 
-HB.instance Definition _ A := iso.on (unitl A). 
-HB.instance Definition _ A := iso.on (unitr A). 
+HB.instance Definition _ A B C := ISO.on (assoc A B C). 
+HB.instance Definition _ A := ISO.on (unitl A). 
+HB.instance Definition _ A := ISO.on (unitr A). 
 
 Definition assoc' A B C: A ⊗ (B ⊗ C) ~> (A ⊗ B) ⊗ C := (assoc A B C)⁻¹.
 Definition unitl' A: A ~> unit ⊗ A := (unitl A)⁻¹.
@@ -108,9 +108,9 @@ Definition unitr' A: A ~> A ⊗ unit := (unitr A)⁻¹.
 Arguments assoc': simpl never.
 Arguments unitl': simpl never.
 Arguments unitr': simpl never.
-HB.instance Definition _ A B C := iso.on (assoc' A B C). 
-HB.instance Definition _ A := iso.on (unitl' A). 
-HB.instance Definition _ A := iso.on (unitr' A). 
+HB.instance Definition _ A B C := ISO.on (assoc' A B C). 
+HB.instance Definition _ A := ISO.on (unitl' A). 
+HB.instance Definition _ A := ISO.on (unitr' A). 
 
 
 Lemma ntx_assoc [A B A' B' A'' B''] (f: A ~> B) (g: A' ~> B') (h: A'' ~> B''):
@@ -315,7 +315,7 @@ End s.
 
 (** ** monoidal categories (i.e., with coherence laws) *)
 
-#[primitive] HB.mixin Record IsMonoidal 𝐂 of premonoidalcat 𝐂 := {
+#[primitive] HB.mixin Record IsMonoidal 𝐂 of PREMONOIDALCAT 𝐂 := {
     #[canonical=no] pentagon: forall A B C D: ob 𝐂,
       A · assoc B C D ∘ assoc A (B⊗C) D ∘ assoc A B C · D
       ≡ assoc A B (C⊗D) ∘ assoc (A⊗B) C D;
