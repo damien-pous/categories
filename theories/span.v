@@ -49,6 +49,7 @@ Definition span_homC2 a b (x: Span a b) (y: Span b a) (f: Spanhom x (spanC y)): 
 Proof. exact: (span_homC f). Defined.
 
 End s.
+Arguments spanhom {_} [_ _ _ _] _ _ _ _ _/.
 
 (** ** the category of spans *)
 

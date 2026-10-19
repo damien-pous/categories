@@ -54,6 +54,7 @@ Definition cospan_homC2 a b (x: Cospan a b) (y: Cospan b a) (f: Cospanhom x (cos
 Proof. exact: (cospan_homC f). Defined.
 
 End s.
+Arguments cospanhom {_} [_ _ _ _] _ _ _ _ _/.
 
 
 (** duality with span homomorphisms *)
