@@ -23,33 +23,45 @@ End s.
 
 (** ** algebras morphisms *)
 
+Definition is_alghom {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F) (f: A ~> B) :=
+  Fhom F f \; alg B ≡ alg A \; f.
+Arguments is_alghom {_} [_ _ _] _/.
+#[primitive]
+HB.mixin Record IsAlghom {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F) (f: A ~> B) := {
+    #[canonical=no] alghomP: is_alghom f;
+  }.
+#[short(type="Alghom")]
+HB.structure Definition ALGHOM 𝐂 F A B := { f of IsAlghom 𝐂 F A B f }.
+Arguments Alghom {_ _}.
+HB.instance Definition _ 𝐂 F A B := Setoid.copy (Alghom A B) (kernel (@ALGHOM.sort 𝐂 F A B)).
 Section s.
 Context {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F).
-Definition alghom (f: A ~> B) := Fhom F f \; alg B ≡ alg A \; f.
-Definition Alghom := sig alghom. 
-Coercion Alghom_sort (f: Alghom): A ~> B := sval f.
-Definition mk_alghom (f: A ~> B): alghom f -> Alghom := exist _ f. 
-Definition algP (f: Alghom): alghom f := proj2_sig f.
+Definition alghom (f: A ~> B) (H: is_alghom f) := f.  
+HB.instance Definition _ f H := IsAlghom.Build 𝐂 F A B (@alghom f H) H.
+Definition alghom_ (f: A ~> B) (H: is_alghom f): Alghom A B := alghom H.  
 End s.
-Arguments Alghom {_ _}.
-Arguments alghom {_} [_ _ _] _/.
-Arguments mk_alghom {_} [_ _ _] &_ _.
-HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (Algebra F) Alghom.
+Arguments alghom {_} [_ _ _] _ _.
+Arguments alghom_ {_} [_ _ _] _ _.
 
 (** ** the category of algebras *)
 
+HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (Algebra F) Alghom.
+
 Section s.
 Context {𝐂: Cat} (F: Functor 𝐂 𝐂).
+Implicit Types A B C: Algebra F.   
 
-Program Definition Alghom_id (A: Algebra F): A ~> A :=
-  mk_alghom idmap _. 
-Next Obligation. move=>A/=. cat. Qed.
+Lemma alghom_id A: is_alghom A.
+Proof. cbn. cat. Qed.
+HB.instance Definition _ A := IsAlghom.Build 𝐂 F A A A (alghom_id A).
+Definition Alghom_id {A}: Alghom A A := A. 
 
-Program Definition Alghom_comp (A B C: Algebra F) (f: A ~> B) (g: B ~> C): A ~> C :=
-  mk_alghom (f \; g) _. 
-Next Obligation. move=>A B C f g/=. rewrite Fcomp. do 2 arewrite algP. cat. Qed.
+Lemma alghom_comp A B C (f: Alghom A B) (g: Alghom B C): is_alghom (f \; g).
+Proof. cbn. rewrite Fcomp. do 2 arewrite alghomP. cat. Qed.
+HB.instance Definition _ A B C (f g: Alghom _ _) := IsAlghom.Build 𝐂 F A C (f \; g) (@alghom_comp A B C f g).
+Definition Alghom_comp {A B C} (f g: Alghom _ _): Alghom A C := @comp _ A B C f g. 
 
-HB.instance Definition _ := IsPreCat.Build (Algebra F) Alghom_id Alghom_comp.
+HB.instance Definition _ := IsPreCat.Build (Algebra F) (@Alghom_id) (@Alghom_comp).
 
 Lemma _alg_cat: IsCat (Algebra F).
 Proof.
@@ -61,8 +73,11 @@ Proof.
 Qed.
 HB.instance Definition _ := _alg_cat.
 
-Definition Alghom_self (A: Algebra F): algebra_ (Fhom F (alg A)) ~> A :=
-  mk_alghom (alg A) eqv_refl. 
+Definition algnext A := F A.
+HB.instance Definition _ A := IsAlgebra.Build 𝐂 F (algnext A) (Fhom F (alg A)).
+Definition algnexthom A: algnext A ~>_𝐂 A := alg A.
+HB.instance Definition _ A := IsAlghom.Build 𝐂 F (algnext A) A (algnexthom A) eqv_refl.
+Definition algnexthom_ A: Alghom (algnext A) A := algnexthom A.
 
 (** ** co Lambek Lemma *)
 
@@ -70,7 +85,7 @@ Section colambek.
   (* TODO: improve insertion of coercions INITIAL.sort and Alghom_sort *)
   Variable A: Initial (Algebra F).
   Abbreviation A' := (INITIAL.sort A). 
-  Let FA: Algebra F := algebra_ (Fhom F (alg A')).
+  Abbreviation FA := (algnext A': Algebra F). 
   Let b: A' ~> FA := init A FA.
   (*
 FA -Fb-> FFA -Fa-> FA
@@ -78,11 +93,11 @@ FA -Fb-> FFA -Fa-> FA
 V        V         V
 A --b--> FA --a--> A
    *)
-  Let ba: Alghom_sort b \; alg A' ≡ idmap.
-  Proof. exact: (initU (b \; Alghom_self A') (Alghom_id _)). Qed.
-  Let ab: alg A' \; Alghom_sort b  ≡ idmap.
-  Proof. rewrite -algP-Fcomp ba. cat. Qed.
-  HB.instance Definition _ := @IsIso.Build _ _ _ (alg A') (Alghom_sort b) ba ab. 
+  Let ba: ALGHOM.sort b \; alg A' ≡ idmap.
+  Proof. exact: (initU (b \; algnexthom_ A') idmap). Qed.
+  Let ab: alg A' \; b  ≡ idmap.
+  Proof. rewrite -alghomP-Fcomp ba. cat. Qed.
+  HB.instance Definition _ := @IsIso.Build _ _ _ (alg A') b ba ab. 
 End colambek.
 Check fun A: Initial (Algebra F) => alg (INITIAL.sort A): Iso _ _. 
 

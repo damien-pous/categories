@@ -50,10 +50,10 @@ Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop (A: ob C): Coalgebra 
 
 Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: _ ~> _.
 Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: Coalghom _ _.
-Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => Alghomop f: Coalghom _ _.
-Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => morphop f: Coalghom _ _.
+Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => morphop f: Coalghom _ _.
+Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => morphop f: Coalghom _ _.
 Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => morphop f: _ ~>_(Coalgebra _) _.
-Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => (morphop f: Coalghom _ _): _ ~> _.
+Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => (morphop f: Coalghom _ _): _ ~> _.
 
 Section s.
   Context {C: Cat} (F: Functor C C).
