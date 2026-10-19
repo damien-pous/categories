@@ -117,6 +117,26 @@ Proof.
 Qed.
 HB.instance Definition _ := _setoid_list_functor.
 
+
+(** power functor *)
+(* TODO: integrate into closedness / do families instead *)
+
+Section s.
+Variable A: Setoid.
+Definition setoid_power (X: Setoid): Setoid := A -eqv-> X. 
+HB.instance Definition _ :=
+  IsBarePreFunctor.Build Setoid Setoid setoid_power (fun _ _ f => mk_ext (setoid_comp f) _).
+Lemma _setoid_power_prefunctor: IsPreFunctor' _ _ setoid_power.
+Proof. split=> B C f g fg. cbn=>h a. exact: fg. Qed.
+HB.instance Definition _ := _setoid_power_prefunctor.
+Lemma _setoid_power_functor: IsFunctor _ _ setoid_power.
+Proof. by split; cbn. Qed.
+HB.instance Definition _ := _setoid_power_functor.
+End s.
+
+
+(** ** (co)Cartesian structure of setoids *)
+
 (** initial object in setoids *)
 
 Definition empty_setoid: Setoid := False.
