@@ -79,13 +79,17 @@ Definition algnexthom A: algnext A ~>_𝐂 A := alg A.
 HB.instance Definition _ A := IsAlghom.Build 𝐂 F (algnext A) A (algnexthom A) eqv_refl.
 Definition algnexthom_ A: Alghom (algnext A) A := algnexthom A.
 
-(** ** co Lambek Lemma *)
+(** ** initial algebras *)
 
-Section colambek.
+Section initial_algebra.
   (* TODO: improve insertion of coercions INITIAL.sort and Alghom_sort *)
   Variable A: Initial (Algebra F).
+
   Abbreviation A' := (INITIAL.sort A). 
   Abbreviation FA := (algnext A': Algebra F). 
+
+  (** ** Lambek's Lemma *)
+  
   Let b: A' ~> FA := init A FA.
   (*
 FA -Fb-> FFA -Fa-> FA
@@ -97,10 +101,51 @@ A --b--> FA --a--> A
   Proof. exact: (initU (b \; algnexthom_ A') idmap). Qed.
   Let ab: alg A' \; b  ≡ idmap.
   Proof. rewrite -alghomP-Fcomp ba. cat. Qed.
-  HB.instance Definition _ := @IsIso.Build _ _ _ (alg A') b ba ab. 
-End colambek.
+  HB.instance Definition _ := @IsIso.Build _ _ _ (alg A') b ba ab.
+
+
+  Definition rec_ (X: Algebra F): A' ~> X := init _ X.
+  Definition rec (X: Algebra F): A' ~>_𝐂 X := rec_ X.
+  Lemma recE X: alg A' \; rec X ≡ Fhom F (rec X)\; alg X.
+  Proof. symmetry. exact: alghomP. Qed.
+  Lemma rec_comp (X Y: Algebra F) (f: X ~> Y): rec X \; f ≡ rec Y.
+  Proof. change (rec_ X \; f ≡ rec_ Y). exact: initU. Qed.
+  Corollary rec_eqv (X: ob 𝐂) (f g: F X ~> X): f ≡ g -> rec (algebra f) ≡ rec (algebra g).
+  Proof.
+    intro fg.
+    unshelve eset (i:= @alghom_ _ _ (algebra f) (algebra g) idmap _). cbn; cat. 
+    rewrite -(rec_comp i). cbn; rewrite /alghom. cat. 
+  Qed.
+  
+End initial_algebra.
 Check fun A: Initial (Algebra F) => alg (INITIAL.sort A): Iso _ _. 
 
 End s.
 
+(** transporting algebras along natural transformations *)
+(* TODO: we should actually transport along adjunctions *)
+Definition transport_alg {𝐂: PreCat} {F G} (i: @NTX 𝐂 𝐂 F G) (X: Algebra G): Algebra F :=
+  algebra (i X \; alg X).
 
+Section i.
+  Context {𝐂: Cat} (F G: Functor 𝐂 𝐂) (i: F ≃ G).
+  (** transporting algebras along natural isomorphisms preserve initiality *)
+  Lemma initial_transport (A: Algebra G) (H: initial A): initial (transport_alg i¹ A).
+    move=>/=X.
+    move: (H (transport_alg i⁻¹ X)).
+    unshelve apply: unique_impl=>/=.
+    - move=>f. unshelve apply: alghom_.
+      apply f. cbn.
+      (* TO FIXRW *)
+      rewrite -compoA (natural (inv i)) compoA (alghomP (s:=f))=>/=. cbn.
+      rewrite -compoA. apply: comp_eqv=>//.
+      rewrite -compoA. setoid_rewrite (invKl i A). cbn. cat.
+    - move=>f. unshelve apply: alghom_.
+      apply f. cbn. sorry.      (* TODO, fine, waiting since this could be done differently *)
+    done.
+  Qed.
+  
+  HB.instance Definition _ (A: Initial (Algebra G)) :=
+    IsInitial.Build (Algebra F) (transport_alg i¹ (INITIAL.sort A))
+      (initial_transport initialP). 
+End i.
