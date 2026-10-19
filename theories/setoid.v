@@ -1,6 +1,7 @@
 (** * the category of setoids *)
 
-Require Import cat morphisms.
+Require Import functor.
+From Stdlib Require Import List.
 
 Local Open Scope cat_scope.
 
@@ -12,7 +13,7 @@ Local Open Scope cat_scope.
  *)
 Unset Universe Checking.
 
-
+(** ** the category of setoids *)
 
 HB.instance Definition _ := IsQuiver.Build Setoid.type setoid_morphism.type.
 HB.instance Definition _ := IsPreCat.Build Setoid.type (fun _ => setoid_id) (fun _ _ _ f g => setoid_comp g f).
@@ -64,3 +65,52 @@ Proof. exact/setoid_is_mono/monoP. Qed.
 Lemma setoid_epi [A B: Setoid.type] (f: A ↠ B): surjective (EPI.sort f).
 Proof. exact/setoid_is_epi/epiP. Qed.
 
+
+(** ** concrete functors in setoids *)
+
+(** option functor *)
+Definition setoid_option (A: Setoid.type): Setoid.type := option A. 
+Lemma _setoid_option_map (A B: Setoid.type) (f: A-eqv->B):
+  isExtensional _ _ (option_map f).
+Proof. split. move=>[a|][a'|]//=. exact: (extensional f). Qed.
+HB.instance Definition _ A B f := @_setoid_option_map A B f.
+Definition setoid_option_map (A B: Setoid.type) (f: A-eqv->B): setoid_option A -eqv-> setoid_option B :=
+  option_map f.
+
+HB.instance Definition _ :=
+  IsBarePreFunctor.Build Setoid.type Setoid.type setoid_option setoid_option_map. 
+Lemma _setoid_option_prefunctor: IsPreFunctor' _ _ setoid_option.
+Proof. split. cbn=> A B f g fg [a|]//=. exact: fg. Qed.
+HB.instance Definition _ := _setoid_option_prefunctor.
+Lemma _setoid_option_functor: IsFunctor _ _ setoid_option.
+Proof.
+  split.
+  - by cbn=>A[a|]. 
+  - by cbn=>A B C f g [a|].
+Qed.
+HB.instance Definition _ := _setoid_option_functor.
+
+(** list functor *)
+Definition setoid_list (A: Setoid.type): Setoid.type := list A. 
+Lemma _setoid_list_map (A B: Setoid.type) (f: A-eqv->B):
+  isExtensional _ _ (List.map f).
+Proof.
+  split. elim=>[|a p IH][|b q]//=.
+  move=>[??]. split=>//. exact: (extensional f). exact: IH.
+Qed.
+HB.instance Definition _ A B f := @_setoid_list_map A B f.
+Definition setoid_list_map (A B: Setoid.type) (f: A-eqv->B): setoid_list A -eqv-> setoid_list B :=
+  List.map f.
+
+HB.instance Definition _ :=
+  IsBarePreFunctor.Build Setoid.type Setoid.type setoid_list setoid_list_map. 
+Lemma _setoid_list_prefunctor: IsPreFunctor' _ _ setoid_list.
+Proof. split. cbn=> A B f g fg. by elim=>[|a p IH]. Qed.
+HB.instance Definition _ := _setoid_list_prefunctor.
+Lemma _setoid_list_functor: IsFunctor _ _ setoid_list.
+Proof.
+  split.
+  - cbn=>A. by elim. 
+  - cbn=>A B C f g. by elim.
+Qed.
+HB.instance Definition _ := _setoid_list_functor.
