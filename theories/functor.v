@@ -425,6 +425,24 @@ Definition functor_cst {𝐂 𝐃: Cat} (D: 𝐃): 𝐂 ≈> 𝐃 := cst D: Func
 HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp). 
 *)
 
+(** projections functors *)
+HB.instance Definition _ (𝐂 𝐃: BareQuiver) := IsBarePreFunctor.Build (𝐂∧𝐃) 𝐂 fst (fun _ _ => fst).
+HB.instance Definition _ (𝐂 𝐃: Quiver) := IsPreFunctor'.Build (𝐂∧𝐃) 𝐂 fst (fun _ _ _ _ => fst).
+Lemma _fst_functor (𝐂 𝐃: PreCat): IsFunctor (𝐂∧𝐃) 𝐂 fst.
+Proof. split; done. Qed.
+HB.instance Definition _ 𝐂 𝐃 := @_fst_functor 𝐂 𝐃.
+
+HB.instance Definition _ (𝐂 𝐃: BareQuiver) := IsBarePreFunctor.Build (𝐂∧𝐃) 𝐃 snd (fun _ _ => snd).
+HB.instance Definition _ (𝐂 𝐃: Quiver) := IsPreFunctor'.Build (𝐂∧𝐃) 𝐃 snd (fun _ _ _ _ => snd).
+Lemma _snd_functor (𝐂 𝐃: PreCat): IsFunctor (𝐂∧𝐃) 𝐃 snd.
+Proof. split; done. Qed.
+HB.instance Definition _ 𝐂 𝐃 := @_snd_functor 𝐂 𝐃.
+
+HB.instance Definition _ I (𝐂: I -> BareQuiver) i := IsBarePreFunctor.Build (forall i, 𝐂 i) (𝐂 i) (app i) (fun _ _ => app i).
+HB.instance Definition _ I (𝐂: I -> Quiver) i := IsPreFunctor'.Build (forall i, 𝐂 i) (𝐂 i) (app i) (fun _ _ _ _ => app i).
+Lemma _app_functor I (𝐂: I -> PreCat) i: IsFunctor (forall i, 𝐂 i) (𝐂 i) (app i).
+Proof. split; done. Qed.
+HB.instance Definition _ I 𝐂 i := @_app_functor I 𝐂 i.
 
 
 (** * Natural transformations *)
@@ -578,6 +596,11 @@ Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 �
   (n: F ~> G) (m: F' ~> G'): (functor_comp F F') ~> (functor_comp G G') :=
   (ntx_comp'_ n m: NTX _ _). 
 Notation "h ⊚ k" := (ntx_comp' k h): cat_scope. (* TODO: reverse this notation! *)
+
+
+(* TODO: un/currying  *)
+(* HB.instance Definition _ (C D: Quiver) (E: PreCat) (F: PreFunctor (C∧D) E) := *)
+(*   IsBarePreFunctor.Build C (PreFunctor D E) curry _.  *)
 
 
 
