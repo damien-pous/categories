@@ -25,21 +25,21 @@ theories/setoid.v                          # the category of setoids (strangely 
 theories/bicat.v                           # bicategories
 theories/cat_bicat.v                       # Cat: BiCat (needs universe polymorphism, hence type:type for now)
 
-# below: compiles but to be evolved
+## below: compiles but to be evolved
 theories/cone.v                            # cones for generic limits
 theories/cast.v                            # casting operations
 theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors
 theories/cartesian.v                       # (co)cartesian monoidal categories
 
-# below: to be ported
-theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
-theories/span_duality.v                    # hierarchy of objects
-theories/monoidal_maclane.v                # MacLane theorem for monoidal categories
-theories/monoidal_gmaclane.v               # extended MacLane theorem + inferrence of MacLane isomorphisms
-theories/monoidal_tactic.v                 # decision procedure for monoidal cats
-theories/monoidal.v                        # user-end module for monoidal cats
-theories/monoidal_examples.v               # example: composing monoids
+## below: to be ported
+# theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
+# theories/span_duality.v                    # hierarchy of objects
+# theories/monoidal_maclane.v                # MacLane theorem for monoidal categories
+# theories/monoidal_gmaclane.v               # extended MacLane theorem + inferrence of MacLane isomorphisms
+# theories/monoidal_tactic.v                 # decision procedure for monoidal cats
+# theories/monoidal.v                        # user-end module for monoidal cats
+# theories/monoidal_examples.v               # example: composing monoids
 
 -R tests/ CategoriesTests
 tests/coercions.v			   # tests for the coercion setup
