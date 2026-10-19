@@ -158,7 +158,7 @@ HB.instance Definition _ := IsCat.Build Cat1
                               (fun _ _ _ _ _ _ _ => erefl)
                               (fun _ _ _ _ _ _ _ _ _ => erefl).
 
-(** ** product of categories *)
+(** ** binary product of categories *)
 HB.instance Definition _ (𝐂 𝐃: BareQuiver) := IsBareQuiver.Build (𝐂∧𝐃)
     (fun A B => (A.1 ~> B.1) ∧ (A.2 ~> B.2)). 
 HB.instance Definition _ (𝐂 𝐃: Quiver) := IsQuiver.Build (𝐂∧𝐃)
@@ -166,12 +166,33 @@ HB.instance Definition _ (𝐂 𝐃: Quiver) := IsQuiver.Build (𝐂∧𝐃)
 HB.instance Definition _ (𝐂 𝐃: PreCat) := IsPreCat.Build (𝐂∧𝐃)
     (fun A => (idmap,idmap))
     (fun A B C f g => (g.1 ∘ f.1, g.2 ∘ f.2)).
-Program Definition _prod_cat (𝐂 𝐃: Cat) := IsCat.Build (𝐂∧𝐃) _ _ _ _. 
-Next Obligation. split; apply: comp1o. Qed.
-Next Obligation. split; apply: compo1. Qed.
-Next Obligation. split; apply: compoA. Qed.
-Next Obligation. move=>*??[??]??[??]. split=>/=; exact: comp_eqv. Qed.
+Lemma _prod_cat (𝐂 𝐃: Cat) : IsCat (𝐂∧𝐃).
+Proof.
+  split.
+  - split; exact: comp1o.
+  - split; exact: compo1. 
+  - split; exact: compoA.
+  - move=>?????[??]??[??]. split=>/=; exact: comp_eqv.
+Qed.
 HB.instance Definition _ 𝐂 𝐃 := _prod_cat 𝐂 𝐃.
+
+(** ** dependent product of categories *)
+HB.instance Definition _ I (𝐂: I -> BareQuiver) := IsBareQuiver.Build (forall i, 𝐂 i)
+    (fun A B => forall i, (A i ~> B i)). 
+HB.instance Definition _ I (𝐂: I -> Quiver) := IsQuiver.Build (forall i, 𝐂 i)
+    (fun A B => forall i, (A i ~> B i)). 
+HB.instance Definition _ I (𝐂: I -> PreCat) := IsPreCat.Build (forall i, 𝐂 i)
+    (fun A i => idmap)
+    (fun A B C f g i => f i \; g i).
+Lemma _dprod_cat I (𝐂: I -> Cat): IsCat (forall i, 𝐂 i).
+Proof.
+  split. 1,2,3: repeat intro. 
+  - exact: comp1o.
+  - exact: compo1. 
+  - exact: compoA.
+  - intros ????? H?? H' i; apply: comp_eqv. exact: H. exact: H'.
+Qed.
+HB.instance Definition _ I 𝐂 := @_dprod_cat I 𝐂.
 
 (** ** initial objects *)
 Definition initial {𝐂: Quiver} (x: ob 𝐂) := forall y, unique (x ~> y).
