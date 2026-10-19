@@ -94,18 +94,11 @@ Existing Instance comp_eqv.
 Lemma compoA' {𝐂: Cat} {a b c d: ob 𝐂} (f: a ~> b) (g: b ~> c) (h: c ~> d): f \; (g \; h) ≡ (f \; g) \; h.
 Proof. symmetry. exact/compoA. Qed.
 
-(** TOFIX: UGLY FIXES for setoid_rewrite (look for occurrences of FIXRW for places that fail without this hack) *)
-(* Lemma comp_eqv_fix {𝐂: Cat} (a b c: ob 𝐂) (f: a ~> b): Proper (eqv ==> eqv) (@comp _ a b c f). *)
-(* Proof. intros ???. exact/comp_eqv. Qed. *)
-(* Hint Extern 0 (Proper _ comp) => exact/comp_eqv : typeclass_instances. *)
-(* Hint Extern 0 (Proper _ (comp _)) => exact/comp_eqv_fix : typeclass_instances. *)
-(* Hint Extern 0 (@ProperProxy _ eqv _) => exact/eqv_refl : typeclass_instances. *)
-
 (** rewriting tuple *)
 Definition cats := (@compo1, @comp1o, @compoA)%core.
 
 (** the category of setoids and extensional functions  *)
-(** disabled for now for lack of universe polymorphism  *)
+(** disabled for now for lack of universe polymorphism, see setoid.v *)
 (* HB.instance Definition _ := IsQuiver.Build Setoid.type setoid_morphism.type. *)
 (* HB.instance Definition _ := IsPreCat.Build Setoid.type (fun _ => setoid_id) (fun _ _ _ f g => setoid_comp g f). *)
 (* Lemma _setoid_cat: IsCat Setoid.type. *)

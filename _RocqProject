@@ -19,13 +19,14 @@ theories/product.v                         # products
 theories/coproduct.v                       # coproducts
 theories/pullback.v                        # pullbacks
 theories/pushout.v                         # pushouts
+theories/algebra.v                         # algebras
+theories/coalgebra.v                       # coalgebras
 theories/setoid.v                          # the category of setoids (strangely needs universe polymorphism, hence type:type for now)
 theories/bicat.v                           # bicategories
 theories/cat_bicat.v                       # Cat: BiCat (needs universe polymorphism, hence type:type for now)
 
 # below: compiles but to be evolved
 theories/cone.v                            # cones for generic limits
-theories/algebra.v                         # (co)algebras
 theories/cast.v                            # casting operations
 theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors

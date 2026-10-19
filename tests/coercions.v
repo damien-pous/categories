@@ -1,4 +1,4 @@
-Require Import cat functor morphisms algebra.
+Require Import cat functor morphisms coalgebra.
 
 Local Open Scope cat_scope.
 
@@ -35,24 +35,25 @@ Check fun (C: Quiver) (A: Initial C) => obop A: Terminal (C^op).
 Check fun (C: PreCat) (A: Initial C) => obop A: Terminal (C^op).
 Check fun (C: Cat) (A: Initial C) => obop A: Terminal (C^op).
 
-Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => C^op: Quiver.  
-Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => funcop F: C^op -> C^op.  
-Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: C^op.
-Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: Algebra _.  
-Check fun (C: Quiver) (F: ob C -> ob C) (A: Algebra F) => obop A: CoAlgebra _.  
+Check fun (C: Quiver) (F: ob C -> ob C) (A: Coalgebra F) => C^op: Quiver.  
+Check fun (C: Quiver) (F: ob C -> ob C) (A: Coalgebra F) => funcop F: C^op -> C^op.  
+Check fun (C: Quiver) (F: ob C -> ob C) (A: Coalgebra F) => obop A: C^op.
+Check fun (C: Quiver) (F: ob C -> ob C) (A: Coalgebra F) => obop A: Algebra _.  
+Check fun (C: Quiver) (F: ob C -> ob C) (A: Algebra F) => obop A: Coalgebra _.  
 
-Fail Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.  
-Fail Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.  
-Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: ob (CoAlgebra F)^op.  
+Fail Check fun (C: Cat) (F: Functor C C) (A: Coalgebra F) => obop A: Algebra _.  
+Fail Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: Coalgebra _.  
+Check fun (C: Cat) (F: Functor C C) (A: Coalgebra F) => obop A: ob (Coalgebra F)^op.  
 Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: ob (Algebra F)^op.  
-Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop (A: ob C): Algebra _.  
-Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop (A: ob C): CoAlgebra _.  
+Check fun (C: Cat) (F: Functor C C) (A: Coalgebra F) => obop (A: ob C): Algebra _.  
+Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop (A: ob C): Coalgebra _.  
 
 Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: _ ~> _.
-Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: CoAlgebraHom _ _.
-Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: CoAlgebraHom _ _.
-Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: _ ~>_(CoAlgebra _) _.
-Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => (morphop f: CoAlgebraHom _ _): _ ~> _.
+Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: Coalghom _ _.
+Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => Alghomop f: Coalghom _ _.
+Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => morphop f: Coalghom _ _.
+Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => morphop f: _ ~>_(Coalgebra _) _.
+Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: Alghom A B) => (morphop f: Coalghom _ _): _ ~> _.
 
 Section s.
   Context {C: Cat} (F: Functor C C).

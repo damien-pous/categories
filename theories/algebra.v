@@ -1,120 +1,57 @@
-(** (co)algebras  *)
+(** * algebras *)
 
 Require Export functor.
 Require Import arewrite.
 
 Local Open Scope cat_scope.
 
-(** * (co)algebras *)
+(** ** algebras *)
 
 #[primitive]
-HB.mixin Record IsAlgebra {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂) := {
+HB.mixin Record IsAlgebra {𝐂: BareQuiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂) := {
     #[canonical=no] alg: F A ~> A;
   }.
 #[short(type="Algebra")]
-HB.structure Definition algebra 𝐂 F := { A of IsAlgebra 𝐂 F A }.
-Arguments alg {_ _ _}, {_ _}. 
+HB.structure Definition ALGEBRA 𝐂 F := { A of IsAlgebra 𝐂 F A }.
+Arguments alg {_ _ _}, {_ _}.
+Section s.
+Context {𝐂: BareQuiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂).
+Definition algebra (a: F A ~> A) := A.
+HB.instance Definition _ a := @IsAlgebra.Build 𝐂 F (algebra a) a.
+Definition algebra_ a: Algebra F := algebra a.
+End s.
 
-#[primitive]
-HB.mixin Record IsCoAlgebra {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂) := {
-    #[canonical=no] coalg: A ~> F A;
-  }.
-#[short(type="CoAlgebra")]
-HB.structure Definition coalgebra 𝐂 F := { A of IsCoAlgebra 𝐂 F A }.
-Arguments coalg {_ _ _}, {_ _}. 
+(** ** algebras morphisms *)
 
-HB.instance Definition _ {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: Algebra F) :=
-  IsCoAlgebra.Build (𝐂^op) (funcop F) (obop A) (alg A).
-HB.instance Definition _ {𝐂: Quiver} (F: ob 𝐂 -> ob 𝐂) (A: CoAlgebra F) :=
-  IsAlgebra.Build (𝐂^op) (funcop F) (obop A) (coalg A).
+Section s.
+Context {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F).
+Definition alghom (f: A ~> B) := Fhom F f \; alg B ≡ alg A \; f.
+Definition Alghom := sig alghom. 
+Coercion Alghom_sort (f: Alghom): A ~> B := sval f.
+Definition mk_alghom (f: A ~> B): alghom f -> Alghom := exist _ f. 
+Definition algP (f: Alghom): alghom f := proj2_sig f.
+End s.
+Arguments Alghom {_ _}.
+Arguments alghom {_} [_ _ _] _/.
+Arguments mk_alghom {_} [_ _ _] &_ _.
+HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (Algebra F) Alghom.
 
-(* Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => C^op: Quiver.   *)
-(* Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => funcop F: C^op -> C^op.   *)
-(* Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: C^op. *)
-(* Check fun (C: Quiver) (F: ob C -> ob C) (A: CoAlgebra F) => obop A: Algebra _.   *)
-(* Check fun (C: Quiver) (F: ob C -> ob C) (A: Algebra F) => obop A: CoAlgebra _.   *)
-(* Check fun (C: PreCat) (F: PreFunctor C C) (A: CoAlgebra F) => obop A: Algebra _.   *)
-(* Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.   *)
-(* Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.   *)
+(** ** the category of algebras *)
 
+Section s.
+Context {𝐂: Cat} (F: Functor 𝐂 𝐂).
 
-(* TOTHINK: do we really want to infer algebra homomorphisms, or just define them? *)
-#[primitive]
-HB.mixin Record IsAlgebraHom {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F) (f: A ~> B) := {
-    #[canonical=no] alg_hom: Fhom F f \; alg B ≡ alg A \; f;
-  }.
-#[short(type="AlgebraHom")]
-HB.structure Definition algebrahom 𝐂 F A B := { f of IsAlgebraHom 𝐂 F A B f }.
-Arguments alg_hom {_ _ _ _ _}, {_ _ _ _}. 
-Arguments AlgebraHom {_ _}, {_}. 
+Program Definition Alghom_id (A: Algebra F): A ~> A :=
+  mk_alghom idmap _. 
+Next Obligation. move=>A/=. cat. Qed.
 
-#[primitive]
-HB.mixin Record IsCoAlgebraHom {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: CoAlgebra F) (f: A ~> B) := {
-    #[canonical=no] coalg_hom: coalg A \; Fhom F f ≡ f \; coalg B;
-  }.
-#[short(type="CoAlgebraHom")]
-HB.structure Definition coalgebrahom 𝐂 F A B := { f of IsCoAlgebraHom 𝐂 F A B f }.
-Arguments coalg_hom {_ _ _ _ _}, {_ _ _ _}. 
-Arguments CoAlgebraHom {_ _}, {_}. 
+Program Definition Alghom_comp (A B C: Algebra F) (f: A ~> B) (g: B ~> C): A ~> C :=
+  mk_alghom (f \; g) _. 
+Next Obligation. move=>A B C f g/=. rewrite Fcomp. do 2 arewrite algP. cat. Qed.
 
-HB.instance Definition _ 𝐂 F A B := Setoid.copy (AlgebraHom F A B) (kernel (@algebrahom.sort 𝐂 F A B)).
-HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (Algebra F) AlgebraHom.
+HB.instance Definition _ := IsPreCat.Build (Algebra F) Alghom_id Alghom_comp.
 
-HB.instance Definition _ 𝐂 F A B := Setoid.copy (CoAlgebraHom F A B) (kernel (@coalgebrahom.sort 𝐂 F A B)).
-HB.instance Definition _ (𝐂: PreCat) (F: PreFunctor 𝐂 𝐂) := IsQuiver.Build (CoAlgebra F) CoAlgebraHom.
-
-(* with the above instances, obop A is seen as an object in the dual of the Coalgebra category *)
-(* Fail Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: Algebra _.   *)
-(* Fail Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: CoAlgebra _.   *)
-(* Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop A: ob (CoAlgebra F)^op.   *)
-(* Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop A: ob (Algebra F)^op.   *)
-(* Check fun (C: Cat) (F: Functor C C) (A: CoAlgebra F) => obop (A: ob C): Algebra _.   *)
-(* Check fun (C: Cat) (F: Functor C C) (A: Algebra F) => obop (A: ob C): CoAlgebra _.   *)
-
-HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: Algebra F) (f: AlgebraHom A B) :=
-  IsCoAlgebraHom.Build (𝐂^op) (funcop F) _ _ (morphop f) (alg_hom f).
-HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) (A B: CoAlgebra F) (f: CoAlgebraHom A B) :=
-  IsAlgebraHom.Build (𝐂^op) (funcop F) _ _ (morphop f) (coalg_hom f).
-
-(* Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: _ ~> _. *)
-(* Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: A ~> B) => morphop f: CoAlgebraHom _ _. *)
-(* Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: CoAlgebraHom _ _. *)
-(* Fail Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => morphop f: _ ~>_(CoAlgebra _) _. *)
-(* Check fun (C: Cat) (F: Functor C C) (A B: Algebra F) (f: AlgebraHom A B) => (morphop f: CoAlgebraHom _ _): _ ~> _. *)
-
-Lemma alg_hom_idmap (𝐂: Cat) (F: Functor 𝐂 𝐂) (A: Algebra F): Fhom F A \; alg A ≡ alg A \; A. 
-Proof. cat. Qed.
-HB.instance Definition _ 𝐂 F A := IsAlgebraHom.Build _ _ A A idmap (@alg_hom_idmap 𝐂 F A).
-
-Lemma alg_hom_comp (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: Algebra F) (f: A ~> B) (g: B ~> C):
-  Fhom F (f \; g) \; alg C ≡ alg A \; (f \; g). 
-Proof. rewrite Fcomp. do 2 arewrite alg_hom. cat. Qed.
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: Algebra F) (f: A ~> B) (g: B ~> C) :=
-  IsAlgebraHom.Build _ _ A C (f \; g) (@alg_hom_comp 𝐂 F A B C f g).
-
-(* TOTHINK: set arguments so that they always unfold? *)
-Definition alg_id {𝐂: Cat} {F: Functor 𝐂 𝐂} (A: Algebra F): A ~> A := idmap: AlgebraHom _ _. 
-Definition alg_comp {𝐂: Cat} {F: Functor 𝐂 𝐂} (A B C: Algebra F) (f: A ~> B) (g: B ~> C): A ~> C := f \; g: AlgebraHom _ _. 
-
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) := IsPreCat.Build (Algebra F) alg_id alg_comp.
-
-Lemma coalg_hom_idmap (𝐂: Cat) (F: Functor 𝐂 𝐂) (A: CoAlgebra F): coalg A \; Fhom F A ≡ A \; coalg A. 
-Proof. exact: (alg_hom_idmap (obop (A: ob 𝐂))). Qed.
-HB.instance Definition _ 𝐂 F A := IsCoAlgebraHom.Build _ _ A A idmap (@coalg_hom_idmap 𝐂 F A).
-
-Lemma coalg_hom_comp (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: CoAlgebra F) (f: A ~> B) (g: B ~> C):
-  coalg A \; Fhom F (f \; g) ≡ (f \; g) \; coalg C. 
-Proof. exact: (alg_hom_comp (morphop (coalgebrahom.sort g): AlgebraHom _ _) (morphop (coalgebrahom.sort f): AlgebraHom _ _)). Qed.
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) (A B C: CoAlgebra F) (f: A ~> B) (g: B ~> C) :=
-  IsCoAlgebraHom.Build _ _ A C (f \; g) (@coalg_hom_comp 𝐂 F A B C f g).
-
-(* TOTHINK: set arguments so that they always unfold? *)
-Definition coalg_id {𝐂: Cat} {F: Functor 𝐂 𝐂} (A: CoAlgebra F): A ~> A := idmap: CoAlgebraHom _ _. 
-Definition coalg_comp {𝐂: Cat} {F: Functor 𝐂 𝐂} (A B C: CoAlgebra F) (f: A ~> B) (g: B ~> C): A ~> C := f \; g: CoAlgebraHom _ _. 
-
-HB.instance Definition _ (𝐂: Cat) (F: Functor 𝐂 𝐂) := IsPreCat.Build (CoAlgebra F) coalg_id coalg_comp.
-
-Lemma _coalg_cat (𝐂: Cat) (F: Functor 𝐂 𝐂): IsCat (CoAlgebra F).
+Lemma _alg_cat: IsCat (Algebra F).
 Proof.
   split; intros.
   - exact/comp1o. 
@@ -122,4 +59,33 @@ Proof.
   - exact/compoA.
   - move=>??????. exact/comp_eqv.
 Qed.
-HB.instance Definition _ 𝐂 F := @_coalg_cat 𝐂 F.
+HB.instance Definition _ := _alg_cat.
+
+Definition Alghom_self (A: Algebra F): algebra_ (Fhom F (alg A)) ~> A :=
+  mk_alghom (alg A) eqv_refl. 
+
+(** ** co Lambek Lemma *)
+
+Section colambek.
+  (* TODO: improve insertion of coercions INITIAL.sort and Alghom_sort *)
+  Variable A: Initial (Algebra F).
+  Abbreviation A' := (INITIAL.sort A). 
+  Let FA: Algebra F := algebra_ (Fhom F (alg A')).
+  Let b: A' ~> FA := init A FA.
+  (*
+FA -Fb-> FFA -Fa-> FA
+|a       |Fa       |a
+V        V         V
+A --b--> FA --a--> A
+   *)
+  Let ba: Alghom_sort b \; alg A' ≡ idmap.
+  Proof. exact: (initU (b \; Alghom_self A') (Alghom_id _)). Qed.
+  Let ab: alg A' \; Alghom_sort b  ≡ idmap.
+  Proof. rewrite -algP-Fcomp ba. cat. Qed.
+  HB.instance Definition _ := @IsIso.Build _ _ _ (alg A') (Alghom_sort b) ba ab. 
+End colambek.
+Check fun A: Initial (Algebra F) => alg (INITIAL.sort A): Iso _ _. 
+
+End s.
+
+

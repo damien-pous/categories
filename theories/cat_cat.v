@@ -13,13 +13,6 @@ Unset Universe Checking.
 HB.instance Definition _ := IsBareQuiver.Build Cat Functor.
 HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp).
 
-Program Definition _cat_cat := IsCat.Build Cat _ _ _ _.
-Next Obligation. split. exact: same_functor. Qed.
-Next Obligation. split. exact: same_functor. Qed.
-Next Obligation. split. exact: same_functor. Qed.
-Next Obligation. intros. exact: functor_comp_eqv. Qed.
-HB.instance Definition _ := _cat_cat.
-
 Definition cat_top: Terminal Cat.
   exists (Cat1: Cat)=>X.
   unshelve eexists=>//.
