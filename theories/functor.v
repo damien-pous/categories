@@ -201,6 +201,7 @@ HB.instance Definition _ 𝐂 𝐃 (F: PreFunctor 𝐂 𝐃) :=
   IsPreContravariantFunctor'.Build 𝐂 𝐃^op (funcop2 F) (@Fhom_eqv _ _ F).
 HB.instance Definition _ 𝐂 𝐃 (F: Functor 𝐂 𝐃) :=
   IsContravariantFunctor.Build 𝐂 𝐃^op (funcop2 F) (fun _ => Fidmap) (fun _ _ _ _ _ => Fcomp _ _). 
+
 HB.instance Definition _ 𝐂 𝐃 (F: BarePreContravariantFunctor 𝐂 𝐃) :=
   IsBarePreFunctor.Build 𝐂 𝐃^op (funcop2 F) (fun _ _ => Fhom' F).
 HB.instance Definition _ 𝐂 𝐃 (F: PreContravariantFunctor 𝐂 𝐃) :=
@@ -420,7 +421,7 @@ HB.instance Definition _ := IsBareQuiver.Build Cat Functor.
 Notation "F ≈> G" := (Functor F G): cat_scope.
 Definition functor_id {𝐂: PreCat}: 𝐂 ≈> 𝐂 := idfun: Functor 𝐂 𝐂.
 Definition functor_comp {𝐂 𝐃 𝐄: PreCat} (F: 𝐂 ≈> 𝐃) (G: 𝐃 ≈> 𝐄): 𝐂 ≈> 𝐄 := catcomp F G: Functor _ _.
-Definition functor_cst {𝐂 𝐃: Cat} (D: 𝐃): 𝐂 ≈> 𝐃 := cst D: Functor _ _.
+Definition functor_cst {𝐂} {𝐃: Cat} (D: 𝐃): 𝐂 ≈> 𝐃 := cst D: Functor _ _.
 (*TMP-UNIV
 HB.instance Definition _ := IsPreCat.Build Cat (@functor_id) (@functor_comp). 
 *)
@@ -1149,14 +1150,15 @@ Proof.
   apply: comp_eqv. apply: Fhom_eqv. exact: ii. exact: jj. 
 Qed.
 
-(* Lemma functor_comp_eqv: *)
-(*   Proper (eqv ==> eqv ==> eqv) (@functor_comp 𝐂 𝐃 𝐄). *)
-(* Proof. *)
-(*   intros F G [i] F' G' [j]. split.   *)
-(*   apply: (mk_iso' (j⊚ i) (j⁻¹⊚i⁻¹) _ _). *)
-(*   rewrite endo_exchange. *)
-(*   etransitivity. exact: (ntx_comp'_eqv (invKl i) (invKl j)). by rewrite -ntx_id_comp.  *)
-(*   rewrite endo_exchange. *)
-(*   etransitivity. exact: (ntx_comp'_eqv (invKr i) (invKr j)). by rewrite -ntx_id_comp.  *)
-(* Qed. *)
+Import CMorphisms.
+Lemma functor_comp_iso:
+  Proper (functor_equiv ==> functor_equiv ==> functor_equiv) (@functor_comp 𝐂 𝐃 𝐄).
+Proof.
+  intros F G i F' G' j. 
+  apply: (iso_ (j⊚ i) (j⁻¹⊚i⁻¹) _ _).
+  abstract (rewrite endo_exchange; etransitivity;
+            [exact: (ntx_comp'_eqv (invKl i) (invKl j)) | by rewrite -ntx_id_comp]).
+  abstract (rewrite endo_exchange; etransitivity;
+            [exact: (ntx_comp'_eqv (invKr i) (invKr j)) | by rewrite -ntx_id_comp]).
+Defined.
 End strict.

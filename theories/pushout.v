@@ -55,6 +55,7 @@ Proof. move=>z. exact: (P.2 z in1 in2 squareBelow). Defined.
 Lemma initial_pushout H: initial (@square_below_ 𝐂 a b x y f g i j H) -> is_pushout.
 Proof. move=>T. split=>//z i' j' H'; exact: (T (square_below_ H')). Defined.
 End s.
+Arguments is_pushout {_} [_ _ _ _] _ _ _ _/.
 
 #[primitive] HB.mixin Record IsPushout 𝐂 a b x f g y of @SQUAREBELOW 𝐂 a b x f g y :=
   {#[canonical=no]pushoutP: @is_pushout 𝐂 a b x y f g in1 in2}.

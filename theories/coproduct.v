@@ -18,7 +18,7 @@ Lemma initial_coproduct: initial (cospan_ i j) -> coproduct.
 Proof. move=>T y i' j'; exact: (T (cospan_ i' j')). Defined.
 
 End s.
-Arguments coproduct {_}.
+Arguments coproduct {_} _ _ _ _ _/.
 
 #[primitive] HB.mixin Record IsCoproduct (𝐂: PreCat) a b x of COSPAN 𝐂 a b x :=
   {#[canonical=no]coproductP: coproduct a b x in1 in2}.
@@ -101,7 +101,7 @@ Proof. exact: CospanH. Qed.
 Lemma copair_ext: copair in1 in2 ≡ x.
 Proof. exact: (pair_ext (obop x)). Qed.
 
-Lemma coprod_ext y (f g: x ~> y): in1 \; f ≡ in1 \; g -> in2 \; f ≡ in2 \; g -> f ≡ g.
+Lemma coprod_ext y (f g: x ~> y): in1 \; f ≡ in1 \; g ∧ in2 \; f ≡ in2 \; g <-> f ≡ g.
 Proof. exact: (prod_ext (x:=obop x)). Qed.
 End s.
 
@@ -158,14 +158,44 @@ Implicit Types a b c d: ob 𝐂.
 
 Definition coprodP a b: coproduct a b (a+b) in1 in2 := coproductP. 
 
-Definition copair' a b c d (f: a~>c) (g: b~>d): a+b ~> c+d := copair (f\;in1) (g\;in2).
+(** [hcoprod] for "coprod" on homsets *)
+Definition hcoprod a b c d (f: a~>c) (g: b~>d): a+b ~> c+d := copair (f\;in1) (g\;in2).
 
-Lemma copair'_id a b: copair' a b ≡ idmap.
-Proof. exact: (@pair'_id 𝐂^op). Qed.
+#[export] Instance coprod_eqv {a b c d}: Proper (eqv ==> eqv ==> eqv) (@hcoprod a b c d).
+Proof. exact: (@prod_eqv 𝐂^op). Qed. 
 
-Lemma copair'_comp a a' a'' b b' b'' (f: a~>a') (f': a'~>a'') (g: b~>b') (g': b'~>b''):
-  copair' (f\;f') (g\;g') ≡ copair' f g \; copair' f' g'.
-Proof. exact: (@pair'_comp 𝐂^op). Qed.
+Lemma coprod_id a b: hcoprod a b ≡ idmap.
+Proof. exact: (@prod_id 𝐂^op). Qed.
+
+Lemma coprod_comp a a' a'' b b' b'' (f: a~>a') (f': a'~>a'') (g: b~>b') (g': b'~>b''):
+  hcoprod (f\;f') (g\;g') ≡ hcoprod f g \; hcoprod f' g'.
+Proof. exact: (@prod_comp 𝐂^op). Qed.
+
+(** [hcoprod] preserves epis (but not monos)
+    as a functor, it also preserves split epis, split monos, and isomorphisms *)
+
+Lemma coprod_epi a a' b b' (f: Epi a a') (g: Epi b b'): is_epi (hcoprod f g).
+Proof. exact: (prod_mono (f:=morphop f) (g:=morphop g)). Qed.
+HB.instance Definition _ a a' b b' (f: Epi a a') (g: Epi b b') :=
+  IsEpi.Build _ _ _ (hcoprod f g) (@coprod_epi _ _ _ _ f g).
+
+HB.instance Definition _ a a' b b' (f: Invertible a a') (g: Invertible b b') :=
+  HasInverseOp.Build _ _ _ (hcoprod f g) (hcoprod f⁻¹ g⁻¹). 
+
+Lemma coprod_splitmono a a' b b' (f: SplitMono a a') (g: SplitMono b b'): has_right_inverse (hcoprod f g).
+Proof. exact: (prod_splitepi (morphop f) (morphop g)). Qed.
+
+HB.instance Definition _ a a' b b' (f: SplitMono a a') (g: SplitMono b b') :=
+  HasRightInverse.Build _ _ _ (hcoprod f g) (@coprod_splitmono _ _ _ _ f g).
+
+Lemma coprod_splitepi a a' b b' (f: SplitEpi a a') (g: SplitEpi b b'): has_left_inverse (hcoprod f g).
+Proof. exact: (prod_splitmono (morphop f) (morphop g)). Qed.
+
+HB.instance Definition _ a a' b b' (f: SplitEpi a a') (g: SplitEpi b b') :=
+  HasLeftInverse.Build _ _ _ (hcoprod f g) (@coprod_splitepi _ _ _ _ f g).
+
+HB.saturate hcoprod.
+Definition coprod_iso a a' b b' (f: a ≃ a') (g: b ≃ b'): a+b ≃ a'+b' := hcoprod f g.
 
 (* Note: could be defined already in PreCatBCoprod *)
 Definition codiag a: a+a ~> a := copair a a.

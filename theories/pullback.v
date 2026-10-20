@@ -7,7 +7,7 @@ Local Open Scope cat_scope.
 
 Definition square (𝐂: PreCat) (a b x y: ob 𝐂) (p: hom x a) (q: hom x b) (i: hom a y) (j: hom b y) :=
   p \; i ≡ q \; j.
-Arguments square {_} [_ _ _ _]/.
+Arguments square {_} [_ _ _ _] _ _ _ _/.
 
 Lemma squareC 𝐂 a b x y f g p q: @square 𝐂 a b x y f g p q -> square g f q p.
 Proof. exact: eqv_sym. Qed.
@@ -49,6 +49,7 @@ Proof. move=>z. exact: (P.2 z pi1 pi2 squareAbove). Defined.
 Lemma terminal_pullback H: terminal (@square_above_ 𝐂 a b x y f g p q H) -> is_pullback.
 Proof. move=>T. split=>//z p' q' H'; exact: (T (square_above_ H')). Defined.
 End s.
+Arguments is_pullback {_} [_ _ _ _] _ _ _ _/.
 
 #[primitive] HB.mixin Record IsPullback 𝐂 a b y f g x of @SQUAREABOVE 𝐂 a b y f g x :=
   {#[canonical=no]pullbackP: @is_pullback 𝐂 a b x y f g pi1 pi2}.

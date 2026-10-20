@@ -37,10 +37,10 @@ Notation "f \;_ 𝐂 g" := (@comp _ 𝐂 _ _ _ f g) (only parsing): cat_scope.
 Notation "f ∘ g" := (comp g f) (only parsing): cat_scope.
 Notation "f ∘_ 𝐂 g" := (@comp _ 𝐂 _ _ _ g f) (only parsing): cat_scope.
 
-(* Check fun C: Cat => fun A: ob C => A: A ~> A. *)
+(* Check fun C: BarePreCat => fun A: ob C => A: A ~> A. *)
 Module HIDEOBJ.
   Abbreviation idmap := (@idmap _ _).
-  (* Check fun C: Cat => fun A: ob C => A: A ~> A. *)
+  (* Check fun C: BarePreCat => fun A: ob C => A: A ~> A. *)
 End HIDEOBJ.
 
 (** ** setoid enriched quivers *)

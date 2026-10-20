@@ -19,7 +19,7 @@ Lemma terminal_product: terminal (span_ p q) -> product.
 Proof. move=>T y p' q'; exact: (T (span_ p' q')). Defined.
 
 End s.
-Arguments product {_}.
+Arguments product {_} _ _ _ _ _/.
 
 #[primitive] HB.mixin Record IsProduct (𝐂: PreCat) a b x of SPAN 𝐂 a b x :=
   {#[canonical=no]productP: product a b x pi1 pi2}.
@@ -104,8 +104,11 @@ Proof. exact: SpanH. Qed.
 Lemma pair_ext: pair pi1 pi2 ≡ x.
 Proof. symmetry. apply: pairU; cat. Qed.
 
-Lemma prod_ext y (f g: y ~> x): f \; pi1 ≡ g \; pi1 -> f \; pi2 ≡ g \; pi2 -> f ≡ g.
-Proof. move=>F G. rewrite (pair_ext' g). exact: pairU. Qed.
+Lemma prod_ext y (f g: y ~> x): f \; pi1 ≡ g \; pi1 ∧ f \; pi2 ≡ g \; pi2 <-> f ≡ g.
+Proof.
+  split. move=>[F G]. rewrite (pair_ext' g). exact: pairU.
+  move=>H. by split; rewrite H.
+Qed.
 End s.
 
 Lemma productUr a (u: Terminal 𝐂): product a u a a (term u a).
@@ -178,18 +181,53 @@ Implicit Types a b c d: ob 𝐂.
 
 Definition prodP a b: product a b (a×b) pi1 pi2 := productP. 
 
-Definition pair' a b c d (f: a~>c) (g: b~>d): a×b ~> c×d := pair (pi1\;f) (pi2\;g).
+(** [hprod] for "prod" on homsets *)
+Definition hprod a b c d (f: a~>c) (g: b~>d): a×b ~> c×d := pair (pi1\;f) (pi2\;g).
 
-Lemma pair'_id a b: pair' a b ≡ idmap.
+#[export] Instance prod_eqv {a b c d}: Proper (eqv ==> eqv ==> eqv) (@hprod a b c d).
+Proof. move=>f f' ff g g' gg. apply: pair_eqv; exact/comp_eqv. Qed. 
+
+Lemma prod_id a b: hprod a b ≡ idmap.
 Proof. symmetry. apply: pairU; cat. Qed.
 
-Lemma pair'_comp a a' a'' b b' b'' (f: a~>a') (f': a'~>a'') (g: b~>b') (g': b'~>b''):
-  pair' (f\;f') (g\;g') ≡ pair' f g \; pair' f' g'.
+Lemma prod_comp a a' a'' b b' b'' (f: a~>a') (f': a'~>a'') (g: b~>b') (g': b'~>b''):
+  hprod (f\;f') (g\;g') ≡ hprod f g \; hprod f' g'.
 Proof.
   symmetry; apply: pairU=>/=;
     rewrite !compoA pairE; 
     rewrite -!compoA pairE//.
 Qed.
+
+(** [hprod] preserves monos (but not epis)
+    as a functor, it also preserves split epis, split monos, and isomorphisms *)
+
+Lemma prod_mono a a' b b' (f: Mono a a') (g: Mono b b'): is_mono (hprod f g).
+Proof.
+  move=>/=c i j /prod_ext[++].
+  rewrite !compoA /hprod !pairE -!compoA.
+  move=>/monoP?/monoP?. exact/prod_ext.
+Qed.
+HB.instance Definition _ a a' b b' (f: Mono a a') (g: Mono b b') :=
+  IsMono.Build _ _ _ (hprod f g) (@prod_mono _ _ _ _ f g).
+
+HB.instance Definition _ a a' b b' (f: Invertible a a') (g: Invertible b b') :=
+  HasInverseOp.Build _ _ _ (hprod f g) (hprod f⁻¹ g⁻¹). 
+
+Lemma prod_splitmono a a' b b' (f: SplitMono a a') (g: SplitMono b b'): has_right_inverse (hprod f g).
+Proof. by rewrite/=-prod_comp 2!invKr prod_id. Qed.
+
+HB.instance Definition _ a a' b b' (f: SplitMono a a') (g: SplitMono b b') :=
+  HasRightInverse.Build _ _ _ (hprod f g) (@prod_splitmono _ _ _ _ f g).
+
+Lemma prod_splitepi a a' b b' (f: SplitEpi a a') (g: SplitEpi b b'): has_left_inverse (hprod f g).
+Proof. by rewrite/=-prod_comp 2!invKl prod_id. Qed.
+
+HB.instance Definition _ a a' b b' (f: SplitEpi a a') (g: SplitEpi b b') :=
+  HasLeftInverse.Build _ _ _ (hprod f g) (@prod_splitepi _ _ _ _ f g).
+
+HB.saturate hprod.
+Definition prod_iso a a' b b' (f: a ≃ a') (g: b ≃ b'): a×b ≃ a'×b' := hprod f g.
+
 
 (* Note: could be defined already in PreCatBProd *)
 Definition diag a: a ~> a×a := pair a a.

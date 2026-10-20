@@ -74,6 +74,8 @@ Definition is_regepi (𝐂: PreCat) (A B: ob 𝐂) (e: A ~> B) :=
   { C & {f: C~>A & {g: C~>A & is_coequalizer f g e }}}.
 Definition is_regmono (𝐂: PreCat) (A B: ob 𝐂) (m: A ~> B) :=
   { C & {f: B~>C & {g: B~>C & is_equalizer f g m }}}.
+Arguments is_regepi {_ _ _} _/.
+Arguments is_regmono {_ _ _} _/.
 
 HB.mixin Record _IsRegEpi (𝐂: PreCat) (A B: ob 𝐂) (f: A ~> B) := {
     #[canonical=no] regepiP: is_regepi f;

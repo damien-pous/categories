@@ -109,6 +109,8 @@ Definition surjective := forall b, exists a, f a ≡ b.
 Definition bijective := injective /\ surjective.
 End s.
 
+Arguments mk_ext {_ _}&_ _/.
+
 (** Unique existence *)
 
 (* TODO: move to partialorders lib *)

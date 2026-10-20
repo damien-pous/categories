@@ -14,6 +14,7 @@ Local Open Scope cat_scope.
 Unset Universe Checking.
 
 Abbreviation Setoid := Setoid.type.
+Abbreviation SFunctor := (Functor Setoid Setoid).
 
 (** ** the category of setoids *)
 
