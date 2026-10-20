@@ -33,6 +33,12 @@ HB.instance Definition _ x i j H := COSPAN.on (@mk_coproduct x i j H).
 HB.instance Definition _ x i j H := IsCoproduct.Build 𝐂 a b (@mk_coproduct x i j H) H.
 Definition mk_coproduct_ x i j H: Coproduct a b := @mk_coproduct x i j H.
 
+
+Lemma product_op x f g: @product _ _ _ _ (morphop f) (morphop g) -> @coproduct 𝐂 a b x f g.
+Proof. exact. Defined.
+Lemma coproduct_op x f g: @coproduct _ _ _ _ (morphop f) (morphop g) -> @product 𝐂 a b x f g.
+Proof. exact. Defined.
+
 HB.instance Definition _ (x: Product a b) :=
   IsCoproduct.Build 𝐂^op (obop a) (obop b) (obop x) (productP (s:=x)).
 HB.instance Definition _ (x: Product (obop a) (obop b)) :=

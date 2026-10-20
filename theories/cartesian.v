@@ -166,15 +166,24 @@ HB.instance Definition _ :=
   Has0.Build (Functor 𝐂 𝐃) cartesian_Fzero__canonical__cat_INITIAL.
 End s.
 
-
 (** lifting binary coproducts to functors *)
 Section s.
 Context (𝐂: PreCat) {𝐃: CatBCoprod}.
 Section s.
 Variables (F G: Functor 𝐂 𝐃).
-(* missing appropriate functor duality *)
-(* Definition Fcoprod := @prod (Functor 𝐂 𝐃^op) (funcop F) (funcop G). *)
-(* Definition coproduct_Fcoprod: coproduct F G Fcoprod in1 in2 := coprodP. *)
+Definition Fcoprod: Functor 𝐂 𝐃 := opfunc' (opfunc F × opfunc G).
+Definition Fin1: F ~> Fcoprod := ntxop' (pi1 (s := opfunc F × opfunc G)): NTX _ _.
+Definition Fin2: G ~> Fcoprod := ntxop' (pi2 (s := opfunc F × opfunc G)): NTX _ _.
+HB.instance Definition _ := IsCospan.Build _ F G Fcoprod Fin1 Fin2.
+Lemma coproduct_Fcoprod: coproduct F G Fcoprod in1 in2.
+  apply: product_op. 
+  move: (@product_Fprod _ _ (opfunc F) (opfunc G)).
+  (* need to exploit the fact that opfunc is an adjoint equivalence,
+     and thus preserves products *)
+  Fail exact.
+Admitted.
+HB.instance Definition _ := IsCoproduct.Build _ F G Fcoprod coproduct_Fcoprod.
 End s.
-(* HB.instance Definition _ := HasBinaryCoproducts.Build (Functor 𝐂 𝐃) Fcoprod. *)
+HB.instance Definition _ :=
+  HasBinaryCoproducts.Build (Functor 𝐂 𝐃) cartesian_Fcoprod__canonical__coproduct_COPRODUCT.
 End s.
