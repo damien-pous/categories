@@ -122,8 +122,8 @@ Infix "⊣" := adjunction (at level 79): cat_scope.
 (** ** functions with an adjoint candidate (either left or right, or both) *)
 
 #[primitive] 
-HB.mixin Record IsPreAdjoint {𝐂 𝐃} (F: ob 𝐂 -> ob 𝐃) :=
-  { #[canonical=no] adj: ob 𝐃 -> ob 𝐂 }.
+HB.mixin Record IsPreAdjoint {𝐂 𝐃} (F: FUN 𝐂 𝐃) :=
+  { #[canonical=no] adj: FUN 𝐃 𝐂 }.
 #[short(type="PreAdjoint")]
 HB.structure Definition PREADJOINT 𝐂 𝐃 := {F of IsPreAdjoint 𝐂 𝐃 F }.
 Arguments adj {_ _} _.

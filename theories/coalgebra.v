@@ -8,14 +8,14 @@ Local Open Scope cat_scope.
 (** ** coalgebras *)
 
 #[primitive]
-HB.mixin Record IsCoalgebra {𝐂: BareQuiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂) := {
+HB.mixin Record IsCoalgebra {𝐂: BareQuiver} (F: FUN 𝐂 𝐂) (A: ob 𝐂) := {
     #[canonical=no] coalg: A ~> F A;
   }.
 #[short(type="Coalgebra")]
 HB.structure Definition COALGEBRA 𝐂 F := { A of IsCoalgebra 𝐂 F A }.
 Arguments coalg {_ _ _}, {_ _}. 
 Section s.
-Context {𝐂: BareQuiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂).
+Context {𝐂: BareQuiver} (F: FUN 𝐂 𝐂) (A: ob 𝐂).
 Definition coalgebra (a: A ~> F A) := A.
 HB.instance Definition _ a := @IsCoalgebra.Build 𝐂 F (coalgebra a) a.
 Definition coalgebra_ a: Coalgebra F := coalgebra a.
@@ -24,7 +24,7 @@ End s.
 (** duality with algebras *)
 
 Section s.
-Context {𝐂: BareQuiver} (F: ob 𝐂 -> ob 𝐂)  (G: ob 𝐂^op -> ob 𝐂^op).
+Context {𝐂: BareQuiver} (F: FUN 𝐂 𝐂)  (G: FUN 𝐂^op 𝐂^op).
 HB.instance Definition _ (A: Algebra F) :=
   IsCoalgebra.Build (𝐂^op) (funcop F) (obop A) (alg A).
 HB.instance Definition _ (A: Coalgebra F) :=

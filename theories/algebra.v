@@ -8,14 +8,14 @@ Local Open Scope cat_scope.
 (** ** algebras *)
 
 #[primitive]
-HB.mixin Record IsAlgebra {𝐂: BareQuiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂) := {
+HB.mixin Record IsAlgebra {𝐂: BareQuiver} (F: FUN 𝐂 𝐂) (A: ob 𝐂) := {
     #[canonical=no] alg: F A ~> A;
   }.
 #[short(type="Algebra")]
 HB.structure Definition ALGEBRA 𝐂 F := { A of IsAlgebra 𝐂 F A }.
 Arguments alg {_ _ _}, {_ _}.
 Section s.
-Context {𝐂: BareQuiver} (F: ob 𝐂 -> ob 𝐂) (A: ob 𝐂).
+Context {𝐂: BareQuiver} (F: FUN 𝐂 𝐂) (A: ob 𝐂).
 Definition algebra (a: F A ~> A) := A.
 HB.instance Definition _ a := @IsAlgebra.Build 𝐂 F (algebra a) a.
 Definition algebra_ a: Algebra F := algebra a.

@@ -7,8 +7,11 @@ Local Open Scope cat_scope.
 
 (** * Functors *)
 
+Definition FUN A B := ob A -> ob B.
+Identity Coercion FUNfun: FUN >-> Funclass. 
+
 (** ** diagrams: barequiver morphisms *)
-#[primitive] HB.mixin Record IsDiagram (𝐂 𝐃: BareQuiver) (F: ob 𝐂 -> ob 𝐃) := {
+#[primitive] HB.mixin Record IsDiagram (𝐂 𝐃: BareQuiver) (F: FUN 𝐂 𝐃) := {
    #[canonical=no] Fhom: forall a b: ob 𝐂, (a ~> b) -> (F a ~> F b);
   }.
 #[short(type="Diagram")]
@@ -29,7 +32,7 @@ HB.instance Definition _ 𝐂 𝐃 (F: PreFunctor 𝐂 𝐃) a b :=
   isExtensional.Build _ _ (@Fhom _ _ F a b) _. 
 
 (** direct factory, for constructing prefunctors from scratch *)
-HB.factory Record IsPreFunctor (𝐂 𝐃: Quiver) (F: ob 𝐂 -> ob 𝐃) := {
+HB.factory Record IsPreFunctor (𝐂 𝐃: Quiver) (F: FUN 𝐂 𝐃) := {
     Fhom: forall a b, (a ~> b) -> (F a ~> F b);
     Fhom_eqv: forall a b, Proper (eqv ==> eqv) (Fhom a b);
   }.
@@ -39,7 +42,7 @@ HB.builders Context 𝐂 𝐃 F of IsPreFunctor 𝐂 𝐃 F.
 HB.end.
 
 (** alternative factory, when the action on morphisms is already registered as extensional *)
-HB.factory Record IsPreFunctor' (𝐂 𝐃: Quiver) (F: ob 𝐂 -> ob 𝐃) := {
+HB.factory Record IsPreFunctor' (𝐂 𝐃: Quiver) (F: FUN 𝐂 𝐃) := {
     Fhom: forall a b, (a ~> b) -eqv-> (F a ~> F b);
   }.
 HB.builders Context 𝐂 𝐃 F of IsPreFunctor' 𝐂 𝐃 F.
@@ -69,7 +72,7 @@ HB.builders Context 𝐂 𝐃 F of Diagram_IsFunctor 𝐂 𝐃 F.
 HB.end.
 
 (** direct factory, for constructing functors from scratch *)
-HB.factory Record IsFunctor (𝐂 𝐃: PreCat) (F: ob 𝐂 -> ob 𝐃) := {
+HB.factory Record IsFunctor (𝐂 𝐃: PreCat) (F: FUN 𝐂 𝐃) := {
    Fhom: forall {A B: ob 𝐂}, (A ~> B) -> (F A ~> F B);
    Fhom_eqv: forall {A B: ob 𝐂}, Proper (eqv ==> eqv) (@Fhom A B);
    Fidmap: forall A: ob 𝐂, Fhom A ≡ idmap (F A);
@@ -98,7 +101,7 @@ Lemma Fhom_bij 𝐂 𝐃 (F: FaithfulPreFunctor 𝐂 𝐃) {A B: ob 𝐂} (f g: 
   Fhom F f ≡ Fhom F g <-> f ≡ g.
 Proof. split. exact:Fhom_inj. exact/Fhom_eqv. Qed.
 
-HB.factory Record IsFaithfulPreFunctor (𝐂 𝐃: Quiver) (F: ob 𝐂 -> ob 𝐃) := {
+HB.factory Record IsFaithfulPreFunctor (𝐂 𝐃: Quiver) (F: FUN 𝐂 𝐃) := {
     Fhom: forall {A B}, (A ~> B) -> (F A ~> F B);
     Fhom_bij: forall {A B} (f g: A ~> B), Fhom f ≡ Fhom g <-> f ≡ g;
   }.
@@ -127,8 +130,8 @@ Definition cats := (@Fidmap, cats, @Fcomp)%core.
 
 (** * duality *)
 
-Definition funcop {𝐂 𝐃} (F: ob 𝐂 -> ob 𝐃): ob 𝐂^op -> ob 𝐃^op := F.
-Definition funcop' {𝐂 𝐃} (F: ob 𝐂^op -> ob 𝐃^op): ob 𝐂 -> ob 𝐃 := F.
+Definition funcop {𝐂 𝐃} (F: FUN 𝐂 𝐃): FUN 𝐂^op 𝐃^op := F.
+Definition funcop' {𝐂 𝐃} (F: FUN 𝐂^op 𝐃^op): FUN 𝐂 𝐃 := F.
 
 HB.instance Definition _ (𝐂 𝐃: BareQuiver) (F: Diagram 𝐂 𝐃) :=
   IsDiagram.Build _ _ (funcop F) (fun _ _ => Fhom F).
@@ -145,8 +148,8 @@ HB.instance Definition _ (𝐂 𝐃: PreCat) (F: Functor 𝐂 𝐃) :=
 HB.instance Definition _ (𝐂 𝐃: PreCat) (F: Functor 𝐂^op 𝐃^op) :=
   HasFunctorLaws.Build _ _ (funcop' F) (@Fidmap _ _ F) (fun _ _ _ _ _ => @Fcomp _ _ F _ _ _ _ _).
 
-Definition funcop12 {𝐂 𝐃} (F: ob 𝐂^op -> ob 𝐃): ob 𝐂 -> ob 𝐃^op := F.
-Definition funcop21 {𝐂 𝐃} (F: ob 𝐂 -> ob 𝐃^op): ob 𝐂^op -> ob 𝐃 := F.
+Definition funcop12 {𝐂 𝐃} (F: FUN 𝐂^op 𝐃): FUN 𝐂 𝐃^op := F.
+Definition funcop21 {𝐂 𝐃} (F: FUN 𝐂 𝐃^op): FUN 𝐂^op 𝐃 := F.
 
 HB.instance Definition _ (𝐂 𝐃: BareQuiver) (F: Diagram 𝐂^op 𝐃) :=
   IsDiagram.Build _ _ (funcop12 F) (fun _ _ => Fhom F).
@@ -265,7 +268,7 @@ HB.instance Definition _ I 𝐂 i := @_app_functor I 𝐂 i.
 (** * Natural transformations *)
 
 (** tranformations *)
-Definition TX {𝐂: Type} {𝐃: BareQuiver} (F G: ob 𝐂 -> ob 𝐃) := forall X, F X ~> G X.
+Definition TX {𝐂: Type} {𝐃: BareQuiver} (F G: FUN 𝐂 𝐃) := forall X, F X ~> G X.
 Identity Coercion TX_app: TX >-> Funclass.
 
 (** naturality *)
