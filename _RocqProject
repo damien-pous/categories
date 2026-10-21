@@ -11,8 +11,9 @@ theories/arewrite.v			   # rewriting/reflexivity modulo associativity
 theories/morphisms.v                       # hierarchy of morphisms
 theories/airewrite.v			   # rewriting/reflexivity modulo associativity and inverses
 theories/arity.v                           # lists of objects
-theories/functor.v                         # functors, natural transformations, adjunctions
+theories/functor.v                         # functors, natural transformations
 theories/bifunctor.v                       # bifunctors
+theories/adjunction.v                      # adjunctions
 theories/span.v                            # spans
 theories/cospan.v                          # cospans
 theories/product.v                         # products

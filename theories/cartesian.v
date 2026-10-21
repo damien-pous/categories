@@ -1,6 +1,6 @@
 (** * more on (co)cartesian monoidal categories *)
 
-Require Export monoidal_def coproduct.
+Require Export monoidal_def adjunction coproduct.
 From Stdlib Require Import ProofIrrelevance. (* TO REMOVE *)
 Require Import arewrite.
 
@@ -177,10 +177,9 @@ Definition Fin2: G ~> Fcoprod := ntxop' (pi2 (s := opfunc F × opfunc G)): NTX _
 HB.instance Definition _ := IsCospan.Build _ F G Fcoprod Fin1 Fin2.
 Lemma coproduct_Fcoprod: coproduct F G Fcoprod in1 in2.
   apply: product_op. 
-  move: (@product_Fprod _ _ (opfunc F) (opfunc G)).
-  (* need to exploit the fact that opfunc is an adjoint equivalence,
-     and thus preserves products *)
-  Fail exact.
+  move: (@product_Fprod _ _ (opfunc F) (opfunc G))=>/product_terminal H.
+  (* need to lift the adjuction to spans *)
+  Fail move: (radj.preserve_terminal opfunc' H).
 Admitted.
 HB.instance Definition _ := IsCoproduct.Build _ F G Fcoprod coproduct_Fcoprod.
 End s.

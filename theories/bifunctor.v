@@ -14,3 +14,8 @@ Instance app22_eqv {A B D F a a' b b'}: Proper (eqv ==> eqv ==> eqv) (@app22 A B
 Proof. intros ??? ???. exact/extensional. Qed.
 
 
+
+(* TODO: un/currying  *)
+(* HB.instance Definition _ (C D: Quiver) (E: PreCat) (F: PreFunctor (C∧D) E) := *)
+(*   IsBarePreFunctor.Build C (PreFunctor D E) curry _.  *)
+
