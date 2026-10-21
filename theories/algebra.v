@@ -49,7 +49,7 @@ HB.instance Definition _ {𝐂: PreCat} (F: PreFunctor 𝐂 𝐂) := IsQuiver.Bu
 
 Section s.
 Context {𝐂: Cat} (F: Functor 𝐂 𝐂).
-Implicit Types A B C: Algebra F.   
+Implicit Types A B C: Algebra F.
 
 Lemma alghom_id A: is_alghom A.
 Proof. cbn. cat. Qed.
@@ -85,8 +85,18 @@ Section initial_algebra.
   (* TODO: improve insertion of coercions INITIAL.sort and Alghom_sort *)
   Variable A: Initial (Algebra F).
 
-  Abbreviation A' := (INITIAL.sort A). 
-  Abbreviation FA := (algnext A': Algebra F). 
+  
+  Abbreviation A' := (INITIAL.sort A).
+  
+  Abbreviation FAbad := (algnext A').
+  Check FAbad: ob 𝐂.
+  Check FAbad: Algebra F.
+  Fail Check FAbad: ob (Algebra F). (* dommage *)
+
+  Abbreviation FA := (algnext A': Algebra F).
+  Check FA: ob 𝐂.
+  Check FA: Algebra F.
+  Check FA: ob (Algebra F). (* ok *)
 
   (** ** Lambek's Lemma *)
   
@@ -143,7 +153,7 @@ Section i.
     - move=>f. unshelve apply: alghom_.
       apply f. cbn. sorry.      (* TODO, fine, waiting since this could be done differently *)
     done.
-  Qed.
+  Defined.
   
   HB.instance Definition _ (A: Initial (Algebra G)) :=
     IsInitial.Build (Algebra F) (transport_alg i¹ (INITIAL.sort A))
