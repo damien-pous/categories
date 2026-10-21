@@ -342,21 +342,14 @@ Context {𝐂: PreCat} {𝐃: Cat}.
 Definition opfunc (F: ob (Functor 𝐂 𝐃)^op): ob (Functor 𝐂^op 𝐃^op) := funcop F: Functor _ _.
 Definition opfunc' (F: ob (Functor 𝐂^op 𝐃^op)): ob (Functor 𝐂 𝐃)^op := funcop' F: Functor _ _.
 
-(* first two instances only need 𝐃: PreCat *)
 HB.instance Definition _ :=
-  IsBarePreFunctor.Build _ _ opfunc (fun _ _ n => ntxop n: NTX _ _).
-HB.instance Definition _ :=
-  IsPreFunctor'.Build _ _ opfunc (fun _ _ _ _ H => H).
-HB.instance Definition _ :=
-  IsFunctor.Build _ _ opfunc (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  @IsFunctor.Build _ _ opfunc (fun _ _ n => ntxop n: NTX _ _)
+    (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
 (* first two instances only need 𝐃: PreCat *)
 HB.instance Definition _ :=
-  IsBarePreFunctor.Build _ _ opfunc' (fun _ _ n => ntxop' n: NTX _ _).
-HB.instance Definition _ :=
-  IsPreFunctor'.Build _ _ opfunc' (fun _ _ _ _ H => H).
-HB.instance Definition _ :=
-  IsFunctor.Build _ _ opfunc' (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  @IsFunctor.Build _ _ opfunc' (fun _ _ n => ntxop' n: NTX _ _)
+    (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
 HB.instance Definition _ := IsPreAdjointF.Build _ _ opfunc opfunc'.
 HB.instance Definition _ := IsPreAdjointF.Build _ _ opfunc' opfunc.
@@ -405,18 +398,12 @@ Definition opop (a: ob 𝐂^op^op): ob 𝐂 := obop' (obop' a).
 Definition opop' (a: ob 𝐂): ob 𝐂^op^op := obop (obop a).
 
 HB.instance Definition _ :=
-  IsBarePreFunctor.Build _ _ opop (fun _ _ f => morphop' (morphop' f)).
-HB.instance Definition _ :=
-  IsPreFunctor'.Build _ _ opop (fun _ _ _ _ H => H).
-HB.instance Definition _ :=
-  IsFunctor.Build _ _ opop (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  @IsFunctor.Build _ _ opop (fun _ _ f => morphop' (morphop' f))
+    (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
 HB.instance Definition _ :=
-  IsBarePreFunctor.Build _ _ opop' (fun _ _ f => morphop (morphop f)).
-HB.instance Definition _ :=
-  IsPreFunctor'.Build _ _ opop' (fun _ _ _ _ H => H).
-HB.instance Definition _ :=
-  IsFunctor.Build _ _ opop' (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+  @IsFunctor.Build _ _ opop' (fun _ _ f => morphop (morphop f))
+    (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
 HB.instance Definition _ := IsPreAdjointF.Build _ _ opop opop'.
 HB.instance Definition _ := IsPreAdjointF.Build _ _ opop' opop.

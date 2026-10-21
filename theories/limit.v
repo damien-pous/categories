@@ -8,7 +8,7 @@ Local Open Scope cat_scope.
 (** * cones *)
 
 Section s.
-  Context {𝐂: BareQuiver} {𝐃: Cat} (F: BarePreFunctor 𝐂 𝐃).
+  Context {𝐂: BareQuiver} {𝐃: Cat} (F: Diagram 𝐂 𝐃).
   
   Definition cone := {C & {p: forall c, F c ~> C | forall c c' (f: c ~> c'), Fhom F f \; p c' ≡ p c }}.
   Definition cone_ob (C: cone): ob 𝐃 := projT1 C. 
@@ -54,7 +54,7 @@ End s.
 (** * lifting functors to cones *)
 
 Section s.
-  Context {𝐂: BareQuiver} {𝐃: Cat} (F: BarePreFunctor 𝐂 𝐃) {𝐄: Cat}.
+  Context {𝐂: BareQuiver} {𝐃: Cat} (F: Diagram 𝐂 𝐃) {𝐄: Cat}.
 
   Section s.
     Context (G: Functor 𝐃 𝐄).
@@ -70,9 +70,9 @@ Section s.
       abstract (move=>c; rewrite -Fcomp; apply:Fhom_eqv; exact: conehomP).
     Defined.
     
-    HB.instance Definition _ := IsBarePreFunctor.Build _ _ Fcone Fconehom.
-    HB.instance Definition _ := IsPreFunctor'.Build _ _ Fcone (fun _ _ _ _ H => Fhom_eqv (F:=G) H).
-    HB.instance Definition _ := IsFunctor.Build _ _ Fcone (fun _ => Fidmap) (fun _ _ _ _ _ => Fcomp _ _).
+    HB.instance Definition _ :=
+      @IsFunctor.Build _ _ Fcone Fconehom
+        (fun _ _ _ _ H => Fhom_eqv (F:=G) H) (fun _ => Fidmap) (fun _ _ _ _ _ => Fcomp _ _).
   End s.
   
   (** * lifting (left) adjunctions to cones *)
@@ -91,10 +91,10 @@ Section s.
       move=>c. cbn. sorry.       (* TODO *)
     Defined.
     
-    HB.instance Definition _ := IsBarePreFunctor.Build _ _ Fcone' Fcone'hom.
-    HB.instance Definition _ := IsPreFunctor'.Build _ _ Fcone' (fun _ _ _ _ H => Fhom_eqv (F:=adj G) H).
-    HB.instance Definition _ := IsFunctor.Build _ _ Fcone' (fun _ => Fidmap) (fun _ _ _ _ _ => Fcomp _ _).
-
+    HB.instance Definition _ :=
+      @IsFunctor.Build _ _ Fcone' Fcone'hom
+        (fun _ _ _ _ H => Fhom_eqv (F:=adj G) H) (fun _ => Fidmap) (fun _ _ _ _ _ => Fcomp _ _).
+    
     HB.instance Definition _ := IsPreAdjointF.Build _ _ (Fcone G) Fcone'. 
     HB.instance Definition _ := IsPreAdjointF.Build _ _ Fcone' (Fcone G).
 

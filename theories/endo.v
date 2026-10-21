@@ -13,7 +13,7 @@ Abbreviation Endo := (𝐂 ≈> 𝐂).
 Definition COMP (FG: Endo*Endo): Endo := functor_comp FG.2 FG.1.
 
 Program Definition _COMP_functor :=
-  @IsFunctor'.Build _ _ COMP (fun FG FG' (fg: FG ~> FG') => ntx_comp' fg.2 fg.1) _ _ _.
+  @IsFunctor.Build _ _ COMP (fun FG FG' (fg: FG ~> FG') => ntx_comp' fg.2 fg.1) _ _ _.
 Next Obligation.
   move=>FG FG' fg fg' [ff gg].
   exact: ntx_comp'_eqv.

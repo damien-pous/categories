@@ -81,13 +81,11 @@ Definition setoid_option_map (A B: Setoid) (f: A-eqv->B): setoid_option A -eqv->
   option_map f.
 
 HB.instance Definition _ :=
-  IsBarePreFunctor.Build Setoid Setoid setoid_option setoid_option_map. 
-Lemma _setoid_option_prefunctor: IsPreFunctor' _ _ setoid_option.
-Proof. split. cbn=> A B f g fg [a|]//=. exact: fg. Qed.
-HB.instance Definition _ := _setoid_option_prefunctor.
-Lemma _setoid_option_functor: IsFunctor _ _ setoid_option.
+  IsDiagram.Build Setoid Setoid setoid_option setoid_option_map. 
+Lemma _setoid_option_functor: Diagram_IsFunctor _ _ setoid_option.
 Proof.
   split.
+  - cbn=> A B f g fg [a|]//=. exact: fg.
   - by cbn=>A[a|]. 
   - by cbn=>A B C f g [a|].
 Qed.
@@ -106,13 +104,11 @@ Definition setoid_list_map (A B: Setoid) (f: A-eqv->B): setoid_list A -eqv-> set
   List.map f.
 
 HB.instance Definition _ :=
-  IsBarePreFunctor.Build Setoid Setoid setoid_list setoid_list_map. 
-Lemma _setoid_list_prefunctor: IsPreFunctor' _ _ setoid_list.
-Proof. split. cbn=> A B f g fg. by elim=>[|a p IH]. Qed.
-HB.instance Definition _ := _setoid_list_prefunctor.
-Lemma _setoid_list_functor: IsFunctor _ _ setoid_list.
+  IsDiagram.Build Setoid Setoid setoid_list setoid_list_map. 
+Lemma _setoid_list_functor: Diagram_IsFunctor _ _ setoid_list.
 Proof.
   split.
+  - cbn=> A B f g fg. by elim=>[|a p IH]. 
   - cbn=>A. by elim. 
   - cbn=>A B C f g. by elim.
 Qed.
@@ -126,12 +122,12 @@ Section s.
 Variable A: Setoid.
 Definition setoid_power (X: Setoid): Setoid := A -eqv-> X. 
 HB.instance Definition _ :=
-  IsBarePreFunctor.Build Setoid Setoid setoid_power (fun _ _ f => mk_ext (setoid_comp f) _).
-Lemma _setoid_power_prefunctor: IsPreFunctor' _ _ setoid_power.
-Proof. split=> B C f g fg. cbn=>h a. exact: fg. Qed.
-HB.instance Definition _ := _setoid_power_prefunctor.
-Lemma _setoid_power_functor: IsFunctor _ _ setoid_power.
-Proof. by split; cbn. Qed.
+  IsDiagram.Build Setoid Setoid setoid_power (fun _ _ f => mk_ext (setoid_comp f) _).
+Lemma _setoid_power_functor: Diagram_IsFunctor _ _ setoid_power.
+Proof.
+  split. move=> B C f g fg. cbn=>h a. exact: fg.
+  all: by cbn.
+Qed.
 HB.instance Definition _ := _setoid_power_functor.
 End s.
 

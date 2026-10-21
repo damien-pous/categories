@@ -14,7 +14,7 @@ Section s.
 Context {𝐂: CatProd}.
 
 Definition PROD (x: ob 𝐂 ∧ ob 𝐂): ob 𝐂 := x.1 × x.2. 
-Program Definition _PROD_functor := @IsFunctor'.Build _ _ PROD (fun x y f => hprod f.1 f.2) _ _ _.
+Program Definition _PROD_functor := @IsFunctor.Build _ _ PROD (fun x y f => hprod f.1 f.2) _ _ _.
 Next Obligation. 
   move=>/=a b f g [fg1 fg2]; apply: pair_eqv; exact: comp_eqv. 
 Qed.
@@ -66,13 +66,11 @@ Context (𝐂: PreCat) {𝐃: CatBProd}.
 Section s.
 Variables (F G: Functor 𝐂 𝐃).
 Definition Fprod (a: ob 𝐂): ob 𝐃 := F a × G a.
-HB.instance Definition _ := IsBarePreFunctor.Build 𝐂 𝐃 Fprod (fun a b f => hprod (Fhom F f) (Fhom G f)).
-Lemma _Fprod_prefunctor: IsPreFunctor' 𝐂 𝐃 Fprod.
-Proof. split=>a b f g H/=. apply: prod_eqv; exact/Fhom_eqv. Qed.
-HB.instance Definition _ := _Fprod_prefunctor.
-Lemma _Fprod_functor: IsFunctor 𝐂 𝐃 Fprod.
+HB.instance Definition _ := IsDiagram.Build 𝐂 𝐃 Fprod (fun a b f => hprod (Fhom F f) (Fhom G f)).
+Lemma _Fprod_functor: Diagram_IsFunctor 𝐂 𝐃 Fprod.
 Proof.
   split.
+  - move=>a b f g H/=. apply: prod_eqv; exact/Fhom_eqv. 
   - move=>a. cbn. by rewrite 2!Fidmap prod_id.
   - move=>a b c f g. cbn. by rewrite 2!Fcomp prod_comp.
 Qed.
@@ -115,7 +113,7 @@ Section s.
 Context {𝐂: CatCoprod}.
 
 Definition COPROD (x: ob 𝐂 ∧ ob 𝐂): ob 𝐂 := x.1 + x.2.
-Program Definition _COPROD_functor := @IsFunctor'.Build _ _ COPROD (fun x y f => hcoprod f.1 f.2) _ _ _.
+Program Definition _COPROD_functor := @IsFunctor.Build _ _ COPROD (fun x y f => hcoprod f.1 f.2) _ _ _.
 Next Obligation.
   move=>/=a b f g [fg1 fg2]; apply: copair_eqv; exact: comp_eqv.
 Qed.
