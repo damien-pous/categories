@@ -14,6 +14,8 @@ theories/arity.v                           # lists of objects
 theories/functor.v                         # functors, natural transformations
 theories/bifunctor.v                       # bifunctors
 theories/adjunction.v                      # adjunctions
+theories/shape.v                           # concrete bare quivers, for defining shapes
+theories/limit.v                           # cones, generic limits, preservation by left adjoints
 theories/span.v                            # spans
 theories/cospan.v                          # cospans
 theories/product.v                         # products
@@ -27,7 +29,6 @@ theories/bicat.v                           # bicategories
 theories/cat_bicat.v                       # Cat: BiCat (needs universe polymorphism, hence type:type for now)
 
 ## below: compiles but to be evolved
-theories/cone.v                            # cones for generic limits
 theories/cast.v                            # casting operations
 theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors
