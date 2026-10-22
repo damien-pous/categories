@@ -40,7 +40,7 @@ Definition SpanH a b x y (f: @Spanhom a b x y): f \; pi1 ≡ pi1 ∧ f \; pi2 �
 HB.instance Definition _ a b := IsQuiver.Build (Span a b) Spanhom.
 
 Definition span_homC a b (x y: Span a b) (f: Spanhom x y): Spanhom (spanC x) (spanC y).
-Proof. exists f. apply: swap_pair. exact: (SpanH f). Defined.
+Proof. exists f. abstract exact/swap_pair/(SpanH f). Defined.
 Definition span_homC' a b (x y: Span b a) (f: Spanhom (spanC x) (spanC y)): Spanhom x y.
 Proof. exact: (span_homC f). Defined.
 Definition span_homC1 a b (x: Span b a) (y: Span a b) (f: Spanhom (spanC x) y): Spanhom x (spanC y).

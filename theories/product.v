@@ -37,7 +37,7 @@ Definition mk_product_ x p q H: Product a b := @mk_product x p q H.
 Lemma productC x p q: product a b x p q -> product b a x q p.
 Proof.
   move=>P y p' q'. move:P=>/(_ y q' p'). apply: unique_sig_impl.
-  split; exact: swap_pair.
+  abstract by split; exact: swap_pair.
 Defined.
 
 Section s.
@@ -138,21 +138,6 @@ Proof.
        --- arewrite pair2. arewrite pair1. cat.
     -- arewrite pair2. arewrite pair2. done.
 Qed.
-
-(* Definition prod_assoc X Y Z: (X×Y)×Z ≃ X×(Y×Z). *)
-(* Proof. *)
-(*   apply: (mk_iso (pair (fst∘fst) (pair (snd∘fst) snd)) *)
-(*             (pair (pair fst (fst∘snd)) (snd∘snd))). *)
-(*   - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o. *)
-(*     by rewrite -compoA !fst_pair. *)
-(*     apply prod_ext; rewrite compoA ?(fst_pair,snd_pair)//. *)
-(*     by rewrite -compoA fst_pair snd_pair. *)
-(*   - apply prod_ext; rewrite compoA ?(fst_pair,snd_pair) comp1o. *)
-(*     apply prod_ext; rewrite compoA ?(fst_pair,snd_pair)//. *)
-(*     by rewrite -compoA snd_pair fst_pair. *)
-(*     by rewrite -compoA !snd_pair. *)
-(* Defined. *)
-
 
 Lemma productA' a b c (ab: Product a b) (bc: Product b c) (x: Product a bc):
   product ab c x (pair pi1 (pi2 \; pi1)) (pi2 \; pi2).

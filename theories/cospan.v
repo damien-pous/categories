@@ -45,7 +45,7 @@ Definition CospanH a b x y (f: @Cospanhom a b x y): in1 \; f ≡ in1 ∧ in2 \; 
 HB.instance Definition _ a b := IsQuiver.Build (Cospan a b) Cospanhom.
 
 Definition cospan_homC a b (x y: Cospan a b) (f: Cospanhom x y): Cospanhom (cospanC x) (cospanC y).
-Proof. exists f. apply: swap_pair. exact: (CospanH f). Defined.
+Proof. exists f. abstract exact/swap_pair/(CospanH f). Defined.
 Definition cospan_homC' a b (x y: Cospan b a) (f: Cospanhom (cospanC x) (cospanC y)): Cospanhom x y.
 Proof. exact: (cospan_homC f). Defined.
 Definition cospan_homC1 a b (x: Cospan b a) (y: Cospan a b) (f: Cospanhom (cospanC x) y): Cospanhom x (cospanC y).

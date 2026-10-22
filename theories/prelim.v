@@ -131,7 +131,7 @@ Section s.
 Variables (X: Setoid.type) (P: X -> Prop). 
 Definition unique_sig := unique (sig P).
 Coercion unique_sig_elt (x: unique_sig): X := sval x.1.
-Lemma unique_sigP (x: unique_sig): P x. Proof. exact: proj2_sig. Defined.
+Lemma unique_sigP (x: unique_sig): P x. Proof. exact: proj2_sig. Qed.
 Definition unicity_sig (U: unique_sig) x y: P x -> P y -> x ≡ y.
 Proof. move=>p q. exact: (unicity U (exist _ x p) (exist _ y q)). Qed.
 Lemma mk_unique_sig (x: X) (p: P x) (H: forall y, P y -> x ≡ y): unique_sig.
@@ -141,12 +141,12 @@ End s.
 Lemma unique_sig_impl (X: Setoid.type) P Q (H: forall x: X, P x <-> Q x): unique_sig P -> unique_sig Q.
 Proof.
   unshelve apply: unique_impl. 
-  1,2: move=>x; exists (sval x); by apply H, proj2_sig.
-  by move=>[??][??]. 
+  1,2: move=>x; exists (sval x); abstract by apply H, proj2_sig.
+  abstract by move=>[??][??]. 
 Defined.
 
 Lemma unique_sig_eqv (X: Setoid.type) P Q (H: forall x: X, P x <-> Q x): unique_sig P ⇆ unique_sig Q.
-Proof. split; apply: unique_sig_impl=>//. firstorder. Defined.
+Proof. split; apply: unique_sig_impl=>//. abstract firstorder. Defined.
 
 Notation "Σ! x .. y , P" := (unique_sig (fun x => .. (unique_sig (fun y => P)) ..)). 
 
