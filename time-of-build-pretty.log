@@ -1,19 +1,19 @@
     Time |  Peak Mem | File Name               
 -----------------------------------------------
-5m07.41s | 891508 ko | Total Time / Peak Mem   
+5m00.53s | 893260 ko | Total Time / Peak Mem   
 -----------------------------------------------
-2m55.17s | 653816 ko | coproduct.vo            
-0m52.97s | 891508 ko | product.vo              
+2m48.90s | 651348 ko | coproduct.vo            
+0m52.32s | 893260 ko | product.vo              
 0m16.17s | 478672 ko | colimit.vo              
 0m12.84s | 608360 ko | adjunction.vo           
-0m07.92s | 586856 ko | cartesian.vo            
+0m07.98s | 591620 ko | cartesian.vo            
 0m06.85s | 539948 ko | functor.vo              
 0m05.80s | 519404 ko | morphisms.vo            
 0m03.15s | 470372 ko | algebra.vo              
 0m03.12s | 474452 ko | monoidal_def.vo         
 0m01.98s | 457688 ko | span.vo                 
 0m01.88s | 425660 ko | cat.vo                  
-0m01.84s | 501392 ko | setoid.vo               
+0m01.82s | 495388 ko | setoid.vo               
 0m01.76s | 427892 ko | endo.vo                 
 0m01.71s | 421436 ko | cast.vo                 
 0m01.60s | 477424 ko | pushout.vo              

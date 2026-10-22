@@ -111,37 +111,37 @@ Proof.
 Qed.
 End s.
 
-Lemma productUr a (u: Terminal 𝐂): product a u a a (term u a).
-Proof.
-  move=>y p' q'. unshelve apply: mk_unique_sig=>/=. exact: p'.
-  split=>/=. cat. exact: termU.
-  move=>h [/=<- _]. cat.
-Qed.
+Program Definition productUr a (u: Terminal 𝐂): product a u a a (term u a) :=
+  fun y p' q' => @mk_unique_sig _ _ p' _ _.
+Next Obligation. split=>/=. cat. exact: termU. Qed.
+Next Obligation. move=>a u y p' q' h [/=<-_]. cat. Qed.
 
 Lemma productUl a (u: Terminal 𝐂): product u a a (term u a) a.
-Proof. apply productC, productUr. Qed.
+Proof. apply productC, productUr. Defined.
 
-Lemma productA a b c (ab: Product a b) (bc: Product b c) (x: Product ab c):
-  product a bc x (pi1\;pi1) (pair (pi1\;pi2) pi2).
-Proof.
-  move=>y p q. unshelve apply: mk_unique_sig.
-  exact/(pair (pair p (q\;pi1)) (q\;pi2)). split.
+Program Definition productA a b c (ab: Product a b) (bc: Product b c) (x: Product ab c):
+  product a bc x (pi1\;pi1) (pair (pi1\;pi2) pi2) :=
+  fun y p q => @mk_unique_sig _ _ (pair (pair p (q\;pi1)) (q\;pi2)) _ _.
+Next Obligation.
+  split.
   - arewrite pair1; exact/pair1.
   - apply/prod_ext; split.
     arewrite pair1; arewrite pair1; exact/pair2.
     arewrite pair2. arewrite pair2. done.
-  - move=>/=h [<- <-].
-    apply/prod_ext; split.
-    -- arewrite pair1.
-       apply/prod_ext; split.
-       --- arewrite pair1. cat.
-       --- arewrite pair2. arewrite pair1. cat.
-    -- arewrite pair2. arewrite pair2. done.
+Qed.
+Next Obligation.
+  move=>/=a b c ab bc x y p q h [<- <-].
+  apply/prod_ext; split.
+  - arewrite pair1.
+     apply/prod_ext; split.
+     -- arewrite pair1. cat.
+     -- arewrite pair2. arewrite pair1. cat.
+  - arewrite pair2. arewrite pair2. done.
 Qed.
 
 Lemma productA' a b c (ab: Product a b) (bc: Product b c) (x: Product a bc):
   product ab c x (pair pi1 (pi2 \; pi1)) (pi2 \; pi2).
-Proof. exact: (productC (@productA c b a (ProductC bc) (ProductC ab) (ProductC x))). Qed.
+Proof. exact: (productC (@productA c b a (ProductC bc) (ProductC ab) (ProductC x))). Defined.
   
 End s.
 
