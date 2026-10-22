@@ -1,0 +1,36 @@
+    Time |  Peak Mem | File Name               
+-----------------------------------------------
+5m37.41s | 906056 ko | Total Time / Peak Mem   
+-----------------------------------------------
+3m12.59s | 667756 ko | coproduct.vo            
+1m03.63s | 906056 ko | product.vo              
+0m15.25s | 488244 ko | colimit.vo              
+0m13.48s | 606412 ko | adjunction.vo           
+0m08.41s | 585736 ko | cartesian.vo            
+0m06.76s | 537912 ko | functor.vo              
+0m05.18s | 519708 ko | morphisms.vo            
+0m03.16s | 470384 ko | monoidal_def.vo         
+0m03.10s | 476644 ko | algebra.vo              
+0m02.06s | 505400 ko | setoid.vo               
+0m02.02s | 454784 ko | span.vo                 
+0m02.00s | 483572 ko | pushout.vo              
+0m01.92s | 431644 ko | cat.vo                  
+0m01.92s | 431316 ko | endo.vo                 
+0m01.75s | 456140 ko | limit.vo                
+0m01.74s | 421716 ko | cast.vo                 
+0m01.65s | 474604 ko | pullback.vo             
+0m01.57s | 441776 ko | cat_bicat.vo            
+0m01.48s | 433064 ko | coalgebra.vo            
+0m01.08s | 407412 ko | tests/arewrite_tests.vo 
+0m00.99s | 441504 ko | cospan.vo               
+0m00.95s | 421692 ko | bicat.vo                
+0m00.86s | 425752 ko | airewrite.vo            
+0m00.74s | 409448 ko | tests/coercions.vo      
+0m00.66s | 408296 ko | tests/airewrite_tests.vo
+0m00.65s | 406184 ko | arewrite.vo             
+0m00.38s | 397120 ko | bifunctor.vo            
+0m00.37s | 366316 ko | shape.vo                
+0m00.36s | 408408 ko | arity.vo                
+0m00.31s | 346688 ko | prelim.vo               
+0m00.30s | 351492 ko | tests/hb_univ.vo        
+0m00.09s |  16796 ko | .RocqMakefile.d         
