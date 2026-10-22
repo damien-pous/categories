@@ -34,9 +34,9 @@ HB.instance Definition _ :=
   @HasMonoidalOps.Build (Functor 𝐂 𝐂) functor_id COMP.  
 Program Definition _endofunctor_premonoidal :=
   @IsPreMonoidal.Build (Functor 𝐂 𝐂) _ _ _ _ _ _.  
-Next Obligation. move=>F G H. by apply: same_functor. Defined.
-Next Obligation. move=>F. by apply: same_functor. Defined.
-Next Obligation. move=>F. by apply: same_functor. Defined.
+Next Obligation. move=>F G H. exact/iso_functor/same_diagram. Defined.
+Next Obligation. move=>F. exact/iso_functor/same_diagram. Defined.
+Next Obligation. move=>F. exact/iso_functor/same_diagram. Defined.
 Next Obligation. cbn; intros. cat. Qed.
 Next Obligation. cbn; intros. cat. Qed.
 Next Obligation. cbn; intros. cat. Qed.

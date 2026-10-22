@@ -16,9 +16,9 @@ Program Definition _cat_bicat := @IsBiCat.Build Cat _ _ _ _ _ _ _ _.
 Next Obligation. intros. exact: ntx_comp'. Defined.
 Next Obligation. intros. exact: ntx_comp'_eqv. Qed.
 Next Obligation. cbn. intros. cat. Qed.
-Next Obligation. Admitted.
-Next Obligation. intros. exact: same_functor. Defined.
-Next Obligation. intros. exact: same_functor. Defined.
-Next Obligation. intros. exact: same_functor. Defined.
+Next Obligation. cbn. Admitted.
+Next Obligation. intros. exact/iso_functor/same_diagram. Defined.
+Next Obligation. intros. exact/iso_functor/same_diagram. Defined.
+Next Obligation. intros. exact/iso_functor/same_diagram. Defined.
 Next Obligation. cbn. intros. cat. Qed.
 HB.instance Definition _ := _cat_bicat.

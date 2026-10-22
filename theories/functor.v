@@ -271,15 +271,19 @@ HB.instance Definition _ I 𝐂 i := @_app_functor I 𝐂 i.
 Definition TX {𝐂: Type} {𝐃: BareQuiver} (F G: FUN 𝐂 𝐃) := forall X, F X ~> G X.
 Identity Coercion TX_app: TX >-> Funclass.
 
+Definition is_natural {𝐂: BareQuiver} {𝐃: PreCat} (F G: Diagram 𝐂 𝐃) (n: TX F G) :=
+  forall (X Y: ob 𝐂) (f: X ~> Y), n Y ∘ Fhom F f ≡ Fhom G f ∘ n X.
+Arguments is_natural {_ _ _ _} _/.
+
 (** naturality *)
 #[primitive] HB.mixin Record IsNatural {𝐂: BareQuiver} {𝐃: PreCat} (F G: Diagram 𝐂 𝐃) (n: TX F G) :=
-  { #[canonical=no] natural: forall (X Y: ob 𝐂) (f: X ~> Y), n Y ∘ Fhom F f ≡ Fhom G f ∘ n X }.
+  { #[canonical=no] natural: is_natural n }.
 #[short(type="NTX")]
 HB.structure Definition NATURAL 𝐂 𝐃 F G :=
   { n of @IsNatural 𝐂 𝐃 F G n }.
 Arguments natural {_ _ _ _} _ [_ _] _.
 Definition mk_ntx {𝐂: BareQuiver} {𝐃: PreCat} (F G: Diagram 𝐂 𝐃)
-  (n: TX F G) (H: forall (X Y: ob 𝐂) (f: X ~> Y), n Y ∘ Fhom F f ≡ Fhom G f ∘ n X)
+  (n: TX F G) (H: is_natural n)
   := HB.pack_for (NTX F G) n (IsNatural.Build _ _ F G n H).
 Arguments mk_ntx {_ _} _ _ _ _.
 
@@ -305,11 +309,9 @@ HB.instance Definition _ 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 _) (n: NTX F G) 
 HB.instance Definition _ 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) :=
   Setoid.copy (NTX F G) (kernel (@NATURAL.sort 𝐂 𝐃 F G)).
 
-(** ** categories of (pre)functors and natural transformations *)
+(** ** categories of diagrams and natural transformations *)
 HB.instance Definition _  𝐂 (𝐃: PreCat) :=
-  IsQuiver.Build (PreFunctor 𝐂 𝐃) (@NTX 𝐂 𝐃).
-HB.instance Definition _  𝐂 𝐃 :=
-  IsQuiver.Build (Functor 𝐂 𝐃) (@NTX 𝐂 𝐃).
+  IsQuiver.Build (Diagram 𝐂 𝐃) (@NTX 𝐂 𝐃).
 
 Definition ntx_id_ 𝐂 {𝐃: PreCat} (F: Diagram 𝐂 𝐃): TX F F :=
   fun X => idmap (F X).
@@ -318,30 +320,25 @@ Lemma _ntx_id_natural 𝐂 (𝐃: Cat) (F: Diagram 𝐂 𝐃):
   IsNatural 𝐂 𝐃 F F (ntx_id_ F).
 Proof. constructor=>X Y f/=. cat. Qed.
 HB.instance Definition _ 𝐂 𝐃 F := @_ntx_id_natural 𝐂 𝐃 F.
-Definition pre_ntx_id {𝐂} {𝐃: Cat} (F: PreFunctor 𝐂 𝐃): F ~> F := (ntx_id_ F: NTX _ _). 
-Definition ntx_id {𝐂} {𝐃: Cat} (F: Functor 𝐂 𝐃): F ~> F := (ntx_id_ F: NTX _ _). 
+Definition ntx_id {𝐂} {𝐃: Cat} (F: Diagram 𝐂 𝐃): F ~> F := (ntx_id_ F: NTX _ _).
 
 Definition ntx_comp_ {𝐂} {𝐃: PreCat} (F G H: Diagram 𝐂 𝐃) (m: TX F G) (n: TX G H): TX F H :=
   fun X => n X ∘ m X.
 Arguments ntx_comp_ {_ _ _ _ _} _ _ _/. 
-Lemma _ntx_comp_natural 𝐂 (𝐃: Cat) (F G H: PreFunctor 𝐂 𝐃) (m: F ~> G) (n: G ~> H) :
+Lemma _ntx_comp_natural 𝐂 (𝐃: Cat) (F G H: Diagram 𝐂 𝐃) (m: NTX F G) (n: NTX G H) :
   IsNatural 𝐂 𝐃 F H (@ntx_comp_ 𝐂 𝐃 F G H m n).
 Proof.
   constructor=>A B f /=.
   by rewrite -compoA natural compoA natural compoA.
 Qed.
 HB.instance Definition _ 𝐂 𝐃 F G H m n := @_ntx_comp_natural 𝐂 𝐃 F G H m n.
-Definition pre_ntx_comp {𝐂} {𝐃: Cat} (F G H: PreFunctor 𝐂 𝐃) (n: F ~> G) (m: G ~> H): F ~> H :=
-  (ntx_comp_ n m: NTX _ _). 
-Definition ntx_comp {𝐂} {𝐃: Cat} (F G H: Functor 𝐂 𝐃) (n: F ~> G) (m: G ~> H): F ~> H :=
+Definition ntx_comp {𝐂} {𝐃: Cat} (F G H: Diagram 𝐂 𝐃) (n: F ~> G) (m: G ~> H): F ~> H :=
   (ntx_comp_ n m: NTX _ _). 
 
 HB.instance Definition _ 𝐂 (𝐃: Cat) :=
-  IsPreCat.Build (PreFunctor 𝐂 𝐃) pre_ntx_id pre_ntx_comp.
-HB.instance Definition _ 𝐂 (𝐃: Cat) :=
-  IsPreCat.Build (Functor 𝐂 𝐃) ntx_id ntx_comp.
+  IsPreCat.Build (Diagram 𝐂 𝐃) ntx_id ntx_comp.
 
-Lemma _prefunctor_cat 𝐂 (𝐃: Cat): IsCat (PreFunctor 𝐂 𝐃).
+Lemma _diagram_cat 𝐂 (𝐃: Cat): IsCat (Diagram 𝐂 𝐃).
 Proof.
   constructor; repeat intro. 
   - exact: comp1o. 
@@ -349,18 +346,24 @@ Proof.
   - exact: compoA. 
   - exact: comp_eqv.
 Qed.
-HB.instance Definition _ 𝐂 𝐃 := _prefunctor_cat 𝐂 𝐃.
+HB.instance Definition _ 𝐂 𝐃 := _diagram_cat 𝐂 𝐃.
 
-(* TODO with faithful subcat ? *)
-Lemma _functor_cat 𝐂 (𝐃: Cat): IsCat (Functor 𝐂 𝐃).
-Proof.
-  constructor; repeat intro.
-  - exact: comp1o.
-  - exact: compo1.
-  - exact: compoA.
-  - exact: comp_eqv.
-Qed.
-HB.instance Definition _ 𝐂 𝐃 := _functor_cat 𝐂 𝐃.
+(** ** full subcategories of prefunctors/functors and natural transformations *)
+
+HB.instance Definition _ 𝐂 (𝐃: Cat) :=
+  CAT.copy (PreFunctor 𝐂 𝐃) (kernel (@functor_PREFUNCTOR__to__functor_DIAGRAM 𝐂 𝐃)).
+
+HB.instance Definition _ 𝐂 (𝐃: Cat) :=
+  CAT.copy (Functor 𝐂 𝐃) (kernel (@functor_FUNCTOR__to__functor_PREFUNCTOR 𝐂 𝐃)).
+
+(** casting isos between those subcategories *)
+
+(* TODO: general kernel-based construction *)
+Definition iso_prefunctor 𝐂 (𝐃: Cat) (F G: PreFunctor 𝐂 𝐃) (i: F ≃_(Diagram _ _) G): F ≃ G :=
+  @iso_ (PreFunctor _ _) _ _ (i¹) (i⁻¹) (invKl i) (invKr i).
+
+Definition iso_functor 𝐂 (𝐃: Cat) (F G: Functor 𝐂 𝐃) (i: F ≃_(Diagram _ _) G): F ≃ G :=
+  @iso_ (Functor _ _) _ _ (i¹) (i⁻¹) (invKl i) (invKr i).
 
 (* Check fun (𝐂: Cat) (F: Functor 𝐂 𝐂) (f: F ~> F) => let G: PreFunctor _ _ := F in f: G ~> G. *)
 
@@ -368,17 +371,17 @@ Definition ntx_comp'_ 𝐂 𝐃 {𝐄: PreCat} {F G: Diagram 𝐂 𝐃} {F' G': 
   (k: TX F G) (h: TX F' G'): TX (catcomp F F') (catcomp G G') :=
   (fun X => h _ ∘ Fhom _ (k _)).
 Arguments ntx_comp'_ {_ _ _ _ _ _ _} _ _ _/. 
-Program Definition _ntx_comp'_natural 𝐂 𝐃 (𝐄: Cat) (F G: 𝐂 ≈> 𝐃) (F' G': 𝐃 ≈> 𝐄)
-  (k: F ~> G) (h: F' ~> G') := IsNatural.Build 𝐂 𝐄 (catcomp F F') (catcomp G G') (ntx_comp'_ k h) _.
+Program Definition _ntx_comp'_natural 𝐂 (𝐃: PreCat) (𝐄: Cat) (F G: Diagram 𝐂 𝐃) (F': Diagram 𝐃 𝐄) (G': Functor 𝐃 𝐄)
+  (k: NTX F G) (h: NTX F' G') := IsNatural.Build 𝐂 𝐄 (catcomp F F') (catcomp G G') (ntx_comp'_ k h) _.
 Next Obligation.
-  intros. cbn. 
+  cbn; intros.
   rewrite natural -compoA !natural.
   rewrite compoA -Fcomp natural.
   Fail cat.                     (* was working before *)
-  rewrite !Fcomp. cat. 
+  rewrite Fcomp. cat.
 Qed.
 HB.instance Definition _ 𝐂 𝐃 𝐄 F G F' G' k h := @_ntx_comp'_natural 𝐂 𝐃 𝐄 F G F' G' k h.
-Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}
+Definition ntx_comp' {𝐂 𝐃 𝐄: Cat} {F G: Functor 𝐂 𝐃} {F' G': Functor 𝐃 𝐄}
   (*TMP-UNIV: functor_comp -> ∘ once we have Cat:Cat  *)
   (n: F ~> G) (m: F' ~> G'): (functor_comp F F') ~> (functor_comp G G') :=
   (ntx_comp'_ n m: NTX _ _). 
@@ -389,17 +392,59 @@ Notation "h ⊚ k" := (ntx_comp' k h): cat_scope. (* TODO: reverse this notation
 
 (** ** functor equivalence (i.e., natural isomorphisms) *)
 
-Section s.
-Context {𝐂} {𝐃: Cat} (F G: Functor 𝐂 𝐃).
-Definition functor_equiv := F ≃ G. (* TODO: abbreviation? *)
 
-(** alternative constructors for natural isomorphisms  *)
+(* there are several coercions from natural isomorphisms to pointwise morphisms,
+   since we have categories of Diagrams/PreFunctors/Functors *)
+
+Definition iso_ntx_pw1 {𝐂} {𝐃: Cat} (F G: Diagram 𝐂 𝐃) (n: F ≃ G) a: F a ~> G a := n¹ a.
+HB.instance Definition _ 𝐂 𝐃 F G n a :=
+   @IsIso.Build _ _ _ (@iso_ntx_pw1 𝐂 𝐃 F G n a) (inv n a) (invKl n a) (invKr n a).
+
+Definition iso_ntx_pw2 {𝐂} {𝐃: Cat} (F G: PreFunctor 𝐂 𝐃) (n: F ≃ G) a: F a ~> G a := n¹ a.
+HB.instance Definition _ 𝐂 𝐃 F G n a :=
+   @IsIso.Build _ _ _ (@iso_ntx_pw2 𝐂 𝐃 F G n a) (inv n a) (invKl n a) (invKr n a).
+
+Definition iso_ntx_pw3 {𝐂} {𝐃: Cat} (F G: Functor 𝐂 𝐃) (n: F ≃ G) a: F a ~> G a := n¹ a.
+HB.instance Definition _ 𝐂 𝐃 F G n a :=
+   @IsIso.Build _ _ _ (@iso_ntx_pw3 𝐂 𝐃 F G n a) (inv n a) (invKl n a) (invKr n a).
+
+(* unfortunately, we cannot declare the three coercions alltogether *)
+(* TOTHINK: use elpi? (failed so far, because we return dependent function types) *)
+Coercion iso_ntx_pw3: Iso >-> Funclass.
+
+Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≃ G) (X: ob 𝐂) => i X.
+Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≃ G) (X: ob 𝐂) => i X: _ ≃ _.
+Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≃ G) (X: ob 𝐂) => unify (i⁻¹ X)  (i X)⁻¹.
+
+Fail Check fun {𝐂 𝐃: Cat} (F G: Diagram 𝐂 𝐃) (i: F ≃ G) (X: ob 𝐂) => i X.
+Check fun {𝐂 𝐃: Cat} (F G: Diagram 𝐂 𝐃) (i: F ≃ G) (X: ob 𝐂) => iso_ntx_pw1 i X.
+
+Definition is_iso2_tx 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) (i: TX F G) (j: TX G F) :=
+  forall a, is_iso2 (i a) (j a).
+
+Lemma is_iso2_txC 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) (i: TX F G) (j: TX G F):
+  is_iso2_tx i j -> is_iso2_tx j i.
+Proof. move=>H a. exact: is_iso2C. Qed.
+
+Definition is_iso_tx 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) (i: TX F G) :=
+  sig (is_iso2_tx i).
+
+Section s.
+Context {𝐂} {𝐃: Cat} (F G: Diagram 𝐂 𝐃).
+
+Lemma is_iso2_tx_id: is_iso2_tx (ntx_id F) (ntx_id F).
+Proof. move=>a. exact/is_iso2_id. Qed.
+
+Lemma is_iso_tx_id: is_iso_tx (ntx_id F).
+Proof. eexists. exact/is_iso2_tx_id. Defined.
+
+(** natural isomorphisms can be constructed from pointwise isomorphisms *)
 Program Definition iso_ntx'
   (i: forall X, F X ≃ G X) (n: F ~> G)
-  (H: forall X, n X ≡ i X): functor_equiv :=
+  (H: forall X, n X ≡ i X): F ≃ G :=
   iso_ n (mk_ntx G F (fun X => (i X)⁻¹) _) _ _.
 Next Obligation.
-  intros=>/=. rewrite -iso_src.
+  intros=>/=X Y f. rewrite -iso_src.
   rewrite -H -compoA -natural.
   by rewrite compoA H invKr cats. 
 Qed.
@@ -409,14 +454,14 @@ Next Obligation. cbn=>i n H A/=. by rewrite H invKr. Qed.
 (** via natural tranformations which are pointwise isomorphisms *)
 Definition iso_ntx
   (i: forall X, F X ≃ G X):
-  (forall X Y h, i Y ∘ Fhom F h ≡ Fhom G h ∘ i X) -> functor_equiv.
+  (forall X Y h, i Y ∘ Fhom F h ≡ Fhom G h ∘ i X) -> F ≃ G.
 Proof. move=>N. exact: (@iso_ntx' i (mk_ntx _ _ i N)). Defined.
 
 (** when the functors actually are pointwise equal *)
-Lemma same_functor
+Lemma same_diagram
   (FG1: forall X, F X = G X)
   (FG2: forall (A B: ob 𝐂) (f: A ~> B), Fhom G f ≡ cast2' (T:=hom) (Fhom F f) (FG1 A) (FG1 B)):
-  functor_equiv.
+  F ≃ G.
 Proof.
   unshelve apply: iso_ntx.
   - intro. rewrite FG1. exact: iso_refl.
@@ -425,26 +470,13 @@ Proof.
     by simpl; cat. 
 Defined.
 
-(** natural isomorphisms pointwise yield isomorphisms *)
-Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X :=
-  iso_ (i¹ X) (i⁻¹ X) (invKl i X) (invKr i X). 
-
-(* Definition iso_ntx_pw_ (i: functor_equiv): forall X, F X ~> G X := fun X => (i¹ X). *)
-(* HB.instance Definition _ (i: functor_equiv) X := *)
-(*   IsIso.Build _ _ _ (iso_ntx_pw_ i X) (invKl i X) (invKr i X). *)
-(* Definition iso_ntx_pw (i: functor_equiv) X: F X ≃ G X := iso_ntx_pw_ i X.  *)
-
 End s.
-Coercion iso_ntx_pw: functor_equiv >-> Funclass.
-Infix "≈" := functor_equiv: cat_scope.
 
-(* Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≈ G) (X: 𝐂) => unify (i⁻¹ X)  (i X)⁻¹. *)
-
-Lemma iso_ntx_alt 𝐂 (𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) A B (f: A ~> B):
+Lemma iso_ntx_alt 𝐂 (𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≃ G) A B (f: A ~> B):
   Fhom G f ≡ i B ∘ Fhom F f ∘ (i A)⁻¹.
 Proof. rewrite natural -compoA invKl. cat. Qed.
 
-Lemma iso_ntx_eqv 𝐂 (𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≈ G) A B (f g: A ~> B):
+Lemma iso_ntx_eqv 𝐂 (𝐃: Cat) (F G: 𝐂 ≈> 𝐃) (i: F ≃ G) A B (f g: A ~> B):
   Fhom F f ≡ Fhom F g -> Fhom G f ≡ Fhom G g.
 Proof. rewrite 2!(iso_ntx_alt i). by move=>->. Qed.
 
@@ -471,13 +503,12 @@ Lemma ntx_comp'_eqv {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}:
   Proper (eqv ==> eqv ==> eqv) (@ntx_comp' _ _ _ F G F' G').
 Proof.
   intros i i' ii j j' jj X=>/=.
-  Fail by rewrite /= (ii _) (jj _).  (* FIXRW *)
-  apply: comp_eqv. apply: Fhom_eqv. exact: ii. exact: jj. 
+  by rewrite /= (ii _) (jj _).
 Qed.
 
 Import CMorphisms.
 Lemma functor_comp_iso:
-  Proper (functor_equiv ==> functor_equiv ==> functor_equiv) (@functor_comp 𝐂 𝐃 𝐄).
+  Proper (Iso ==> Iso ==> Iso) (@functor_comp 𝐂 𝐃 𝐄).
 Proof.
   intros F G i F' G' j. 
   apply: (iso_ (j⊚ i) (j⁻¹⊚i⁻¹) _ _).

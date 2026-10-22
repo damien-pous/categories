@@ -282,6 +282,7 @@ HB.instance Definition _ (𝐂: Cat) (A B C: ob 𝐂) (f: SplitMono A B) (g: Spl
 
 #[short(type="Iso")]
   HB.structure Definition ISO (𝐂: PreCat) (A B: ob 𝐂) := { f of @SPLITEPI 𝐂 A B f & SPLITMONO _ f }.
+Arguments Iso {_}.
 Infix "≃" := Iso: cat_scope.
 Notation "A ≃_ 𝐂 B" := (@Iso 𝐂 A B) (only parsing): cat_scope.
 Notation "f ¹" := (ISO.sort f): cat_scope.
@@ -304,6 +305,37 @@ HB.factory Record IsIso (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B) := {
 HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of IsIso 𝐂 A B f.
 HB.instance Definition _ := HasInverseOp.Build _ _ _ f g.
 HB.instance Definition _ := IsIso'.Build _ _ _ f invKl invKr.
+HB.end.
+
+(** more concrete definition *)
+
+Definition is_iso2 (𝐂: PreCat) (a b: ob 𝐂) (f: a ~> b) (g: b ~> a) :=
+  g \; f ≡ idmap ∧ f \; g ≡ idmap.
+
+Lemma is_iso2C (𝐂: PreCat) (a b: ob 𝐂) (f: a ~> b) (g: b ~> a):
+  is_iso2 f g -> is_iso2 g f.
+Proof. exact: swap_pair. Qed.
+
+Definition is_iso (𝐂: PreCat) (a b: ob 𝐂) (f: a ~> b) :=
+  sig (is_iso2 f).
+
+Lemma isoP2 (𝐂: PreCat) (a b: ob 𝐂) (i: a ≃ b): is_iso2 i i⁻¹.
+Proof. split. exact/invKl. exact/invKr. Qed.
+Lemma isoP (𝐂: PreCat) (a b: ob 𝐂) (i: a ≃ b): is_iso i.
+Proof. exists i⁻¹. exact/isoP2. Defined.
+
+HB.factory Record IsIso2P (𝐂: Cat) (A B: ob 𝐂) f of @INVERTIBLE _ A B f := {
+    iso2P: is_iso2 f (inv f);
+  }.
+HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of IsIso2P 𝐂 A B f.
+HB.instance Definition _ := @IsIso'.Build _ _ _ f iso2P.1 iso2P.2.
+HB.end.
+
+HB.factory Record IsIsoP (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B) := {
+    isoP: is_iso f;
+  }.
+HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of IsIsoP 𝐂 A B f.
+HB.instance Definition _ := @IsIso.Build _ _ _ f (proj1_sig isoP) (proj2_sig isoP).1 (proj2_sig isoP).2.
 HB.end.
 
 
@@ -395,6 +427,9 @@ Proof. move=>ij. apply/(epiP i). by rewrite /= invKr ij invKr. Qed.
 
 Lemma inv_inj A B (i j: A ≃ B): i⁻¹ ≡ j⁻¹ -> i¹ ≡ j¹.
 Proof. by move=>/inv_eqv. Qed.
+
+Lemma is_iso2_id A: is_iso2 A A.
+Proof. split; cat. Qed.
 
 End s.
 Definition iso_src := (@iso_src_l, @iso_src_r)%core.

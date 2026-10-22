@@ -8,7 +8,9 @@ Local Open Scope cat_scope.
 (** ** adjunctions *)
 
 Module Adj.
-  Record adjunction (𝐂 𝐃: PreCat) (F: PreFunctor 𝐂 𝐃) (G: PreFunctor 𝐃 𝐂) :=
+  Section def.
+  Context (𝐂 𝐃: PreCat) (F: PreFunctor 𝐂 𝐃) (G: PreFunctor 𝐃 𝐂).
+  Record adjunction :=
     mk {
         unit: NTX idfun (catcomp F G);
         counit: NTX (catcomp G F) idfun;
@@ -19,6 +21,11 @@ Module Adj.
         (* unit_counit_l: idmap ⊚ unit \; counit ⊚ idmap ≡ ntx_id _; *)
         (* unit_counit_r: unit ⊚ idmap \; idmap ⊚ counit ≡ ntx_id _; *)
     }.
+  Definition is_reflection s := is_iso_tx (counit s).
+  Definition counit' s (x: is_reflection s): TX idfun (catcomp G F) := sval x.
+  Definition is_coreflection s := is_iso_tx (unit s).
+  Definition unit' s (x: is_coreflection s): TX (catcomp F G) idfun := sval x.
+  End def.
   Infix "⊣" := adjunction (at level 79): cat_scope.
   Arguments adjunction: clear implicits.
   Arguments mk {_ _ _ _} &.
@@ -26,8 +33,8 @@ Module Adj.
   Section theory.
   Context {𝐂 𝐃: Cat} {F G: Functor _ _} (s: adjunction 𝐂 𝐃 F G).
   
-  Definition unit': functor_id ~> functor_comp F G := unit s. (* abbreviation? *)
-  Definition counit': functor_comp G F ~> functor_id := counit s. (* abbreviation? *)
+  Definition unit_: functor_id ~> functor_comp F G := unit s. (* abbreviation? *)
+  Definition counit_: functor_comp G F ~> functor_id := counit s. (* abbreviation? *)
   Lemma unit_counit_l: idmap ⊚ unit s \; counit s ⊚ idmap ≡ ntx_id _.
   Proof. move=>a. move:(unit_counit_l_at s a)=>/=. by rewrite !cats. Qed.
   Lemma unit_counit_r: unit s ⊚ idmap \; idmap ⊚ counit s ≡ ntx_id _.
@@ -80,6 +87,37 @@ Module Adj.
   (** right adjoints preserve terminal objects *)
   Theorem preserve_terminal (b: ob 𝐃) (H: terminal b): terminal (G b).
   Proof. move=>a. apply: (unique_impl up dn_inj). exact/H. Defined.
+
+  Lemma refl_corefl_equiv:
+    is_reflection s -> is_coreflection s -> G ⊣ F. 
+  Proof.
+    move=>R C.
+    unshelve apply: mk.
+    - unshelve eexists. exact: (counit' R). sorry.
+    - unshelve eexists. exact: (unit' C). sorry.
+    - sorry.
+    - sorry.
+  Defined.
+
+  Lemma refl_corefl_equiv_refl
+    (R: is_reflection s) (C: is_coreflection s):
+    is_reflection (refl_corefl_equiv R C).
+  Proof. exists (unit s). exact/is_iso2_txC /(proj2_sig C). Defined.
+
+  Lemma refl_corefl_equiv_corefl
+    (R: is_reflection s) (C: is_coreflection s):
+    is_coreflection (refl_corefl_equiv R C).
+  Proof. exists (counit s). exact/is_iso2_txC /(proj2_sig R). Defined.
+
+  Lemma equiv_refl (s': G ⊣ F): is_reflection s.
+  Proof.
+    exists (unit s')=>a. sorry. 
+  Defined.      
+
+  Lemma equiv_corefl (s': G ⊣ F): is_coreflection s.
+  Proof.
+    exists (counit s'). sorry. 
+  Defined.      
   
   End theory.
   
@@ -93,8 +131,8 @@ Module Adj.
     (GG: adjunction 𝐃 𝐄 G G'):
     catcomp F G ⊣ catcomp G' F' :=
     mk
-      (unit' FF \; idmap ⊚ unit' GG ⊚ idmap)
-      (idmap ⊚ counit' FF ⊚ idmap \; counit' GG) _ _.
+      (unit_ FF \; idmap ⊚ unit_ GG ⊚ idmap)
+      (idmap ⊚ counit_ FF ⊚ idmap \; counit_ GG) _ _.
   Admit Obligations.
   (* Next Obligation. move=>𝐂 𝐃 𝐄 F F' G G' FF GG A/=. rewrite !cats. Admitted.  *)
   (* Next Obligation. move=>𝐂 𝐃 𝐄 F F' G G' FF GG B/=. rewrite !cats. Admitted.  *)
@@ -113,11 +151,27 @@ Module Adj.
       (unit_counit_r_at FG)
       (unit_counit_l_at FG).
 
+  Definition refl_op {𝐂 𝐃 F G} (FG: adjunction 𝐂 𝐃 F G) (H: is_reflection FG):
+    is_coreflection (op FG).
+    exists (counit' H). exact/is_iso2_txC/(proj2_sig H).
+  Defined.
+
+  Definition corefl_op {𝐂 𝐃 F G} (FG: adjunction 𝐂 𝐃 F G) (H: is_coreflection FG):
+    is_reflection (op FG).
+    exists (unit' H). exact/is_iso2_txC/(proj2_sig H).
+  Defined.
+
+  Definition refl_op' {𝐂 𝐃 F G} (FG: F ⊣ G) (H: is_reflection FG):
+    @is_coreflection 𝐃 𝐂 _ _ (op' FG) := refl_op H.
+
+  Definition corefl_op' {𝐂 𝐃 F G} (FG: F ⊣ G) (H: is_coreflection FG):
+    @is_reflection 𝐃 𝐂 _ _ (op' FG) := corefl_op H.
+  
 End Adj.
 Definition adjunction := Adj.adjunction.
 Infix "⊣" := adjunction (at level 79): cat_scope.
 
-(** * HB inferrence *)
+(** * HB inference *)
 
 (** ** functions with an adjoint candidate (either left or right, or both) *)
 
@@ -186,21 +240,85 @@ HB.instance Definition _ 𝐂 𝐃 𝐄 (F: PreAdjointF 𝐂 𝐃) (G: PreAdjoin
 (** ** functors with a left/right adjoint *)
 
 #[primitive] 
-HB.mixin Record IsLeftAdjoint {𝐂 𝐃: PreCat} F of @PREADJOINTF 𝐂 𝐃 F :=
+HB.mixin Record IsLeftAdjoint 𝐂 𝐃 F of @PREADJOINTF 𝐂 𝐃 F :=
   { #[canonical=no] ladjP: F ⊣ adj F; }.
 #[short(type="LeftAdjoint")]
 HB.structure Definition LEFTADJOINT 𝐂 𝐃 := {F of IsLeftAdjoint 𝐂 𝐃 F & }.
 
 #[primitive] 
-HB.mixin Record IsRightAdjoint {𝐂 𝐃: PreCat} F of @PREADJOINTF 𝐂 𝐃 F :=
+HB.mixin Record IsRightAdjoint 𝐂 𝐃 F of @PREADJOINTF 𝐂 𝐃 F :=
   { #[canonical=no] radjP: adj F ⊣  F }.
 #[short(type="RightAdjoint")]
 HB.structure Definition RIGHTADJOINT 𝐂 𝐃 := {F of IsRightAdjoint 𝐂 𝐃 F & }.
 
+(** ** functors taking part into a reflection *)
+
+#[primitive] 
+HB.mixin Record IsLeftReflection 𝐂 𝐃 F of @LEFTADJOINT 𝐂 𝐃 F :=
+  { #[canonical=no] lreflP: Adj.is_reflection (ladjP (s:=F)); }.
+#[short(type="LeftReflection")]
+HB.structure Definition LEFTREFLECTION 𝐂 𝐃 := {F of IsLeftReflection 𝐂 𝐃 F & }.
+
+#[primitive] 
+HB.mixin Record IsRightReflection 𝐂 𝐃 F of @RIGHTADJOINT 𝐂 𝐃 F :=
+  { #[canonical=no] rreflP: Adj.is_reflection (radjP (s:=F)); }.
+#[short(type="RightReflection")]
+HB.structure Definition RIGHTREFLECTION 𝐂 𝐃 := {F of IsRightReflection 𝐂 𝐃 F & }.
+
+(** ** functors taking part into a coreflection *)
+
+#[primitive] 
+HB.mixin Record IsLeftCoreflection 𝐂 𝐃 F of @LEFTADJOINT 𝐂 𝐃 F :=
+  { #[canonical=no] lcoreflP: Adj.is_coreflection (ladjP (s:=F)); }.
+#[short(type="LeftCoreflection")]
+HB.structure Definition LEFTCOREFLECTION 𝐂 𝐃 := {F of IsLeftCoreflection 𝐂 𝐃 F & }.
+
+#[primitive] 
+HB.mixin Record IsRightCoreflection 𝐂 𝐃 F of @RIGHTADJOINT 𝐂 𝐃 F :=
+  { #[canonical=no] rcoreflP: Adj.is_coreflection (radjP (s:=F)); }.
+#[short(type="RightCoreflection")]
+HB.structure Definition RIGHTCOREFLECTION 𝐂 𝐃 := {F of IsRightCoreflection 𝐂 𝐃 F & }.
+
 (** ** adjoint equivalences *)
 
+(* we use an empty mixin because HB does seem to be able to saturate instances appropriately *)
+HB.mixin Record IsAdjointEquivalence_ 𝐂 𝐃 F of
+  @LEFTREFLECTION 𝐂 𝐃 F &
+  @LEFTCOREFLECTION 𝐂 𝐃 F &
+  @RIGHTREFLECTION 𝐂 𝐃 F &
+  @RIGHTCOREFLECTION 𝐂 𝐃 F := {}.
+
 #[short(type="AdjointEquivalence")]
-HB.structure Definition ADJOINTEQUIVALENCE 𝐂 𝐃 := {F of @LEFTADJOINT 𝐂 𝐃 F & @RIGHTADJOINT 𝐂 𝐃 F }.
+  HB.structure Definition ADJOINTEQUIVALENCE 𝐂 𝐃 :=
+  {F of IsAdjointEquivalence_ 𝐂 𝐃 F & }.
+
+(** being both a left and right adjoint (for the same adjoint candidate) is enough *)
+HB.factory Record IsAdjointEquivalence (𝐂 𝐃: Cat) F of @LEFTADJOINT 𝐂 𝐃 F & @RIGHTADJOINT 𝐂 𝐃 F := {}.
+HB.builders Context 𝐂 𝐃 F of IsAdjointEquivalence 𝐂 𝐃 F.
+HB.instance Definition _ :=
+  IsLeftReflection.Build _ _ F (Adj.equiv_refl ladjP (radjP (s:=F))).
+HB.instance Definition _ :=
+  IsLeftCoreflection.Build _ _ F (Adj.equiv_corefl ladjP (radjP (s:=F))).
+HB.instance Definition _ :=
+  IsRightReflection.Build _ _ F (Adj.equiv_refl radjP (ladjP (s:=F))).
+HB.instance Definition _ :=
+  IsRightCoreflection.Build _ _ F (Adj.equiv_corefl radjP (ladjP (s:=F))).
+HB.instance Definition _ :=
+  IsAdjointEquivalence_.Build _ _ F.
+HB.end.
+
+(** being both a left reflection and a right reflection is enough *)
+HB.factory Record IsAdjointEquivalenceL (𝐂 𝐃: Cat) F of @LEFTREFLECTION 𝐂 𝐃 F & @LEFTCOREFLECTION 𝐂 𝐃 F := {}.
+HB.builders Context 𝐂 𝐃 F of IsAdjointEquivalenceL 𝐂 𝐃 F.
+HB.instance Definition _ :=
+  IsRightAdjoint.Build _ _ F (Adj.refl_corefl_equiv (lreflP (s:=F)) (lcoreflP (s:=F))).
+HB.instance Definition _ :=
+  IsRightReflection.Build _ _ F (Adj.refl_corefl_equiv_refl _ _).
+HB.instance Definition _ :=
+  IsRightCoreflection.Build _ _ F (Adj.refl_corefl_equiv_corefl _ _).
+HB.instance Definition _ :=
+  IsAdjointEquivalence_.Build _ _ F.
+HB.end.
 
 
 (** * adjunction instances *)
@@ -213,6 +331,19 @@ HB.instance Definition _ 𝐂 𝐃 (F: LeftAdjoint 𝐂 𝐃) :=
 HB.instance Definition _ 𝐂 𝐃 (F: RightAdjoint 𝐂 𝐃) :=
   IsLeftAdjoint.Build 𝐃 𝐂 (adj F) radjP.
 
+HB.instance Definition _ 𝐂 𝐃 (F: LeftReflection 𝐂 𝐃) :=
+  IsRightReflection.Build 𝐃 𝐂 (adj F) lreflP.
+HB.instance Definition _ 𝐂 𝐃 (F: RightReflection 𝐂 𝐃) :=
+  IsLeftReflection.Build 𝐃 𝐂 (adj F) rreflP.
+
+HB.instance Definition _ 𝐂 𝐃 (F: LeftCoreflection 𝐂 𝐃) :=
+  IsRightCoreflection.Build 𝐃 𝐂 (adj F) lcoreflP.
+HB.instance Definition _ 𝐂 𝐃 (F: RightCoreflection 𝐂 𝐃) :=
+  IsLeftCoreflection.Build 𝐃 𝐂 (adj F) rcoreflP.
+
+HB.instance Definition _ 𝐂 𝐃 (F: AdjointEquivalence 𝐂 𝐃) :=
+  IsAdjointEquivalence_.Build _ _ (adj F).
+
 (* LA <-funcop-> RA *)
 HB.instance Definition _ 𝐂 𝐃 (F: LeftAdjoint 𝐂 𝐃) :=
   IsRightAdjoint.Build _ _ (funcop F) (Adj.op ladjP).
@@ -223,52 +354,47 @@ HB.instance Definition _ 𝐂 𝐃 (F: LeftAdjoint _ _) :=
 HB.instance Definition _ 𝐂 𝐃 (F: RightAdjoint _ _) :=
   IsLeftAdjoint.Build 𝐂 𝐃 (funcop' F) (Adj.op' radjP).
 
+HB.instance Definition _ 𝐂 𝐃 (F: LeftReflection 𝐂 𝐃) :=
+  IsRightCoreflection.Build _ _ (funcop F) (Adj.refl_op lreflP).
+HB.instance Definition _ 𝐂 𝐃 (F: RightReflection 𝐂 𝐃) :=
+  IsLeftCoreflection.Build _ _ (funcop F) (Adj.refl_op rreflP).
+HB.instance Definition _ 𝐂 𝐃 (F: LeftReflection _ _) :=
+  IsRightCoreflection.Build 𝐂 𝐃 (funcop' F) (Adj.refl_op' lreflP).
+HB.instance Definition _ 𝐂 𝐃 (F: RightReflection _ _) :=
+  IsLeftCoreflection.Build 𝐂 𝐃 (funcop' F) (Adj.refl_op' rreflP).
+
+HB.instance Definition _ 𝐂 𝐃 (F: LeftCoreflection 𝐂 𝐃) :=
+  IsRightReflection.Build _ _ (funcop F) (Adj.corefl_op lcoreflP).
+HB.instance Definition _ 𝐂 𝐃 (F: RightCoreflection 𝐂 𝐃) :=
+  IsLeftReflection.Build _ _ (funcop F) (Adj.corefl_op rcoreflP).
+HB.instance Definition _ 𝐂 𝐃 (F: LeftCoreflection _ _) :=
+  IsRightReflection.Build 𝐂 𝐃 (funcop' F) (Adj.corefl_op' lcoreflP).
+HB.instance Definition _ 𝐂 𝐃 (F: RightCoreflection _ _) :=
+  IsLeftReflection.Build 𝐂 𝐃 (funcop' F) (Adj.corefl_op' rcoreflP).
+
+HB.instance Definition _ 𝐂 𝐃 (F: AdjointEquivalence 𝐂 𝐃) :=
+  IsAdjointEquivalence_.Build _ _ (funcop F).
+HB.instance Definition _ 𝐂 𝐃 (F: AdjointEquivalence _ _) :=
+  IsAdjointEquivalence_.Build 𝐂 𝐃 (funcop' F).
+
 (* TODO: funcop12 *)
 
 (** ** identity adjunctions *)
 HB.instance Definition _ (𝐂: Cat) := IsLeftAdjoint.Build 𝐂 𝐂 idfun Adj.id.
 HB.instance Definition _ (𝐂: Cat) := IsRightAdjoint.Build 𝐂 𝐂 idfun Adj.id.
+HB.instance Definition _ (𝐂: Cat) := IsAdjointEquivalence.Build 𝐂 𝐂 idfun.
 
 (** ** composing adjunctions  *)
 HB.instance Definition _ (𝐂 𝐃 𝐄: Cat) (F: LeftAdjoint 𝐂 𝐃) (G: LeftAdjoint 𝐃 𝐄) :=
   IsLeftAdjoint.Build 𝐂 𝐄 (catcomp F G) (Adj.comp ladjP ladjP).
 HB.instance Definition _ (𝐂 𝐃 𝐄: Cat) (F: RightAdjoint 𝐂 𝐃) (G: RightAdjoint 𝐃 𝐄) :=
   IsRightAdjoint.Build 𝐂 𝐄 (catcomp F G) (Adj.comp radjP radjP).
-
-
-(* TOFIX: declarations below are no-ops *)
-HB.saturate adj. 
-HB.saturate funcop. 
-HB.saturate catcomp. 
-(* we emulate them using the following asymmetric declarations *)
-HB.instance Definition _ C D (F: AdjointEquivalence C D) := LEFTADJOINT.on (adj F).
-HB.instance Definition _ C D (F: AdjointEquivalence C D) := LEFTADJOINT.on (funcop F).
-HB.instance Definition _ (C D E: Cat) (F: AdjointEquivalence C D) (G: AdjointEquivalence D E) := LEFTADJOINT.on (catcomp F G).
+HB.instance Definition _ (𝐂 𝐃 𝐄: Cat) (F: AdjointEquivalence 𝐂 𝐃) (G: AdjointEquivalence 𝐃 𝐄) :=
+  IsAdjointEquivalence.Build 𝐂 𝐄 (catcomp F G).
 
 Check fun (C D: Cat) (F: AdjointEquivalence C D) => adj F: AdjointEquivalence D C. 
 Check fun (C D: Cat) (F: AdjointEquivalence C D) => funcop F: AdjointEquivalence (C^op) (D^op). 
 Check fun (C: Cat) (F G: AdjointEquivalence C C) => catcomp F G: AdjointEquivalence C C. 
-
-
-
-(** * additional factories *)
-HB.factory Record IsAdjointEquivalence {𝐂 𝐃: Cat} F of @PREADJOINTF 𝐂 𝐃 F :=
-  { adjKl: functor_comp (adj F) F ≃ functor_id;
-    adjKr: functor_comp F (adj F) ≃ functor_id;
-    unit_counit_l_at: forall A, Fhom F (adjKr⁻¹ A) \; adjKl¹ (F A) ≡ F A;
-    unit_counit_r_at: forall B, adjKr⁻¹ (adj F B) \; Fhom (adj F) (adjKl¹ B) ≡ adj F B;
-    (* unit_counit_l: idmap ⊚ adjKr⁻¹ \; adjKl ⊚ idmap ≡ ntx_id _; *)
-    (* unit_counit_r: adjKr⁻¹ ⊚ idmap \; idmap ⊚ adjKl ≡ ntx_id _; *)
-  }.
-HB.builders Context 𝐂 𝐃 F of @IsAdjointEquivalence 𝐂 𝐃 F.
-HB.instance Definition _ :=
-  @IsLeftAdjoint.Build 𝐂 𝐃 F (Adj.mk adjKr⁻¹ adjKl¹ unit_counit_l_at unit_counit_r_at).  
-(* TODO&MOVE to module Adj *)
-Lemma unit_counit_l_at': forall A, Fhom (adj F) (adjKl⁻¹ A) \; adjKr¹ (adj F A) ≡ adj F A. Admitted.
-Lemma unit_counit_r_at': forall B, adjKl⁻¹ (F B) \; Fhom F (adjKr¹ B) ≡ F B. Admitted.
-HB.instance Definition _ :=
-  @IsRightAdjoint.Build 𝐂 𝐃 F (Adj.mk adjKl⁻¹ adjKr¹ unit_counit_l_at' unit_counit_r_at').  
-HB.end.
 
 
 (** * binding properties of adjunctions to HB's inferrence *)
@@ -334,7 +460,6 @@ End radj.
 HB.instance Definition _ 𝐂 𝐃 F A := IsTerminal.Build _ _ (@radj.preserve_Terminal 𝐂 𝐃 F A).
 
 
-
 (** * equivalence [C->D]^op ≃ [C^op->D^op] *)
 
 Section s.
@@ -346,16 +471,15 @@ HB.instance Definition _ :=
   @IsFunctor.Build _ _ opfunc (fun _ _ n => ntxop n: NTX _ _)
     (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
-(* first two instances only need 𝐃: PreCat *)
 HB.instance Definition _ :=
   @IsFunctor.Build _ _ opfunc' (fun _ _ n => ntxop' n: NTX _ _)
     (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
 HB.instance Definition _ := IsPreAdjointF.Build _ _ opfunc opfunc'.
-HB.instance Definition _ := IsPreAdjointF.Build _ _ opfunc' opfunc.
 
 (* TODO: helpers since this is really an identity adjunction, like for [same_functor]? *)
 Definition adj_opfunc: adjunction opfunc opfunc'.
+Proof.
   unshelve esplit.
   unshelve esplit.
   cbn=>a. exact: ntx_id.
@@ -369,24 +493,25 @@ Definition adj_opfunc: adjunction opfunc opfunc'.
   cbn=>F a/=. by rewrite !cats. 
 Defined.
 
-Definition adj_opfunc': adjunction opfunc' opfunc.
-  unshelve esplit.
-  unshelve esplit.
-  cbn=>a. exact: ntx_id.
-  split; split. cbn=>F G n a. by rewrite !cats. 
-  unshelve esplit.
-  unshelve esplit.
-  cbn=>a. exact: ntx_id.
-  split; split. cbn=>a b f. by rewrite !cats. 
-  split; split. cbn=>F G n a. cat.
-  cbn=>F a/=. by rewrite !cats. 
-  cbn=>F a/=. by rewrite !cats. 
+Definition refl_adj_opfunc: Adj.is_reflection adj_opfunc.
+Proof.
+  unshelve eexists.
+  cbn=>a. exact: idmap.
+  move=>F. split; cbn=>a; by rewrite !cats.
+Defined.
+
+Definition corefl_adj_opfunc: Adj.is_coreflection adj_opfunc.
+Proof.
+  unshelve eexists.
+  cbn=>a. exact: idmap.
+  move=>F. split; cbn=>a; by rewrite !cats.
 Defined.
 
 HB.instance Definition _ := IsLeftAdjoint.Build _ _ opfunc adj_opfunc.
-HB.instance Definition _ := IsRightAdjoint.Build _ _ opfunc adj_opfunc'.
-HB.instance Definition _ := IsLeftAdjoint.Build _ _ opfunc' adj_opfunc'.
-HB.instance Definition _ := IsRightAdjoint.Build _ _ opfunc' adj_opfunc.
+HB.instance Definition _ := IsLeftReflection.Build _ _ opfunc refl_adj_opfunc.
+HB.instance Definition _ := IsLeftCoreflection.Build _ _ opfunc corefl_adj_opfunc.
+HB.instance Definition _ := IsAdjointEquivalenceL.Build _ _ opfunc.
+HB.instance Definition _ := ADJOINTEQUIVALENCE.copy opfunc' (adj opfunc).
 
 End s. 
 
@@ -406,10 +531,10 @@ HB.instance Definition _ :=
     (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
 
 HB.instance Definition _ := IsPreAdjointF.Build _ _ opop opop'.
-HB.instance Definition _ := IsPreAdjointF.Build _ _ opop' opop.
 
 (* TODO: helpers since this is really an identity adjunction, like for [same_functor]? *)
 Definition adj_opop: adjunction opop opop'.
+Proof.
   unshelve esplit.
   unshelve esplit.
   exact: (fun a => idmap). 
@@ -419,19 +544,10 @@ Definition adj_opop: adjunction opop opop'.
   cbn=>a/=. by rewrite !cats. 
 Defined.
 
-Definition adj_opop': adjunction opop' opop.
-  unshelve esplit.
-  unshelve esplit.
-  exact: (fun a => idmap). 
-  split; split. cbn=>a b f. by rewrite !cats.
-  exact: ntx_id.
-  cbn=>a/=. by rewrite !cats. 
-  cbn=>a/=. by rewrite !cats. 
-Defined.
-
 HB.instance Definition _ := IsLeftAdjoint.Build _ _ opop adj_opop.
-HB.instance Definition _ := IsRightAdjoint.Build _ _ opop adj_opop'.
-HB.instance Definition _ := IsLeftAdjoint.Build _ _ opop' adj_opop'.
-HB.instance Definition _ := IsRightAdjoint.Build _ _ opop' adj_opop.
+HB.instance Definition _ := IsLeftReflection.Build _ _ opop (is_iso_tx_id _).
+HB.instance Definition _ := IsLeftCoreflection.Build _ _ opop (is_iso_tx_id _).
+HB.instance Definition _ := IsAdjointEquivalenceL.Build _ _ opop.
+HB.instance Definition _ := ADJOINTEQUIVALENCE.copy opop' (adj opop).
 
 End s. 
