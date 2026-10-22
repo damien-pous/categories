@@ -32,10 +32,10 @@ End s.
 Section s.
 Context (𝐂: Cat) (a b z: ob 𝐂) (f: a ~> z) (g: b ~> z).
 Definition SquareAboveiso_sort (x y: SquareAbove f g) (i: x ≃ y): x ≃_𝐂 y :=
-  iso_ (Spanhom_sort i¹) (Spanhom_sort i⁻¹) (invKl i) (invKr i). 
+  iso_ (Spanhom_sort i¹) (Spanhom_sort i⁻¹) (isoP i). 
 
 Definition squareaboveiso_ (x y: SquareAbove f g) (i: x ≃_𝐂 y) (H: spanhom pi1 pi2 pi1 pi2 i¹): x ≃ y :=
-  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (spanhom_inv H)) (invKl i) (invKr i).
+  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (spanhom_inv H)) (isoP i).
 End s.
 
 Section s.

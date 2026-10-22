@@ -360,10 +360,10 @@ HB.instance Definition _ 𝐂 (𝐃: Cat) :=
 
 (* TODO: general kernel-based construction *)
 Definition iso_prefunctor 𝐂 (𝐃: Cat) (F G: PreFunctor 𝐂 𝐃) (i: F ≃_(Diagram _ _) G): F ≃ G :=
-  @iso_ (PreFunctor _ _) _ _ (i¹) (i⁻¹) (invKl i) (invKr i).
+  @iso_ (PreFunctor _ _) _ _ (i¹) (i⁻¹) (isoP i).
 
 Definition iso_functor 𝐂 (𝐃: Cat) (F G: Functor 𝐂 𝐃) (i: F ≃_(Diagram _ _) G): F ≃ G :=
-  @iso_ (Functor _ _) _ _ (i¹) (i⁻¹) (invKl i) (invKr i).
+  @iso_ (Functor _ _) _ _ (i¹) (i⁻¹) (isoP i).
 
 (* Check fun (𝐂: Cat) (F: Functor 𝐂 𝐂) (f: F ~> F) => let G: PreFunctor _ _ := F in f: G ~> G. *)
 
@@ -393,20 +393,21 @@ Notation "h ⊚ k" := (ntx_comp' k h): cat_scope. (* TODO: reverse this notation
 (** ** functor equivalence (i.e., natural isomorphisms) *)
 
 
+
 (* there are several coercions from natural isomorphisms to pointwise morphisms,
    since we have categories of Diagrams/PreFunctors/Functors *)
 
 Definition iso_ntx_pw1 {𝐂} {𝐃: Cat} (F G: Diagram 𝐂 𝐃) (n: F ≃ G) a: F a ~> G a := n¹ a.
 HB.instance Definition _ 𝐂 𝐃 F G n a :=
-   @IsIso.Build _ _ _ (@iso_ntx_pw1 𝐂 𝐃 F G n a) (inv n a) (invKl n a) (invKr n a).
+   @IsIso.Build _ _ _ (@iso_ntx_pw1 𝐂 𝐃 F G n a) (inv n a) (invKl n a, invKr n a).
 
 Definition iso_ntx_pw2 {𝐂} {𝐃: Cat} (F G: PreFunctor 𝐂 𝐃) (n: F ≃ G) a: F a ~> G a := n¹ a.
 HB.instance Definition _ 𝐂 𝐃 F G n a :=
-   @IsIso.Build _ _ _ (@iso_ntx_pw2 𝐂 𝐃 F G n a) (inv n a) (invKl n a) (invKr n a).
+   @IsIso.Build _ _ _ (@iso_ntx_pw2 𝐂 𝐃 F G n a) (inv n a) (invKl n a, invKr n a).
 
 Definition iso_ntx_pw3 {𝐂} {𝐃: Cat} (F G: Functor 𝐂 𝐃) (n: F ≃ G) a: F a ~> G a := n¹ a.
 HB.instance Definition _ 𝐂 𝐃 F G n a :=
-   @IsIso.Build _ _ _ (@iso_ntx_pw3 𝐂 𝐃 F G n a) (inv n a) (invKl n a) (invKr n a).
+   @IsIso.Build _ _ _ (@iso_ntx_pw3 𝐂 𝐃 F G n a) (inv n a) (invKl n a, invKr n a).
 
 (* unfortunately, we cannot declare the three coercions alltogether *)
 (* TOTHINK: use elpi? (failed so far, because we return dependent function types) *)
@@ -419,37 +420,32 @@ Check fun {𝐂 𝐃: Cat} (F G: Functor 𝐂 𝐃) (i: F ≃ G) (X: ob 𝐂) =>
 Fail Check fun {𝐂 𝐃: Cat} (F G: Diagram 𝐂 𝐃) (i: F ≃ G) (X: ob 𝐂) => i X.
 Check fun {𝐂 𝐃: Cat} (F G: Diagram 𝐂 𝐃) (i: F ≃ G) (X: ob 𝐂) => iso_ntx_pw1 i X.
 
-Definition is_iso2_tx 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) (i: TX F G) (j: TX G F) :=
-  forall a, is_iso2 (i a) (j a).
+Definition is_iso_tx 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) (i: TX F G) (j: TX G F) :=
+  forall a, is_iso (i a) (j a).
 
-Lemma is_iso2_txC 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) (i: TX F G) (j: TX G F):
-  is_iso2_tx i j -> is_iso2_tx j i.
-Proof. move=>H a. exact: is_iso2C. Qed.
-
-Definition is_iso_tx 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) (i: TX F G) :=
-  sig (is_iso2_tx i).
+Lemma iso_txC 𝐂 (𝐃: PreCat) (F G: Diagram 𝐂 𝐃) (i: TX F G) (j: TX G F):
+  is_iso_tx i j -> is_iso_tx j i.
+Proof. move=>H a. exact: isoC. Qed.
 
 Section s.
 Context {𝐂} {𝐃: Cat} (F G: Diagram 𝐂 𝐃).
 
-Lemma is_iso2_tx_id: is_iso2_tx (ntx_id F) (ntx_id F).
-Proof. move=>a. exact/is_iso2_id. Qed.
+Lemma iso_tx_id: is_iso_tx (ntx_id F) (ntx_id F).
+Proof. move=>a. exact/iso_id. Qed.
 
-Lemma is_iso_tx_id: is_iso_tx (ntx_id F).
-Proof. eexists. exact/is_iso2_tx_id. Defined.
+Definition iso_tx_id': sig (is_iso_tx (ntx_id F)) := exist _ _ iso_tx_id.
 
 (** natural isomorphisms can be constructed from pointwise isomorphisms *)
 Program Definition iso_ntx'
   (i: forall X, F X ≃ G X) (n: F ~> G)
   (H: forall X, n X ≡ i X): F ≃ G :=
-  iso_ n (mk_ntx G F (fun X => (i X)⁻¹) _) _ _.
+  iso_ n (mk_ntx G F (fun X => (i X)⁻¹) _) _.
 Next Obligation.
   intros=>/=X Y f. rewrite -iso_src.
   rewrite -H -compoA -natural.
   by rewrite compoA H invKr cats. 
 Qed.
-Next Obligation. cbn=>i n H A/=. by rewrite H invKl. Qed.
-Next Obligation. cbn=>i n H A/=. by rewrite H invKr. Qed.
+Next Obligation. move=>i n H. split; cbn=>A/=; by rewrite H isoP. Qed.
 
 (** via natural tranformations which are pointwise isomorphisms *)
 Definition iso_ntx
@@ -458,17 +454,19 @@ Definition iso_ntx
 Proof. move=>N. exact: (@iso_ntx' i (mk_ntx _ _ i N)). Defined.
 
 (** when the functors actually are pointwise equal *)
-Lemma same_diagram
+Program Definition same_diagram
   (FG1: forall X, F X = G X)
-  (FG2: forall (A B: ob 𝐂) (f: A ~> B), Fhom G f ≡ cast2' (T:=hom) (Fhom F f) (FG1 A) (FG1 B)):
-  F ≃ G.
-Proof.
-  unshelve apply: iso_ntx.
-  - intro. rewrite FG1. exact: iso_refl.
-  - intros A B f. rewrite /= FG2 /cast2' /=.
-    destruct (FG1 A); destruct (FG1 B).
-    by simpl; cat. 
+  (FG2: forall (A B: ob 𝐂) (f: A ~> B),
+      Fhom G f ≡ cast2' (T:=hom) (Fhom F f) (FG1 A) (FG1 B)): F ≃ G :=
+  @iso_ntx _ _. 
+Next Obligation.
+  intros FG1 _ X. rewrite FG1. exact: iso_refl.
 Defined.
+Next Obligation.
+  intros FG1 FG2 A B f. rewrite /= FG2 /cast2' /=/same_diagram_obligation_1.
+  destruct (FG1 A); destruct (FG1 B).
+  by simpl; cat. 
+Qed.
 
 End s.
 
@@ -507,15 +505,17 @@ Proof.
 Qed.
 
 Import CMorphisms.
-Lemma functor_comp_iso:
-  Proper (Iso ==> Iso ==> Iso) (@functor_comp 𝐂 𝐃 𝐄).
-Proof.
-  intros F G i F' G' j. 
-  apply: (iso_ (j⊚ i) (j⁻¹⊚i⁻¹) _ _).
-  abstract (rewrite -ntx_comp'_comp; etransitivity;
-            [exact: (ntx_comp'_eqv (invKl i) (invKl j)) | by rewrite ntx_comp'_id]).
-  abstract (rewrite -ntx_comp'_comp; etransitivity;
-            [exact: (ntx_comp'_eqv (invKr i) (invKr j)) | by rewrite ntx_comp'_id]).
-Defined.
+Program Definition functor_comp_iso:
+  Proper (Iso ==> Iso ==> Iso) (@functor_comp 𝐂 𝐃 𝐄) :=
+  fun F G i F' G' j => iso_ (j⊚ i) (j⁻¹⊚i⁻¹) _.
+Next Obligation.
+  split.
+  - rewrite -ntx_comp'_comp; etransitivity.
+    exact: (ntx_comp'_eqv (invKl i) (invKl j)).
+    by rewrite ntx_comp'_id.
+  - rewrite -ntx_comp'_comp; etransitivity.
+    exact: (ntx_comp'_eqv (invKr i) (invKr j)).
+    by rewrite ntx_comp'_id.
+Qed.
 End strict.
 

@@ -280,6 +280,9 @@ HB.instance Definition _ (𝐂: Cat) (A B C: ob 𝐂) (f: SplitMono A B) (g: Spl
 
 (** * isomorphisms *)
 
+Definition is_iso (𝐂: PreCat) (a b: ob 𝐂) (f: a ~> b) (g: b ~> a) :=
+  g \; f ≡ idmap ∧ f \; g ≡ idmap.
+
 #[short(type="Iso")]
   HB.structure Definition ISO (𝐂: PreCat) (A B: ob 𝐂) := { f of @SPLITEPI 𝐂 A B f & SPLITMONO _ f }.
 Arguments Iso {_}.
@@ -288,56 +291,22 @@ Notation "A ≃_ 𝐂 B" := (@Iso 𝐂 A B) (only parsing): cat_scope.
 Notation "f ¹" := (ISO.sort f): cat_scope.
 HB.instance Definition _ 𝐂 A B := Setoid.copy (A ≃ B) (kernel (@ISO.sort 𝐂 A B)).
 
-HB.factory Record IsIso' (𝐂: Cat) (A B: ob 𝐂) f of HasInverseOp _ A B f := {
-    invKl: has_left_inverse f;
-    invKr: has_right_inverse f;
-  }.
+Lemma isoP (𝐂: PreCat) (a b: ob 𝐂) (i: a ≃ b): is_iso i i⁻¹.
+Proof. split. exact/invKl. exact/invKr. Qed.
+
+HB.factory Record IsIso' (𝐂: Cat) (A B: ob 𝐂) f of @INVERTIBLE _ A B f := 
+  { isoP: is_iso f (inv f) }.
 HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of IsIso' 𝐂 A B f.
-HB.instance Definition _ := HasLeftInverse.Build _ _ _ f invKl.
-HB.instance Definition _ := HasRightInverse.Build _ _ _ f invKr.
+HB.instance Definition _ := HasLeftInverse.Build _ _ _ f isoP.1.
+HB.instance Definition _ := HasRightInverse.Build _ _ _ f isoP.2.
 HB.end.
 
-HB.factory Record IsIso (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B) := {
-    g: B ~> A;
-    invKl: g \; f ≡ idmap;
-    invKr: f \; g ≡ idmap;
-  }.
+HB.factory Record IsIso (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B) := 
+  { g: B ~> A; isoP: is_iso f g }.
 HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of IsIso 𝐂 A B f.
 HB.instance Definition _ := HasInverseOp.Build _ _ _ f g.
-HB.instance Definition _ := IsIso'.Build _ _ _ f invKl invKr.
+HB.instance Definition _ := IsIso'.Build _ _ _ f isoP.
 HB.end.
-
-(** more concrete definition *)
-
-Definition is_iso2 (𝐂: PreCat) (a b: ob 𝐂) (f: a ~> b) (g: b ~> a) :=
-  g \; f ≡ idmap ∧ f \; g ≡ idmap.
-
-Lemma is_iso2C (𝐂: PreCat) (a b: ob 𝐂) (f: a ~> b) (g: b ~> a):
-  is_iso2 f g -> is_iso2 g f.
-Proof. exact: swap_pair. Qed.
-
-Definition is_iso (𝐂: PreCat) (a b: ob 𝐂) (f: a ~> b) :=
-  sig (is_iso2 f).
-
-Lemma isoP2 (𝐂: PreCat) (a b: ob 𝐂) (i: a ≃ b): is_iso2 i i⁻¹.
-Proof. split. exact/invKl. exact/invKr. Qed.
-Lemma isoP (𝐂: PreCat) (a b: ob 𝐂) (i: a ≃ b): is_iso i.
-Proof. exists i⁻¹. exact/isoP2. Defined.
-
-HB.factory Record IsIso2P (𝐂: Cat) (A B: ob 𝐂) f of @INVERTIBLE _ A B f := {
-    iso2P: is_iso2 f (inv f);
-  }.
-HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of IsIso2P 𝐂 A B f.
-HB.instance Definition _ := @IsIso'.Build _ _ _ f iso2P.1 iso2P.2.
-HB.end.
-
-HB.factory Record IsIsoP (𝐂: Cat) (A B: ob 𝐂) (f: A ~> B) := {
-    isoP: is_iso f;
-  }.
-HB.builders Context (𝐂: Cat) (A B: ob 𝐂) f of IsIsoP 𝐂 A B f.
-HB.instance Definition _ := @IsIso.Build _ _ _ f (proj1_sig isoP) (proj2_sig isoP).1 (proj2_sig isoP).2.
-HB.end.
-
 
 HB.saturate idmap.
 HB.saturate comp.
@@ -346,6 +315,10 @@ HB.saturate morphop.
 (* Check fun (C: Cat) (a b: C) (i: a≃b) => morphop i: _ ≃ _. *)
 
 (** * additional properties *)
+
+Lemma isoC (𝐂: PreCat) (a b: ob 𝐂) (f: a ~> b) (g: b ~> a):
+  is_iso f g -> is_iso g f.
+Proof. exact: swap_pair. Qed.
 
 Lemma epiP' {𝐂: Cat} {A B: ob 𝐂} (e: A ↠ B) C (f g: B ~> C): e \; f ≡ e \; g <-> f ≡ g.
 Proof. split. exact/epiP. exact/comp_eqv. Qed.
@@ -428,7 +401,7 @@ Proof. move=>ij. apply/(epiP i). by rewrite /= invKr ij invKr. Qed.
 Lemma inv_inj A B (i j: A ≃ B): i⁻¹ ≡ j⁻¹ -> i¹ ≡ j¹.
 Proof. by move=>/inv_eqv. Qed.
 
-Lemma is_iso2_id A: is_iso2 A A.
+Lemma iso_id A: is_iso A A.
 Proof. split; cat. Qed.
 
 End s.
@@ -441,22 +414,26 @@ Proof. exact: (iso_src_l _ _ (morphop i)). Qed.
 Definition iso_tgt := (@iso_tgt_l, @iso_tgt_r)%core.
 
 (** forging isomorphisms from scratch (TODO: same for other concepts) *)
-Definition iso {𝐂: Cat} {A B: ob 𝐂} (i: A ~> B) (j: B ~> A) (_: j \; i ≡ idmap) (_: i \; j ≡ idmap) := i.
-Arguments iso {_ _ _}. 
-HB.instance Definition _ 𝐂 A B i j ji ij := @IsIso.Build 𝐂 A B (@iso 𝐂 A B i j ji ij) j ji ij. 
-Definition iso_ {𝐂: Cat} {A B: ob 𝐂} (i: A ~> B) (j: B ~> A) ji ij: A ≃ B := iso i j ji ij. 
-Arguments iso_ {_ _ _}.
+Definition iso {𝐂: Cat} {A B: ob 𝐂} (i: A ~> B) (j: B ~> A) (_: is_iso i j) := i.
+Arguments iso {_ _ _} _ _ _/. 
+HB.instance Definition _ 𝐂 A B i j ij := @IsIso.Build 𝐂 A B (@iso 𝐂 A B i j ij) j ij. 
+Definition iso_ {𝐂: Cat} {A B: ob 𝐂} (i: A ~> B) (j: B ~> A) ij: A ≃ B := iso i j ij. 
+Arguments iso_ {_ _ _} _ _/.
 
 (** isomorphisms in product categories *)
 Program Definition pair_iso {𝐂 𝐃: Cat} {A A' B B'} (i: A ≃_𝐂 A') (j: B ≃_𝐃 B'): (A,B) ≃ (A',B')
-  := @iso_ (𝐂*𝐃)%type (A,B) (A',B') (i,j) (i⁻¹, j⁻¹)  _ _.
-Next Obligation. split; exact: invKl. Qed.
-Next Obligation. split; exact: invKr. Qed.
+  := @iso_ (𝐂*𝐃)%type (A,B) (A',B') (i,j) (i⁻¹, j⁻¹)  _.
+Next Obligation. split. split; exact: invKl. split; exact: invKr. Qed.
+Arguments pair_iso {_ _ _ _ _ _} _ _/.
 
 
 (**  unicity of initial/terminal objects, up to (unique) isomorphism *)
-Definition InitialU {𝐂: Cat} (a b: Initial 𝐂): a ≃ b :=
-  iso_ (init _ _) (init _ _) (initU _ _) (initU _ _).
+Program Definition InitialU {𝐂: Cat} (a b: Initial 𝐂): a ≃ b :=
+  iso_ (init _ _) (init _ _) _.
+Next Obligation. split; exact/initU. Qed. 
+Arguments InitialU {_} _ _/.
 
-Definition TerminalU {𝐂: Cat} (a b: Terminal 𝐂): a ≃ b :=
-  iso_ (term _ _) (term _ _) (termU _ _) (termU _ _).
+Program Definition TerminalU {𝐂: Cat} (a b: Terminal 𝐂): a ≃ b :=
+  iso_ (term _ _) (term _ _) _.
+Next Obligation. split; exact/termU. Qed. 
+Arguments TerminalU {_} _ _/.

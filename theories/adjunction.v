@@ -21,9 +21,9 @@ Module Adj.
         (* unit_counit_l: idmap ⊚ unit \; counit ⊚ idmap ≡ ntx_id _; *)
         (* unit_counit_r: unit ⊚ idmap \; idmap ⊚ counit ≡ ntx_id _; *)
     }.
-  Definition is_reflection s := is_iso_tx (counit s).
+  Definition is_reflection s := sig (is_iso_tx (counit s)).
   Definition counit' s (x: is_reflection s): TX idfun (catcomp G F) := sval x.
-  Definition is_coreflection s := is_iso_tx (unit s).
+  Definition is_coreflection s := sig (is_iso_tx (unit s)).
   Definition unit' s (x: is_coreflection s): TX (catcomp F G) idfun := sval x.
   End def.
   Infix "⊣" := adjunction (at level 79): cat_scope.
@@ -102,12 +102,12 @@ Module Adj.
   Lemma refl_corefl_equiv_refl
     (R: is_reflection s) (C: is_coreflection s):
     is_reflection (refl_corefl_equiv R C).
-  Proof. exists (unit s). exact/is_iso2_txC /(proj2_sig C). Defined.
+  Proof. exists (unit s). exact/iso_txC /(proj2_sig C). Defined.
 
   Lemma refl_corefl_equiv_corefl
     (R: is_reflection s) (C: is_coreflection s):
     is_coreflection (refl_corefl_equiv R C).
-  Proof. exists (counit s). exact/is_iso2_txC /(proj2_sig R). Defined.
+  Proof. exists (counit s). exact/iso_txC /(proj2_sig R). Defined.
 
   Lemma equiv_refl (s': G ⊣ F): is_reflection s.
   Proof.
@@ -153,12 +153,12 @@ Module Adj.
 
   Definition refl_op {𝐂 𝐃 F G} (FG: adjunction 𝐂 𝐃 F G) (H: is_reflection FG):
     is_coreflection (op FG).
-    exists (counit' H). exact/is_iso2_txC/(proj2_sig H).
+    exists (counit' H). exact/iso_txC/(proj2_sig H).
   Defined.
 
   Definition corefl_op {𝐂 𝐃 F G} (FG: adjunction 𝐂 𝐃 F G) (H: is_coreflection FG):
     is_reflection (op FG).
-    exists (unit' H). exact/is_iso2_txC/(proj2_sig H).
+    exists (unit' H). exact/iso_txC/(proj2_sig H).
   Defined.
 
   Definition refl_op' {𝐂 𝐃 F G} (FG: F ⊣ G) (H: is_reflection FG):
@@ -545,8 +545,8 @@ Proof.
 Defined.
 
 HB.instance Definition _ := IsLeftAdjoint.Build _ _ opop adj_opop.
-HB.instance Definition _ := IsLeftReflection.Build _ _ opop (is_iso_tx_id _).
-HB.instance Definition _ := IsLeftCoreflection.Build _ _ opop (is_iso_tx_id _).
+HB.instance Definition _ := IsLeftReflection.Build _ _ opop (iso_tx_id' _).
+HB.instance Definition _ := IsLeftCoreflection.Build _ _ opop (iso_tx_id' _).
 HB.instance Definition _ := IsAdjointEquivalenceL.Build _ _ opop.
 HB.instance Definition _ := ADJOINTEQUIVALENCE.copy opop' (adj opop).
 

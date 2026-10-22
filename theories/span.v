@@ -83,14 +83,14 @@ HB.instance Definition _ :=
 (* HB.instance Definition _ := _span_cat.  *)
 
 Definition Spaniso_sort (x y: Span a b) (i: x ≃ y): x ≃_𝐂 y :=
-  iso_ (Spanhom_sort i¹) (Spanhom_sort i⁻¹) (invKl i) (invKr i). 
+  iso_ (Spanhom_sort i¹) (Spanhom_sort i⁻¹) (isoP i). 
 
 Lemma spanhom_inv (x y: Span a b) (i: x ≃_𝐂 y) (H: spanhom pi1 pi2 pi1 pi2 i¹):
   spanhom pi1 pi2 pi1 pi2 i⁻¹.
 Proof. by split; rewrite iso_src H. Qed.
 
 Definition spaniso_ (x y: Span a b) (i: x ≃_𝐂 y) (H: spanhom pi1 pi2 pi1 pi2 i¹): x ≃ y :=
-  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (spanhom_inv H)) (invKl i) (invKr i).
+  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (spanhom_inv H)) (isoP i).
 
 (** ** representation of spans as cones over the appropriate shape *)
 

@@ -253,6 +253,9 @@ Proof.
   by rewrite compoA prodC2 prod1 compoA prod2 -compoA prodC2.
 Qed.
 
+Lemma prodC_inv a b: (prodC a b)⁻¹ ≡ prodC b a.
+Proof. done. Qed.
+
 Definition prodA a b c: (a×b)×c ≃ a×(b×c) :=
   ProductU (mk_product_ (productA _)) _.
 

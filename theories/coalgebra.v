@@ -126,7 +126,7 @@ A --b--> FA --a--> A
   Proof. exact: (@termU _ A _ (Coalghom_comp (coalgnexthom_ A') b) idmap). Qed.
   Let ba: COALGHOM.sort b \; coalg A'  ≡ idmap.
   Proof. rewrite -coalghomP-Fcomp ab. cat. Qed.
-  HB.instance Definition _ := @IsIso.Build _ _ _ (coalg A') b ba ab. 
+  HB.instance Definition _ := @IsIso.Build _ _ _ (coalg A') b (ba,ab). 
 End lambek.
 Check fun A: Terminal (Coalgebra F) => coalg (TERMINAL.sort A): Iso _ _. 
 

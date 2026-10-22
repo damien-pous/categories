@@ -111,7 +111,7 @@ A --b--> FA --a--> A
   Proof. exact: (initU (b \; algnexthom_ A') idmap). Qed.
   Let ab: alg A' \; b  ≡ idmap.
   Proof. rewrite -alghomP-Fcomp ba. cat. Qed.
-  HB.instance Definition _ := @IsIso.Build _ _ _ (alg A') b ba ab.
+  HB.instance Definition _ := @IsIso.Build _ _ _ (alg A') b (ba,ab).
 
 
   Definition rec_ (X: Algebra F): A' ~> X := init _ X.

@@ -92,13 +92,13 @@ Qed.
 HB.instance Definition _ := _cospan_cat.
 
 Definition Cospaniso_sort (x y: Cospan a b) (i: x ≃ y): x ≃_𝐂 y :=
-  iso_ (Cospanhom_sort i¹) (Cospanhom_sort i⁻¹) (invKl i) (invKr i). 
+  iso_ (Cospanhom_sort i¹) (Cospanhom_sort i⁻¹) (isoP i). 
 
 Lemma cospanhom_inv (x y: Cospan a b) (i: x ≃_𝐂 y) (H: cospanhom in1 in2 in1 in2 i¹):
   cospanhom in1 in2 in1 in2 i⁻¹.
 Proof. by split; rewrite iso_tgt H. Qed.
 
 Definition cospaniso_ (x y: Cospan a b) (i: x ≃_𝐂 y) (H: cospanhom in1 in2 in1 in2 i¹): x ≃ y :=
-  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (cospanhom_inv H)) (invKl i) (invKr i).
+  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (cospanhom_inv H)) (isoP i).
 
 End s.

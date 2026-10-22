@@ -38,10 +38,10 @@ End s.
 Section s.
 Context (𝐂: Cat) (a b z: ob 𝐂) (f: z ~> a) (g: z ~> b).
 Definition SquareBelowiso_sort (x y: SquareBelow f g) (i: x ≃ y): x ≃_𝐂 y :=
-  iso_ (Cospanhom_sort i¹) (Cospanhom_sort i⁻¹) (invKl i) (invKr i). 
+  iso_ (Cospanhom_sort i¹) (Cospanhom_sort i⁻¹) (isoP i). 
 
 Definition squarebelowiso_ (x y: SquareBelow f g) (i: x ≃_𝐂 y) (H: cospanhom in1 in2 in1 in2 i¹): x ≃ y :=
-  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (cospanhom_inv H)) (invKl i) (invKr i).
+  @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (cospanhom_inv H)) (isoP i).
 End s.
 
 Section s.
