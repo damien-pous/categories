@@ -1,6 +1,6 @@
 (** * more on (co)cartesian monoidal categories *)
 
-Require Export monoidal_def adjunction coproduct.
+Require Import cat morphisms span cospan product coproduct functor adjunction monoidal_def.
 From Stdlib Require Import ProofIrrelevance. (* TO REMOVE *)
 Require Import arewrite.
 

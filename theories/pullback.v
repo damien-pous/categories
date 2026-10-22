@@ -1,6 +1,6 @@
 (** * pullbacks *)
 
-Require Export cospan.
+Require Import cat morphisms span cospan.
 Require Import arewrite.
 
 Local Open Scope cat_scope.

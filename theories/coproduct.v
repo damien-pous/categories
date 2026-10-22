@@ -1,6 +1,6 @@
 (** * coproducts *)
 
-Require Export cospan product.
+Require Import cat morphisms span cospan product.
 
 Local Open Scope cat_scope.
 

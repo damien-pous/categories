@@ -1,6 +1,6 @@
 (** * the monoidal category of endofunctors *)
 
-Require Export monoidal_def.
+Require Import cat functor monoidal_def.
 From Stdlib Require Import ProofIrrelevance. 
 
 Local Open Scope cat_scope.

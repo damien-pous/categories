@@ -1,6 +1,6 @@
 (** * monoidal categories *)
 
-Require Export cat cast bifunctor.
+Require Import cat morphisms cast functor bifunctor.
 
 Local Open Scope cat_scope.
 

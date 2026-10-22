@@ -1,6 +1,6 @@
 (** * the bicategory of categories *)
 
-Require Export span functor bicat product.
+Require Import cat functor bicat.
 
 Local Open Scope cat_scope.
 

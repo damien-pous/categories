@@ -1,6 +1,6 @@
 (** * spans *)
 
-Require Export shape functor limit.
+Require Import cat morphisms shape functor adjunction limit.
 
 Local Open Scope cat_scope.
 

@@ -1,6 +1,6 @@
 (** * bifunctors *)
 
-Require Export functor.
+Require Import cat functor.
 
 Local Open Scope cat_scope.
 

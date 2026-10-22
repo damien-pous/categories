@@ -1,6 +1,6 @@
 (** * algebras *)
 
-Require Export functor.
+Require Import cat morphisms functor.
 Require Import arewrite.
 
 Local Open Scope cat_scope.

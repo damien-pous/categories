@@ -1,6 +1,6 @@
 (** cones and limits *)
 
-Require Export functor adjunction.
+Require Import cat functor adjunction.
 Require Import arewrite.
 
 Local Open Scope cat_scope.

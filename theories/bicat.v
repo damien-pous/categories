@@ -1,6 +1,6 @@
 (** bicategories *)
 
-Require Export morphisms.
+Require Import cat morphisms.
 
 Local Open Scope cat_scope.
 

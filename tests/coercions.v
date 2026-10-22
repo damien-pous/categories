@@ -1,4 +1,4 @@
-Require Import cat functor morphisms coalgebra.
+Require Import cat functor morphisms algebra coalgebra.
 
 Local Open Scope cat_scope.
 

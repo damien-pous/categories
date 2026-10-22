@@ -1,6 +1,6 @@
 (** * Functors and natural transformations *)
 
-Require Export morphisms.
+Require Import cat morphisms.
 Require Import arewrite.
 
 Local Open Scope cat_scope.

@@ -1,6 +1,6 @@
 (** * the category of setoids *)
 
-Require Import functor coproduct.
+Require Import cat morphisms functor span cospan product coproduct.
 From Stdlib Require Import List.
 
 Local Open Scope cat_scope.

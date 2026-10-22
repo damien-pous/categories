@@ -1,6 +1,6 @@
 (** hierarchy of morphisms: (split/regular) {mono,epi}morphisms and isomorphisms *)
 
-Require Export cat.
+Require Import cat.
 Require Import arewrite.
 
 Local Open Scope cat_scope.

@@ -1,6 +1,6 @@
 (** * products *)
 
-Require Export span.
+Require Import cat morphisms span.
 Require Import arewrite.
 
 Local Open Scope cat_scope.
