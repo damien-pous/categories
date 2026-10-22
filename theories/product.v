@@ -124,14 +124,19 @@ Proof. apply productC, productUr. Qed.
 Lemma productA a b c (ab: Product a b) (bc: Product b c) (x: Product ab c):
   product a bc x (pi1\;pi1) (pair (pi1\;pi2) pi2).
 Proof.
-(* TODO: finish *)
   move=>y p q. unshelve apply: mk_unique_sig.
-  exact: (pair (pair p (q\;pi1)) (q\;pi2)).
-  split.
-   arewrite pair1; exact: pair1.
-   sorry.
-  move=>/=h [H1 H2].
-  sorry.
+  exact/(pair (pair p (q\;pi1)) (q\;pi2)). split.
+  - arewrite pair1; exact/pair1.
+  - apply/prod_ext; split.
+    arewrite pair1; arewrite pair1; exact/pair2.
+    arewrite pair2. arewrite pair2. done.
+  - move=>/=h [<- <-].
+    apply/prod_ext; split.
+    -- arewrite pair1.
+       apply/prod_ext; split.
+       --- arewrite pair1. cat.
+       --- arewrite pair2. arewrite pair1. cat.
+    -- arewrite pair2. arewrite pair2. done.
 Qed.
 
 (* Definition prod_assoc X Y Z: (X×Y)×Z ≃ X×(Y×Z). *)
@@ -198,6 +203,16 @@ Proof.
     rewrite -!compoA pairE//.
 Qed.
 
+Lemma prod1 a b c d (f: a~>c) (g: b~>d): hprod f g \; pi1 ≡ pi1 \; f.
+Proof. by rewrite /hprod pair1. Qed.
+
+Lemma prod2 a b c d (f: a~>c) (g: b~>d): hprod f g \; pi2 ≡ pi2 \; g.
+Proof. by rewrite /hprod pair2. Qed.
+
+Lemma prodE a b c d (f: a~>c) (g: b~>d): hprod f g \; pi1 ≡ pi1 \; f ∧ hprod f g \; pi2 ≡ pi2 \; g.
+Proof. split. exact/prod1. exact/prod2. Qed.
+
+
 (** [hprod] preserves monos (but not epis)
     as a functor, it also preserves split epis, split monos, and isomorphisms *)
 
@@ -228,6 +243,8 @@ HB.instance Definition _ a a' b b' (f: SplitEpi a a') (g: SplitEpi b b') :=
 HB.saturate hprod.
 Definition prod_iso a a' b b' (f: a ≃ a') (g: b ≃ b'): a×b ≃ a'×b' := hprod f g.
 
+(* local notation, consistent with the subsequent notation in cartesian monoidal categories *)
+Infix "·" := hprod: cat_scope.
 
 (* Note: could be defined already in PreCatBProd *)
 Definition diag a: a ~> a×a := pair a a.
@@ -238,11 +255,59 @@ Definition prodC a b: a×b ≃ b×a :=
 Definition prodCH a b: spanhom _ _ _ _ (prodC a b)¹ :=
   ProductUH (ProductC _) _.
 
+Lemma prodC1 a b: prodC a b \; pi1 ≡ pi2.
+Proof. apply prodCH. Qed.
+
+Lemma prodC2 a b: prodC a b \; pi2 ≡ pi1.
+Proof. apply prodCH. Qed.
+
+Lemma prodC_nat a b a' b' f g: hprod g f \; prodC b' a' ≡ prodC a b \; hprod f g.
+Proof.
+  apply/prod_ext. split.
+  by rewrite compoA prodC1 prod2 compoA prod1 -compoA prodC1.
+  by rewrite compoA prodC2 prod1 compoA prod2 -compoA prodC2.
+Qed.
+
 Definition prodA a b c: (a×b)×c ≃ a×(b×c) :=
   ProductU (mk_product_ (productA _)) _.
 
 Definition prodAH a b c: spanhom _ _ _ _ (prodA a b c)¹ :=
   ProductUH (mk_product_ (productA _)) _.
+
+Lemma prodA1 a b c: prodA a b c \; pi1 ≡ pi1 \; pi1.
+Proof. apply prodAH. Qed.
+
+Lemma prodA2 a b c: prodA a b c \; pi2 \; pi1 ≡ pi1 \; pi2.
+Proof. by rewrite -compoA (prodAH a b c).2 pair1. Qed.
+
+Lemma prodA3 a b c: prodA a b c \; pi2 \; pi2 ≡ pi2.
+Proof. by rewrite -compoA (prodAH a b c).2 pair2. Qed.
+
+Lemma prodA_nat a b c a' b' c' f g h:
+  (f · g) · h \; prodA a' b' c' ≡ prodA a b c \; f · (g · h).
+Proof.
+  apply/prod_ext; split. 2: apply/prod_ext; split.
+  - arewrite prodA1. arewrite prod1. arewrite prod1. symmetry.
+    arewrite prod1. arewrite prodA1. cat.
+  - arewrite prodA2. arewrite prod1. arewrite prod2. symmetry.
+    arewrite prod2. arewrite prod1. arewrite prodA2. cat.
+  - arewrite prodA3. arewrite prod2. symmetry.
+    arewrite prod2. arewrite prod2. arewrite prodA3. cat.
+Qed.
+
+Lemma prodA_pentagon a b c d:
+  prodA a b c · d \; prodA a (b × c) d \; a · prodA b c d ≡ prodA (a × b) c d \; prodA a b (c × d).
+Proof.
+  apply/prod_ext; split. 2: apply/prod_ext; split. 3: apply/prod_ext; split.
+  - arewrite prod1. arewrite prodA1. arewrite prod1. arewrite prodA1. symmetry.
+    arewrite prodA1. arewrite prodA1. cat.
+  - arewrite prod2. arewrite prodA1. arewrite prodA2. arewrite prod1. arewrite prodA2. symmetry.
+    arewrite prodA2. arewrite prodA1. cat.
+  - arewrite prod2. arewrite prodA2. arewrite prodA2. arewrite prod1. arewrite prodA3. symmetry.
+    arewrite prodA3. arewrite prodA2. done. 
+  - arewrite prod2. arewrite prodA3. arewrite prodA3. arewrite prod2. symmetry.
+    arewrite prodA3. arewrite prodA3. cat. 
+Qed.
 
 End s.
 
@@ -256,9 +321,49 @@ Definition prodUl a: one×a ≃ a :=
 Definition prodUlH a: spanhom _ _ _ _ (prodUl a)¹ :=
   ProductUH _ (mk_product_ (@productUl _ _ _)).
 
+Lemma prodUl'2 a: inv (prodUl a) \; pi2 ≡ idmap.
+Proof. rewrite -iso_src. symmetry. apply prodUlH. Qed.
+
+Lemma prodUl_pi2 a: (prodUl a)¹ ≡ pi2.
+Proof. move: (prodUl'2 a). rewrite iso_src. move=>->. cat. Qed.
+
+Lemma prodUl_nat a a' f: hprod idmap f \; prodUl a' ≡ prodUl a \; f.
+Proof.
+  rewrite iso_tgt compoA iso_src. 
+  apply/prod_ext; split. exact/termU.
+  arewrite prod2. arewrite prodUl'2. symmetry.
+  arewrite prodUl'2. cat.
+Qed.
+
 Definition prodUr a: a×one ≃ a :=
   ProductU _ (mk_product_ (@productUr _ _ _)).
 
 Definition prodUrH a: spanhom _ _ _ _ (prodUr a)¹ :=
   ProductUH _ (mk_product_ (@productUr _ _ _)).
+
+(* to be deduced from monoidal symmetry? *)
+Lemma prodUr'1 a: inv (prodUr a) \; pi1 ≡ idmap.
+Proof. rewrite -iso_src. symmetry. apply prodUrH. Qed.
+
+Lemma prodUr_pi1 a: (prodUr a)¹ ≡ pi1.
+Proof. move: (prodUr'1 a). rewrite iso_src. move=>->. cat. Qed.
+
+Lemma prodUr_nat a a' f: hprod f idmap \; prodUr a' ≡ prodUr a \; f.
+Proof.
+  rewrite iso_tgt compoA iso_src. 
+  apply/prod_ext; split. 2: exact/termU. 
+  arewrite prod1. arewrite prodUr'1. symmetry. 
+  arewrite prodUr'1. cat. 
+Qed.
+
+Infix "·" := hprod: cat_scope.
+Lemma prodA_triangle a b: prodA a one b \; a · prodUl b ≡ prodUr a · b.
+Proof.
+  apply/prod_ext; split. 
+  - arewrite prod1. arewrite prodA1. symmetry.
+    arewrite prod1. arewrite prodUr_pi1. done. 
+  - arewrite prod2. arewrite prodUl_pi2. arewrite prodA3. symmetry.
+    arewrite prod2. cat.
+Qed.
+
 End s.

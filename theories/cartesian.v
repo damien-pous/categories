@@ -26,18 +26,11 @@ HB.instance Definition _ := CATPROD.on (cartesian 𝐂).
 HB.instance Definition _ := HasMonoidalOps.Build (cartesian 𝐂) one PROD. 
 HB.instance Definition _ := HasUIP.Build (cartesian 𝐂) (fun _ _ => proof_irrelevance _). 
 
-Program Definition _cartesian_premonoidal :=
-  @IsPreMonoidal.Build (cartesian 𝐂) prodA prodUl prodUr _ _ _.  
-Next Obligation. intros a b c a' b' c' f g h. Admitted.
-Next Obligation. intros a a' f. Admitted.
-Next Obligation. intros a a' f. Admitted.
-HB.instance Definition _ := _cartesian_premonoidal.
+HB.instance Definition _ :=
+  @IsPreMonoidal.Build (cartesian 𝐂) prodA prodUl prodUr prodA_nat prodUl_nat prodUr_nat.
 
-Program Definition _cartesian_monoidal :=
-  @IsMonoidal.Build (cartesian 𝐂) _ _.
-Next Obligation. intros a b c d. Admitted.
-Next Obligation. intros a b. Admitted.
-HB.instance Definition _ := _cartesian_monoidal.
+HB.instance Definition _ :=
+  @IsMonoidal.Build (cartesian 𝐂) prodA_pentagon prodA_triangle.
 
 End s.
 
