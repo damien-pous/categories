@@ -243,7 +243,7 @@ HB.instance Definition _ a a' b b' (f: SplitEpi a a') (g: SplitEpi b b') :=
 HB.saturate hprod.
 Definition prod_iso a a' b b' (f: a ≃ a') (g: b ≃ b'): a×b ≃ a'×b' := hprod f g.
 
-(* local notation, consistent with the subsequent notation in cartesian monoidal categories *)
+(* local notation, consistent with the subsequent notation in (cartesian) monoidal categories *)
 Infix "·" := hprod: cat_scope.
 
 (* Note: could be defined already in PreCatBProd *)
@@ -261,7 +261,7 @@ Proof. apply prodCH. Qed.
 Lemma prodC2 a b: prodC a b \; pi2 ≡ pi1.
 Proof. apply prodCH. Qed.
 
-Lemma prodC_nat a b a' b' f g: hprod g f \; prodC b' a' ≡ prodC a b \; hprod f g.
+Lemma prodC_nat a b a' b' f g: g · f \; prodC b' a' ≡ prodC a b \; f · g.
 Proof.
   apply/prod_ext. split.
   by rewrite compoA prodC1 prod2 compoA prod1 -compoA prodC1.
@@ -314,6 +314,7 @@ End s.
 Section s.
 Context {𝐂: CatProd}.
 Implicit Types a b c d: ob 𝐂.
+Infix "·" := hprod: cat_scope.
 
 Definition prodUl a: one×a ≃ a :=
   ProductU _ (mk_product_ (@productUl _ _ _)).
@@ -327,7 +328,7 @@ Proof. rewrite -iso_src. symmetry. apply prodUlH. Qed.
 Lemma prodUl_pi2 a: (prodUl a)¹ ≡ pi2.
 Proof. move: (prodUl'2 a). rewrite iso_src. move=>->. cat. Qed.
 
-Lemma prodUl_nat a a' f: hprod idmap f \; prodUl a' ≡ prodUl a \; f.
+Lemma prodUl_nat a a' f: idmap · f \; prodUl a' ≡ prodUl a \; f.
 Proof.
   rewrite iso_tgt compoA iso_src. 
   apply/prod_ext; split. exact/termU.
@@ -348,7 +349,7 @@ Proof. rewrite -iso_src. symmetry. apply prodUrH. Qed.
 Lemma prodUr_pi1 a: (prodUr a)¹ ≡ pi1.
 Proof. move: (prodUr'1 a). rewrite iso_src. move=>->. cat. Qed.
 
-Lemma prodUr_nat a a' f: hprod f idmap \; prodUr a' ≡ prodUr a \; f.
+Lemma prodUr_nat a a' f: f · idmap \; prodUr a' ≡ prodUr a \; f.
 Proof.
   rewrite iso_tgt compoA iso_src. 
   apply/prod_ext; split. 2: exact/termU. 
@@ -356,7 +357,6 @@ Proof.
   arewrite prodUr'1. cat. 
 Qed.
 
-Infix "·" := hprod: cat_scope.
 Lemma prodA_triangle a b: prodA a one b \; a · prodUl b ≡ prodUr a · b.
 Proof.
   apply/prod_ext; split. 

@@ -33,7 +33,6 @@ HB.instance Definition _ x i j H := COSPAN.on (@mk_coproduct x i j H).
 HB.instance Definition _ x i j H := IsCoproduct.Build 𝐂 a b (@mk_coproduct x i j H) H.
 Definition mk_coproduct_ x i j H: Coproduct a b := @mk_coproduct x i j H.
 
-
 Lemma product_op x f g: @product _ _ _ _ (morphop f) (morphop g) -> @coproduct 𝐂 a b x f g.
 Proof. exact. Defined.
 Lemma coproduct_op x f g: @coproduct _ _ _ _ (morphop f) (morphop g) -> @product 𝐂 a b x f g.
@@ -112,18 +111,18 @@ Proof. exact: (prod_ext (x:=obop x)). Qed.
 End s.
 
 Lemma coproductUr a (u: Initial 𝐂): coproduct a u a a (init u a).
-Proof. exact:(productUr (u:=obop u)). Qed.
+Proof. exact:(productUr (u:=obop u)). Defined.
 
 Lemma coproductUl a (u: Initial 𝐂): coproduct u a a (init u a) a.
-Proof. exact:(productUl (u:=obop u)). Qed.
+Proof. exact:(productUl (u:=obop u)). Defined.
 
 Lemma coproductA a b c (ab: Coproduct a b) (bc: Coproduct b c) (x: Coproduct ab c):
   coproduct a bc x (in1\;in1) (copair (in2\;in1) in2).
-Proof. exact:(productA (ab:=obop ab) (bc:=obop bc) (obop x)). Qed.
+Proof. exact:(productA (ab:=obop ab) (bc:=obop bc) (obop x)). Defined.
 
 Lemma coproductA' a b c (ab: Coproduct a b) (bc: Coproduct b c) (x: Coproduct a bc):
   coproduct ab c x (copair in1 (in1 \; in2)) (in2 \; in2).
-Proof. exact:(productA' (ab:=obop ab) (bc:=obop bc) (obop x)). Qed.
+Proof. exact:(productA' (ab:=obop ab) (bc:=obop bc) (obop x)). Defined.
   
 End s.
 
@@ -165,7 +164,7 @@ Implicit Types a b c d: ob 𝐂.
 Definition coprodP a b: coproduct a b (a+b) in1 in2 := coproductP. 
 
 (** [hcoprod] for "coprod" on homsets *)
-Definition hcoprod a b c d (f: a~>c) (g: b~>d): a+b ~> c+d := copair (f\;in1) (g\;in2).
+Definition hcoprod a b c d (f: a~>c) (g: b~>d): a+b ~> c+d := hprod (morphop f) (morphop g).
 
 #[export] Instance coprod_eqv {a b c d}: Proper (eqv ==> eqv ==> eqv) (@hcoprod a b c d).
 Proof. exact: (@prod_eqv 𝐂^op). Qed. 
@@ -176,6 +175,15 @@ Proof. exact: (@prod_id 𝐂^op). Qed.
 Lemma coprod_comp a a' a'' b b' b'' (f: a~>a') (f': a'~>a'') (g: b~>b') (g': b'~>b''):
   hcoprod (f\;f') (g\;g') ≡ hcoprod f g \; hcoprod f' g'.
 Proof. exact: (@prod_comp 𝐂^op). Qed.
+
+Lemma coprod1 a b c d (f: a~>c) (g: b~>d): in1 \; hcoprod f g ≡ f \; in1.
+Proof. exact: (@prod1 𝐂^op). Qed.
+
+Lemma coprod2 a b c d (f: a~>c) (g: b~>d): in2 \; hcoprod f g ≡ g \; in2.
+Proof. exact: (@prod2 𝐂^op). Qed.
+
+Lemma coprodE a b c d (f: a~>c) (g: b~>d): in1 \; hcoprod f g ≡ f \; in1 ∧ in2 \; hcoprod f g ≡ g \; in2.
+Proof. exact: (@prodE 𝐂^op). Qed.
 
 (** [hcoprod] preserves epis (but not monos)
     as a functor, it also preserves split epis, split monos, and isomorphisms *)
@@ -203,6 +211,9 @@ HB.instance Definition _ a a' b b' (f: SplitEpi a a') (g: SplitEpi b b') :=
 HB.saturate hcoprod.
 Definition coprod_iso a a' b b' (f: a ≃ a') (g: b ≃ b'): a+b ≃ a'+b' := hcoprod f g.
 
+(* local notation, consistent with the subsequent notation in (cocartesian) monoidal categories *)
+Infix "·" := hcoprod: cat_scope.
+
 (* Note: could be defined already in PreCatBCoprod *)
 Definition codiag a: a+a ~> a := copair a a.
 
@@ -212,17 +223,60 @@ Definition coprodC a b: a+b ≃ b+a :=
 Definition coprodCH a b: cospanhom _ _ _ _ (coprodC a b)¹ :=
   CoproductUH (CoproductC _) _.
 
+Lemma coprodC1 a b: in1 \; coprodC a b ≡ in2.
+Proof. apply coprodCH. Qed.
+
+Lemma coprodC2 a b: in2 \; coprodC a b ≡ in1.
+Proof. apply coprodCH. Qed.
+
+Lemma coprodC_nat a b a' b' f g: g · f \; coprodC b' a' ≡ coprodC a b \; f · g.
+Proof. symmetry. exact/(@prodC_nat 𝐂^op). Qed.
+
+Lemma coprodC_inv a b: (coprodC a b)⁻¹ ≡ coprodC b a.
+Proof. done. Qed.
+
 Definition coprodA a b c: (a+b)+c ≃ a+(b+c) :=
   CoproductU (mk_coproduct_ (coproductA _)) _.
 
 Definition coprodAH a b c: cospanhom _ _ _ _ (coprodA a b c)¹ :=
   CoproductUH (mk_coproduct_ (coproductA _)) _.
 
+Lemma coprodA1 a b c: in1 \; in1 \; coprodA a b c ≡ in1.
+Proof.
+  rewrite -compoA iso_tgt. symmetry.
+  exact/(prodA1 (obop a) (obop b) (obop c)).
+Qed.
+
+Lemma coprodA2 a b c: in2 \; in1 \; coprodA a b c ≡ in1 \; in2.
+Proof.
+  rewrite -compoA iso_tgt. symmetry.
+  exact/(prodA2 (obop a) (obop b) (obop c)).
+Qed.
+
+Lemma coprodA3 a b c: in2 \; coprodA a b c ≡ in2 \; in2.
+Proof.
+  rewrite iso_tgt. symmetry.
+  exact/(prodA3 (obop a) (obop b) (obop c)).
+Qed.
+
+Lemma coprodA_nat a b c a' b' c' f g h:
+  (f · g) · h \; coprodA a' b' c' ≡ coprodA a b c \; f · (g · h).
+Proof.
+  rewrite iso_tgt compoA iso_src.
+  exact/(prodA_nat (morphop f) (morphop g) (morphop h)).
+Qed.
+
+Lemma coprodA_pentagon a b c d:
+  coprodA a b c · d \; coprodA a (b + c) d \; a · coprodA b c d ≡ coprodA (a + b) c d \; coprodA a b (c + d).
+(* TOFIX: super long to typecheck :( *)
+Proof. exact/inv_inj/(prodA_pentagon (obop a) (obop b) (obop c) (obop d)). Qed.
+
 End s.
 
 Section s.
 Context {𝐂: CatCoprod}.
 Implicit Types a b c d: ob 𝐂.
+Infix "·" := hcoprod: cat_scope.
 
 Definition coprodUl a: zero+a ≃ a :=
   CoproductU _ (mk_coproduct_ (@coproductUl _ _ _)).
@@ -230,10 +284,39 @@ Definition coprodUl a: zero+a ≃ a :=
 Definition coprodUlH a: cospanhom _ _ _ _ (coprodUl a)¹ :=
   CoproductUH _ (mk_coproduct_ (@coproductUl _ _ _)).
 
+Lemma coprodUl'2 a: in2 \; coprodUl a ≡ idmap.
+Proof. exact/(prodUl'2 (obop a)). Qed.
+
+Lemma coprodUl_in2 a: (coprodUl a)⁻¹ ≡ in2.
+Proof. exact/(prodUl_pi2 (obop a)). Qed.
+
+Lemma coprodUl_nat a a' f: idmap · f \; coprodUl a' ≡ coprodUl a \; f.
+Proof.
+  rewrite iso_tgt compoA iso_src.
+  exact/(prodUl_nat (morphop f)). 
+Qed.
+
 Definition coprodUr a: a+zero ≃ a :=
   CoproductU _ (mk_coproduct_ (@coproductUr _ _ _)).
 
 Definition coprodUrH a: cospanhom _ _ _ _ (coprodUr a)¹ :=
   CoproductUH _ (mk_coproduct_ (@coproductUr _ _ _)).
+
+(* to be deduced from monoidal symmetry? *)
+Lemma coprodUr'1 a: in1 \; coprodUr a ≡ idmap.
+Proof. exact/(prodUr'1 (obop a)). Qed.
+
+Lemma coprodUr_in1 a: (coprodUr a)⁻¹ ≡ in1.
+Proof. exact/(prodUr_pi1 (obop a)). Qed.
+
+Lemma coprodUr_nat a a' f: f · idmap \; coprodUr a' ≡ coprodUr a \; f.
+Proof.
+  rewrite iso_tgt compoA iso_src.
+  exact/(prodUr_nat (morphop f)). 
+Qed.
+
+Lemma coprodA_triangle a b: coprodA a zero b \; a · coprodUl b ≡ coprodUr a · b.
+(* TOFIX: super long to typecheck :( *)
+Proof. exact/inv_inj/(prodA_triangle (obop a) (obop b)). Qed.
 
 End s.

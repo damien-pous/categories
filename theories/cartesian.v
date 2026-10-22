@@ -118,18 +118,11 @@ HB.instance Definition _ := CATCOPROD.on (cocartesian 𝐂).
 HB.instance Definition _ := HasMonoidalOps.Build (cocartesian 𝐂) zero COPROD.
 HB.instance Definition _ := HasUIP.Build (cocartesian 𝐂) (fun _ _ => proof_irrelevance _).
 
-Program Definition _cocartesian_premonoidal :=
-  @IsPreMonoidal.Build (cocartesian 𝐂) coprodA coprodUl coprodUr _ _ _.
-Next Obligation. intros a b c a' b' c' f g h. Admitted.
-Next Obligation. intros a a' f. Admitted.
-Next Obligation. intros a a' f. Admitted.
-HB.instance Definition _ := _cocartesian_premonoidal.
+HB.instance Definition _ :=
+  @IsPreMonoidal.Build (cocartesian 𝐂) coprodA coprodUl coprodUr coprodA_nat coprodUl_nat coprodUr_nat.
 
-Program Definition _cocartesian_monoidal :=
-  @IsMonoidal.Build (cocartesian 𝐂) _ _.
-Next Obligation. intros a b c d. Admitted.
-Next Obligation. intros a b. Admitted.
-HB.instance Definition _ := _cocartesian_monoidal.
+HB.instance Definition _ :=
+  @IsMonoidal.Build (cocartesian 𝐂) coprodA_pentagon coprodA_triangle.
 
 End s.
 
