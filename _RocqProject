@@ -15,7 +15,8 @@ theories/functor.v                         # functors, natural transformations
 theories/bifunctor.v                       # bifunctors
 theories/adjunction.v                      # adjunctions
 theories/shape.v                           # concrete bare quivers, for defining shapes
-theories/limit.v                           # cones, generic limits, preservation by left adjoints
+theories/limit.v                           # cones, generic limits, preservation by right adjoints
+theories/colimit.v                         # cocones, generic colimits, preservation by left adjoints (all by duality)
 theories/span.v                            # spans
 theories/cospan.v                          # cospans
 theories/product.v                         # products
@@ -36,7 +37,6 @@ theories/cartesian.v                       # (co)cartesian monoidal categories
 
 ## below: to be ported
 # theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)
-# theories/span_duality.v                    # hierarchy of objects
 # theories/monoidal_maclane.v                # MacLane theorem for monoidal categories
 # theories/monoidal_gmaclane.v               # extended MacLane theorem + inferrence of MacLane isomorphisms
 # theories/monoidal_tactic.v                 # decision procedure for monoidal cats

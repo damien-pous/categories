@@ -1,6 +1,6 @@
 (** * spans *)
 
-Require Export morphisms.
+Require Export shape functor limit.
 
 Local Open Scope cat_scope.
 
@@ -64,15 +64,23 @@ Program Definition Span_comp (x y z: Span a b) (f: x ~> y) (g: y ~> z): x ~> z :
 Next Obligation. intros; split; by rewrite compoA 2!SpanH. Qed.
 HB.instance Definition _ := IsPreCat.Build (Span a b) Span_id Span_comp. 
 
-Lemma _span_cat: IsCat (Span a b).
-Proof.
-  split=>*.
-  - exact: comp1o. 
-  - exact: compo1. 
-  - exact: compoA. 
-  - intros??????; exact: comp_eqv.
-Qed.
-HB.instance Definition _ := _span_cat. 
+Definition Span_sort := @SPAN.sort _ a b.
+HB.instance Definition _ :=
+  @IsFunctor.Build _ _ Span_sort (@Spanhom_sort _ a b) _ (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl). 
+HB.instance Definition _ :=
+  @IsFaithful.Build _ _ Span_sort (fun _ _ _ _ H => H).
+HB.instance Definition _ :=
+  FaithfulSubCat.Build _ (Span a b) Span_sort.
+                  
+(* Lemma _span_cat: IsCat (Span a b). *)
+(* Proof. *)
+(*   split=>*. *)
+(*   - exact: comp1o.  *)
+(*   - exact: compo1.  *)
+(*   - exact: compoA.  *)
+(*   - intros??????; exact: comp_eqv. *)
+(* Qed. *)
+(* HB.instance Definition _ := _span_cat.  *)
 
 Definition Spaniso_sort (x y: Span a b) (i: x ≃ y): x ≃_𝐂 y :=
   iso_ (Spanhom_sort i¹) (Spanhom_sort i⁻¹) (invKl i) (invKr i). 
@@ -83,5 +91,75 @@ Proof. by split; rewrite iso_src H. Qed.
 
 Definition spaniso_ (x y: Span a b) (i: x ≃_𝐂 y) (H: spanhom pi1 pi2 pi1 pi2 i¹): x ≃ y :=
   @iso_ _ x y (exist _ i¹ H) (exist _ i⁻¹ (spanhom_inv H)) (invKl i) (invKr i).
+
+(** ** representation of spans as cones over the appropriate shape *)
+
+Abbreviation Shape := (Diagram (shape.discrete bool) 𝐂).
+Definition shape: Shape.
+  exists (fun c => if c then a else b).
+  done.
+Defined.
+Abbreviation Cone := (cone shape).
+
+Definition Span_Cone (x: Span a b): Cone.
+  exists (Span_sort x). 
+  exists (fun c => if c return Span_sort x ~> shape c then pi1 else pi2).
+  done. 
+Defined.
+Definition Cone_Span (c: Cone): Span a b :=
+  span (cone_mor c true) (cone_mor c false).
+
+Lemma _Span_Cone_functor: IsFunctor _ _ Span_Cone.
+Proof.
+  unshelve eexists.
+  - move=>x y h. exists (Spanhom_sort h).
+    abstract by case; apply (SpanH h).
+  - by move=>x y h h'.
+  - by move=>x.
+  - by move=>x y z f g.
+Defined.
+HB.instance Definition _ := _Span_Cone_functor. 
+
+Lemma _Cone_Span_functor: IsFunctor _ _ Cone_Span.
+Proof.
+  unshelve eexists.
+  - move=>x y h. exists (conehom_sort h).
+    exact: (conehomP h true, conehomP h false).
+  - by move=>x y h h'.
+  - by move=>x.
+  - by move=>x y z f g.
+Defined.
+HB.instance Definition _ := _Cone_Span_functor. 
+
+Program Definition Span_Cone_adj: adjunction Span_Cone Cone_Span := Adj.mk _ _ _ _.
+Next Obligation.
+  unshelve eexists. exact: (fun c => idmap c).
+  abstract by (split;split=>x y f; cbn; cat).
+Defined.
+Next Obligation.
+  unshelve eexists. cbn=>c.
+  unshelve eexists. cbn. exact: idmap.
+  abstract by (case=>/=; rewrite cats).
+  abstract by (split; split=>x y f; cbn; rewrite !cats).
+Defined.
+Next Obligation. cbn=>c. cat. Qed.
+Next Obligation. cbn=>c. cat. Qed.
+Lemma Span_Cone_refl: Adj.is_reflection Span_Cone_adj.
+  unshelve eexists. cbn=>c.
+  unshelve eexists. cbn. exact: idmap.
+  abstract by (case=>/=; rewrite cats).
+  abstract by split; cbn; cat. 
+Defined.
+Lemma Span_Cone_corefl: Adj.is_coreflection Span_Cone_adj.
+  unshelve eexists. exact: (fun c => idmap c).
+  abstract by split; cbn; cat. 
+Defined.
+
+HB.instance Definition _ := IsPreAdjointF.Build _ _ Span_Cone Cone_Span. 
+HB.instance Definition _ := IsLeftAdjoint.Build _ _ Span_Cone Span_Cone_adj. 
+HB.instance Definition _ := IsLeftReflection.Build _ _ Span_Cone Span_Cone_refl. 
+HB.instance Definition _ := IsLeftCoreflection.Build _ _ Span_Cone Span_Cone_corefl. 
+HB.instance Definition _ := IsAdjointEquivalenceL.Build _ _ Span_Cone. 
+HB.instance Definition _ := ADJOINTEQUIVALENCE.copy Cone_Span (adj Span_Cone). 
 
 End s.
