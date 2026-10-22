@@ -19,6 +19,8 @@ Proof. move=>T y i' j'; exact: (T (cospan_ i' j')). Defined.
 
 End s.
 Arguments coproduct {_} _ _ _ _ _/.
+Arguments coproduct_initial {_} [_ _ _ _ _] _/.
+Arguments initial_coproduct {_} [_ _ _ _ _] _/.
 
 #[primitive] HB.mixin Record IsCoproduct (𝐂: PreCat) a b x of COSPAN 𝐂 a b x :=
   {#[canonical=no]coproductP: coproduct a b x in1 in2}.
@@ -89,6 +91,8 @@ Proof. by apply copairU. Qed.
 End s.
 End s.
 Arguments copair {_} [_ _ _ _] _ _.
+Arguments mk_coproduct {_} [_ _ _ _ _] _/.
+Arguments mk_coproduct_ {_} [_ _ _ _ _] _/.
 
 Section s.
 Context {𝐂: Cat}.
@@ -238,38 +242,58 @@ Proof. done. Qed.
 Definition coprodA a b c: (a+b)+c ≃ a+(b+c) :=
   CoproductU (mk_coproduct_ (coproductA _)) _.
 
+(* below, we use slightly convoluted proof scripts to mitigate an efficienciency issue in unification
+   cf goal below, where not using [cbn] drastically degrades performances
+ *)
+Goal forall a b c, inv (coprodA a b c) = prodA (obop a) (obop b) (obop c).
+  (* Time done.                    (* 2.7s *) *)
+  (* Restart. *)
+  cbn.
+  Time done.                    (* 0.14s *)
+Abort.
+
 Definition coprodAH a b c: cospanhom _ _ _ _ (coprodA a b c)¹ :=
   CoproductUH (mk_coproduct_ (coproductA _)) _.
 
 Lemma coprodA1 a b c: in1 \; in1 \; coprodA a b c ≡ in1.
 Proof.
   rewrite -compoA iso_tgt. symmetry.
-  exact/(prodA1 (obop a) (obop b) (obop c)).
+  (* here we would just do exact:, normally *)
+  move:(prodA1 (obop a) (obop b) (obop c)).
+  by cbn. 
 Qed.
 
 Lemma coprodA2 a b c: in2 \; in1 \; coprodA a b c ≡ in1 \; in2.
 Proof.
   rewrite -compoA iso_tgt. symmetry.
-  exact/(prodA2 (obop a) (obop b) (obop c)).
+  move:(prodA2 (obop a) (obop b) (obop c)).
+  by cbn.
 Qed.
 
 Lemma coprodA3 a b c: in2 \; coprodA a b c ≡ in2 \; in2.
 Proof.
   rewrite iso_tgt. symmetry.
-  exact/(prodA3 (obop a) (obop b) (obop c)).
+  move:(prodA3 (obop a) (obop b) (obop c)).
+  by cbn. 
 Qed.
 
 Lemma coprodA_nat a b c a' b' c' f g h:
   (f · g) · h \; coprodA a' b' c' ≡ coprodA a b c \; f · (g · h).
 Proof.
   rewrite iso_tgt compoA iso_src.
-  exact/(prodA_nat (morphop f) (morphop g) (morphop h)).
+  (* this one takes 13s if we just do [exact:] *)
+  move:(prodA_nat (morphop f) (morphop g) (morphop h)).
+  by cbn. 
 Qed.
 
 Lemma coprodA_pentagon a b c d:
   coprodA a b c · d \; coprodA a (b + c) d \; a · coprodA b c d ≡ coprodA (a + b) c d \; coprodA a b (c + d).
-(* TOFIX: super long to typecheck :( *)
-Proof. exact/inv_inj/(prodA_pentagon (obop a) (obop b) (obop c) (obop d)). Qed.
+Proof.
+  apply/inv_inj.
+  (* this one takes ages if we just do [exact:] *)
+  move:(prodA_pentagon (obop a) (obop b) (obop c) (obop d)).
+  by cbn.
+Qed.
 
 End s.
 
@@ -293,7 +317,8 @@ Proof. exact/(prodUl_pi2 (obop a)). Qed.
 Lemma coprodUl_nat a a' f: idmap · f \; coprodUl a' ≡ coprodUl a \; f.
 Proof.
   rewrite iso_tgt compoA iso_src.
-  exact/(prodUl_nat (morphop f)). 
+  move:(prodUl_nat (morphop f)).
+  by cbn.
 Qed.
 
 Definition coprodUr a: a+zero ≃ a :=
@@ -304,19 +329,24 @@ Definition coprodUrH a: cospanhom _ _ _ _ (coprodUr a)¹ :=
 
 (* to be deduced from monoidal symmetry? *)
 Lemma coprodUr'1 a: in1 \; coprodUr a ≡ idmap.
-Proof. exact/(prodUr'1 (obop a)). Qed.
+Proof. move:(prodUr'1 (obop a)). by cbn. Qed.
 
 Lemma coprodUr_in1 a: (coprodUr a)⁻¹ ≡ in1.
-Proof. exact/(prodUr_pi1 (obop a)). Qed.
+Proof. move:(prodUr_pi1 (obop a)). by cbn. Qed.
 
 Lemma coprodUr_nat a a' f: f · idmap \; coprodUr a' ≡ coprodUr a \; f.
 Proof.
   rewrite iso_tgt compoA iso_src.
-  exact/(prodUr_nat (morphop f)). 
+  move:(prodUr_nat (morphop f)).
+  by cbn.
 Qed.
 
 Lemma coprodA_triangle a b: coprodA a zero b \; a · coprodUl b ≡ coprodUr a · b.
-(* TOFIX: super long to typecheck :( *)
-Proof. exact/inv_inj/(prodA_triangle (obop a) (obop b)). Qed.
+Proof.
+  apply/inv_inj.
+  (* this one also takes ages without cbn *)
+  move:(prodA_triangle (obop a) (obop b)).
+  by cbn.
+Qed.
 
 End s.

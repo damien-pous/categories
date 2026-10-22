@@ -20,6 +20,8 @@ Proof. move=>T y p' q'; exact: (T (span_ p' q')). Defined.
 
 End s.
 Arguments product {_} _ _ _ _ _/.
+Arguments product_terminal {_} [_ _ _ _ _] _/.
+Arguments terminal_product {_} [_ _ _ _ _] _/.
 
 #[primitive] HB.mixin Record IsProduct (𝐂: PreCat) a b x of SPAN 𝐂 a b x :=
   {#[canonical=no]productP: product a b x pi1 pi2}.
@@ -87,6 +89,8 @@ Proof. by apply pairU. Qed.
 End s.
 End s.
 Arguments pair {_} [_ _ _ _] _ _.
+Arguments mk_product {_} [_ _ _ _ _] _/.
+Arguments mk_product_ {_} [_ _ _ _ _] _/.
 
 Section s.
 Context {𝐂: Cat}.
