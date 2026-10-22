@@ -484,20 +484,20 @@ Proof. rewrite 2!(iso_ntx_alt i). by move=>->. Qed.
 
 Section strict.
 Context {𝐂 𝐃 𝐄: Cat}.
-Lemma endo_exchange {F G H: 𝐂 ≈> 𝐃} {F' G' H': 𝐃 ≈> 𝐄}
+
+Lemma ntx_comp'_id {F: 𝐂 ≈> 𝐃} {G: 𝐃 ≈> 𝐄}:
+  idmap G ⊚ idmap F ≡ idmap.
+Proof. intro X; cbn. by rewrite !cats. Qed.
+
+Lemma ntx_comp'_comp {F G H: 𝐂 ≈> 𝐃} {F' G' H': 𝐃 ≈> 𝐄}
   (i: F ~> G) (j: G ~> H)
   (i': F' ~> G') (j': G' ~> H'):
-  (j'⊚j) ∘ (i'⊚i) ≡ (j'∘i') ⊚ (j∘i).
+  (j'∘i') ⊚ (j∘i) ≡ (j'⊚j) ∘ (i'⊚i).
 Proof.
   intro X; cbn.
   rewrite -!compoA. apply: comp_eqv=>//.
   normalise. by rewrite natural.
 Qed.
-
-Lemma ntx_id_comp {F: 𝐂 ≈> 𝐃} {G: 𝐃 ≈> 𝐄}:
-  (*TMP-UNIV: functor_comp -> ∘ once we have Cat:Cat  *)
-  idmap (functor_comp F G) ≡ idmap G ⊚ idmap F.
-Proof. intro X; cbn. by rewrite !cats. Qed.
 
 Lemma ntx_comp'_eqv {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}:
   Proper (eqv ==> eqv ==> eqv) (@ntx_comp' _ _ _ F G F' G').
@@ -512,10 +512,10 @@ Lemma functor_comp_iso:
 Proof.
   intros F G i F' G' j. 
   apply: (iso_ (j⊚ i) (j⁻¹⊚i⁻¹) _ _).
-  abstract (rewrite endo_exchange; etransitivity;
-            [exact: (ntx_comp'_eqv (invKl i) (invKl j)) | by rewrite -ntx_id_comp]).
-  abstract (rewrite endo_exchange; etransitivity;
-            [exact: (ntx_comp'_eqv (invKr i) (invKr j)) | by rewrite -ntx_id_comp]).
+  abstract (rewrite -ntx_comp'_comp; etransitivity;
+            [exact: (ntx_comp'_eqv (invKl i) (invKl j)) | by rewrite ntx_comp'_id]).
+  abstract (rewrite -ntx_comp'_comp; etransitivity;
+            [exact: (ntx_comp'_eqv (invKr i) (invKr j)) | by rewrite ntx_comp'_id]).
 Defined.
 End strict.
 

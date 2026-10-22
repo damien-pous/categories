@@ -36,11 +36,23 @@ HB.end.
     #[canonical=no] comp'1o: forall {a b: ob 𝐂} (f: a ~> b), idmap \; f ≃ f;
     #[canonical=no] comp'o1: forall {a b: ob 𝐂} (f: a ~> b), f \; idmap ≃ f;
     #[canonical=no] comp'oA: forall {a b c d: ob 𝐂} (f: a ~> b) (g: b ~> c) (h: c ~> d), (f \; g) \; h ≃ f \; (g \; h);
-    (* missing naturality of above transformations *)
+    (* naturality of above transformations *)
     #[canonical=no] comp'1o_nat: forall {a b: ob 𝐂} (f f': a ~> b) (i: f ~> f'), comp'1o f \; i ≡ comp'22 idmap i \; comp'1o f';
-    (* .. *)
-    (* .. *)
-    (* missing coherence axioms (triangle and pentagon) *)
+    #[canonical=no] comp'o1_nat: forall {a b: ob 𝐂} (f f': a ~> b) (i: f ~> f'), comp'o1 f \; i ≡ comp'22 i idmap \; comp'o1 f';
+    #[canonical=no] comp'1A_nat:
+    forall {a b c d: ob 𝐂}
+      (f f': a ~> b) (i: f ~> f')
+      (g g': b ~> c) (j: g ~> g')
+      (h h': c ~> d) (k: h ~> h'),
+      comp'oA f g h \; comp'22 i (comp'22 j k) ≡ comp'22 (comp'22 i j) k \; comp'oA f' g' h';
+    (* missing coherence axioms, waiting for notations *)
+    (* #[canonical=no] pentagon: forall A B C D: ob 𝐂, *)
+    (*   A · assoc B C D ∘ assoc A (B⊗C) D ∘ assoc A B C · D *)
+    (*   ≡ assoc A B (C⊗D) ∘ assoc (A⊗B) C D; *)
+
+    (* #[canonical=no] triangle: forall A B: ob 𝐂, *)
+    (*   A · unitl B ∘ assoc A unit B *)
+    (*   ≡ unitr A · B;     *)
   }.
 #[short(type="BiCat")]
 HB.structure Definition BICAT := { 𝐂 of IsBiCat 𝐂 & }.
