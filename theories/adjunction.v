@@ -460,12 +460,50 @@ End radj.
 HB.instance Definition _ 𝐂 𝐃 F A := IsTerminal.Build _ _ (@radj.preserve_Terminal 𝐂 𝐃 F A).
 
 
+(** * equivalence C^op^op ≃ C *)
+
+Section s.
+Context {𝐂: Cat}.
+Definition opop: FUN 𝐂^op^op 𝐂 := fun a => obop' (obop' a).
+Definition opop': FUN 𝐂 𝐂^op^op := fun a => obop (obop a).
+
+HB.instance Definition _ :=
+  @IsFunctor.Build _ _ opop (fun _ _ f => morphop' (morphop' f))
+    (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+
+HB.instance Definition _ :=
+  @IsFunctor.Build _ _ opop' (fun _ _ f => morphop (morphop f))
+    (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+
+HB.instance Definition _ := IsPreAdjointF.Build _ _ opop opop'.
+
+(* TODO: helpers since this is really an identity adjunction, like for [same_functor]? *)
+Definition adj_opop: adjunction opop opop'.
+Proof.
+  unshelve esplit.
+  unshelve esplit.
+  exact: (fun a => idmap). 
+  split; split. cbn=>a b f. by rewrite !cats.
+  exact: ntx_id. 
+  cbn=>a/=. by rewrite !cats. 
+  cbn=>a/=. by rewrite !cats. 
+Defined.
+
+HB.instance Definition _ := IsLeftAdjoint.Build _ _ opop adj_opop.
+HB.instance Definition _ := IsLeftReflection.Build _ _ opop (iso_tx_id' _).
+HB.instance Definition _ := IsLeftCoreflection.Build _ _ opop (iso_tx_id' _).
+HB.instance Definition _ := IsAdjointEquivalenceL.Build _ _ opop.
+HB.instance Definition _ := ADJOINTEQUIVALENCE.copy opop' (adj opop).
+
+End s. 
+
+
 (** * equivalence [C->D]^op ≃ [C^op->D^op] *)
 
 Section s.
 Context {𝐂: PreCat} {𝐃: Cat}.
-Definition opfunc (F: ob (Functor 𝐂 𝐃)^op): ob (Functor 𝐂^op 𝐃^op) := funcop F: Functor _ _.
-Definition opfunc' (F: ob (Functor 𝐂^op 𝐃^op)): ob (Functor 𝐂 𝐃)^op := funcop' F: Functor _ _.
+Definition opfunc: FUN (Functor 𝐂 𝐃)^op (Functor 𝐂^op 𝐃^op) := fun F => funcop F: Functor _ _.
+Definition opfunc': FUN (Functor 𝐂^op 𝐃^op) (Functor 𝐂 𝐃)^op := fun F => funcop' F: Functor _ _.
 
 HB.instance Definition _ :=
   @IsFunctor.Build _ _ opfunc (fun _ _ n => ntxop n: NTX _ _)
@@ -515,39 +553,116 @@ HB.instance Definition _ := ADJOINTEQUIVALENCE.copy opfunc' (adj opfunc).
 
 End s. 
 
-(** * equivalence C^op^op ≃ C *)
 
-Section s.
-Context {𝐂: Cat}.
-Definition opop (a: ob 𝐂^op^op): ob 𝐂 := obop' (obop' a).
-Definition opop' (a: ob 𝐂): ob 𝐂^op^op := obop (obop a).
+(** * adjunction C D -> adjunction [D->E] ≃ [C->E]
+      (reversing polarities) *)
 
-HB.instance Definition _ :=
-  @IsFunctor.Build _ _ opop (fun _ _ f => morphop' (morphop' f))
-    (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+Definition Fprecomp {𝐂 𝐃: Cat} (F: Functor 𝐂 𝐃) (𝐄: Cat): FUN (Functor 𝐃 𝐄) (Functor 𝐂 𝐄) :=
+  fun H => catcomp F H: Functor _ _.
+Arguments Fprecomp {_ _} _ {_}.
 
-HB.instance Definition _ :=
-  @IsFunctor.Build _ _ opop' (fun _ _ f => morphop (morphop f))
-    (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+(* TOFIX: super long if [ntx_comp'_eqv] is declared as an instance in [adjunction.v] *)
+Program Definition _Fprecomp_functor 𝐂 𝐃 F 𝐄 :=
+  @IsFunctor.Build _ _ (@Fprecomp 𝐂 𝐃 F 𝐄) (fun _ _ n => n ⊚ idmap) _ _ _.
+Next Obligation. move=>*n m nm. exact/ntx_comp'_eqv. Qed.
+Next Obligation. move=>*. exact/ntx_comp'_id. Qed.
+Next Obligation.
+  move=>*/=. rewrite -ntx_comp'_comp (* cats *).
+  etransitivity. apply: ntx_comp'_eqv. 2,3: done. cat.
+Qed.
+HB.instance Definition _ 𝐂 𝐃 F 𝐄 := @_Fprecomp_functor 𝐂 𝐃 F 𝐄.
 
-HB.instance Definition _ := IsPreAdjointF.Build _ _ opop opop'.
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: PreAdjointF 𝐂 𝐃) (𝐄: Cat) :=
+  IsPreAdjointF.Build (Functor 𝐃 𝐄) (Functor 𝐂 𝐄) (Fprecomp F) (Fprecomp (adj F)).
 
-(* TODO: helpers since this is really an identity adjunction, like for [same_functor]? *)
-Definition adj_opop: adjunction opop opop'.
+Lemma Fprecomp_ladj (𝐂 𝐃: Cat) (F: RightAdjoint 𝐂 𝐃) (𝐄: Cat):
+  @adjunction (Functor 𝐃 𝐄) (Functor 𝐂 𝐄) (Fprecomp F) (Fprecomp (adj F)).
 Proof.
   unshelve esplit.
-  unshelve esplit.
-  exact: (fun a => idmap). 
-  split; split. cbn=>a b f. by rewrite !cats.
-  exact: ntx_id. 
-  cbn=>a/=. by rewrite !cats. 
-  cbn=>a/=. by rewrite !cats. 
+  - unshelve esplit.
+    move=>H. exact: (ntx_comp' (radj.unit F) (ntx_id H)).
+    sorry.
+  - unshelve esplit.
+    move=>H. exact: (ntx_comp' (radj.counit F) (ntx_id H)).
+    sorry.
+  - cbn; intros. sorry.
+  - cbn; intros. sorry.
 Defined.
 
-HB.instance Definition _ := IsLeftAdjoint.Build _ _ opop adj_opop.
-HB.instance Definition _ := IsLeftReflection.Build _ _ opop (iso_tx_id' _).
-HB.instance Definition _ := IsLeftCoreflection.Build _ _ opop (iso_tx_id' _).
-HB.instance Definition _ := IsAdjointEquivalenceL.Build _ _ opop.
-HB.instance Definition _ := ADJOINTEQUIVALENCE.copy opop' (adj opop).
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: RightAdjoint 𝐂 𝐃) (𝐄: Cat) :=
+  IsLeftAdjoint.Build (Functor 𝐃 𝐄) (Functor 𝐂 𝐄) (Fprecomp F) (Fprecomp_ladj F 𝐄).
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: LeftAdjoint 𝐂 𝐃) (𝐄: Cat) :=
+  IsRightAdjoint.Build (Functor 𝐃 𝐄) (Functor 𝐂 𝐄) (Fprecomp F) (Fprecomp_ladj (adj F) 𝐄).
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: AdjointEquivalence 𝐂 𝐃) (𝐄: Cat) :=
+  IsAdjointEquivalence.Build (Functor 𝐃 𝐄) (Functor 𝐂 𝐄) (Fprecomp F).
 
+(** * adjunction C D -> adjunction [E->C] ≃ [E->D]
+      (preserving polarities) *)
+
+Definition Fpostcomp {𝐂 𝐃: Cat} (F: Functor 𝐂 𝐃) (𝐄: Cat): FUN (Functor 𝐄 𝐂) (Functor 𝐄 𝐃) :=
+  fun H => catcomp H F: Functor _ _.
+Arguments Fpostcomp {_ _} _ {_}.
+
+Program Definition _Fpostcomp_functor 𝐂 𝐃 F 𝐄 :=
+  @IsFunctor.Build _ _ (@Fpostcomp 𝐂 𝐃 F 𝐄) (fun _ _ n => idmap ⊚ n) _ _ _.
+Next Obligation. move=>*n m nm. exact/ntx_comp'_eqv. Qed.
+Next Obligation. move=>*. exact/ntx_comp'_id. Qed.
+Next Obligation.
+  move=>*/=. rewrite -ntx_comp'_comp (* cats *).
+  etransitivity. apply: ntx_comp'_eqv. 1,3: done. cat.
+Qed.
+HB.instance Definition _ 𝐂 𝐃 F 𝐄 := @_Fpostcomp_functor 𝐂 𝐃 F 𝐄.
+
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: PreAdjointF 𝐂 𝐃) (𝐄: Cat) :=
+  IsPreAdjointF.Build (Functor 𝐄 𝐂) (Functor 𝐄 𝐃) (Fpostcomp F) (Fpostcomp (adj F)).
+
+Lemma Fpostcomp_ladj (𝐂 𝐃: Cat) (F: LeftAdjoint 𝐂 𝐃) (𝐄: Cat):
+  @adjunction (Functor 𝐄 𝐂) (Functor 𝐄 𝐃) (Fpostcomp F) (Fpostcomp (adj F)).
+Proof.
+  unshelve esplit.
+  - unshelve esplit.
+    move=>H. exact: (ntx_comp' (ntx_id H) (ladj.unit F)).
+    sorry.
+  - unshelve esplit.
+    move=>H. exact: (ntx_comp' (ntx_id H) (ladj.counit F)).
+    sorry.
+  - cbn; intros. sorry.
+  - cbn; intros. sorry.
+Defined.
+
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: LeftAdjoint 𝐂 𝐃) (𝐄: Cat) :=
+  IsLeftAdjoint.Build (Functor 𝐄 𝐂) (Functor 𝐄 𝐃) (Fpostcomp F) (Fpostcomp_ladj F 𝐄).
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: RightAdjoint 𝐂 𝐃) (𝐄: Cat) :=
+  IsRightAdjoint.Build (Functor 𝐄 𝐂) (Functor 𝐄 𝐃) (Fpostcomp F) (Fpostcomp_ladj (adj F) 𝐄).
+HB.instance Definition _ (𝐂 𝐃: Cat) (F: AdjointEquivalence 𝐂 𝐃) (𝐄: Cat) :=
+  IsAdjointEquivalence.Build (Functor 𝐄 𝐂) (Functor 𝐄 𝐃) (Fpostcomp F).
+
+(** * adjunction C' C -> adjunction D D' -> adjunction [C->D] ≃ [C'->D']
+      (with appropriate polarities) *)
+
+Section s.
+Context {𝐂' 𝐂 𝐃 𝐃': Cat}.
+Definition Functor_adj (F: Functor 𝐂' 𝐂) (G: Functor 𝐃 𝐃'): FUN (Functor 𝐂 𝐃) (Functor 𝐂' 𝐃') :=
+  catcomp (Fprecomp F) (Fpostcomp G).
+
+HB.instance Definition _ (F: Functor 𝐂' 𝐂) (G: Functor 𝐃 𝐃') :=
+  FUNCTOR.on (Functor_adj F G).
+HB.instance Definition _ (F: PreAdjointF 𝐂' 𝐂) (G: PreAdjointF 𝐃 𝐃') :=
+  PREADJOINTF.on (Functor_adj F G).
+HB.instance Definition _ (F: RightAdjoint 𝐂' 𝐂) (G: LeftAdjoint 𝐃 𝐃') :=
+  LEFTADJOINT.on (Functor_adj F G).
+HB.instance Definition _ (F: LeftAdjoint 𝐂' 𝐂) (G: RightAdjoint 𝐃 𝐃') :=
+  RIGHTADJOINT.on (Functor_adj F G).
+(* TOFIX: HB lags *)
+HB.instance Definition _ (F: AdjointEquivalence 𝐂' 𝐂) (G: AdjointEquivalence 𝐃 𝐃') :=
+  ADJOINTEQUIVALENCE.on (Functor_adj F G).
 End s. 
+
+(** * equivalence [C^op->D^op]^op ≃ [C->D] ≃  as a corollary*)
+
+Section s.
+Context {𝐂 𝐃: Cat}.
+Definition deopfunc: FUN (Functor 𝐂^op 𝐃^op)^op (Functor 𝐂 𝐃) :=
+  catcomp opfunc (Functor_adj opop' opop).
+HB.instance Definition _ := ADJOINTEQUIVALENCE.on deopfunc.
+End s.

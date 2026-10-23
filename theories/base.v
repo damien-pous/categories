@@ -115,10 +115,7 @@ HB.instance Definition _ := HasBinaryCoproducts.Build 𝐂 (fun a b => Fcoprod a
 HB.end.
 
 (** lifting binary coproducts to functors *)
-HB.instance Definition _ (𝐂: PreCat) {𝐃: CatBCoprod} :=
-  HasBCoprodThroughAdj.Build (Functor 𝐂^op 𝐃^op)^op (Functor 𝐂 𝐃)
-    sorry
-    (* (catcomp opfunc (Functor_adj opop opop)) *)
-.
+HB.instance Definition _ (𝐂: Cat) {𝐃: CatBCoprod} :=
+  HasBCoprodThroughAdj.Build (Functor 𝐂^op 𝐃^op)^op (Functor 𝐂 𝐃) deopfunc.
 
 (* TODO: lift pullbacks/pushouts through adjunctions *)

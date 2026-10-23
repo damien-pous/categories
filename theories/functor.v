@@ -497,6 +497,8 @@ Proof.
   normalise. by rewrite natural.
 Qed.
 
+(* TOFIX: declaring this one as an instance results in super long
+   steps in adjunction.v (_Frecomp_functor) *)
 Lemma ntx_comp'_eqv {F G: 𝐂 ≈> 𝐃} {F' G': 𝐃 ≈> 𝐄}:
   Proper (eqv ==> eqv ==> eqv) (@ntx_comp' _ _ _ F G F' G').
 Proof.
