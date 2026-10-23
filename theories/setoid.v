@@ -38,9 +38,6 @@ Proof.
 Qed.
 
 (* Lemma setoid_is_regmono: iffT (is_regmono f) (forall b, (exists a, f a ≡ b) -> { a | f a ≡ b }). *)
-(* Proof. *)
-(*   split. *)
-(* Admitted. *)
 
 Lemma setoid_is_epi: is_epi f <-> surjective f.
 Proof.
@@ -56,9 +53,6 @@ Proof.
 Qed.
 
 (* Lemma setoid_is_regepi: iffT (is_regepi f) ... *)
-(* Proof. *)
-(*   split. *)
-(* Admitted. *)
 
 End s.
 

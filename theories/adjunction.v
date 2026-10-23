@@ -133,9 +133,8 @@ Module Adj.
     mk
       (unit_ FF \; idmap ⊚ unit_ GG ⊚ idmap)
       (idmap ⊚ counit_ FF ⊚ idmap \; counit_ GG) _ _.
-  Admit Obligations.
-  (* Next Obligation. move=>𝐂 𝐃 𝐄 F F' G G' FF GG A/=. rewrite !cats. Admitted.  *)
-  (* Next Obligation. move=>𝐂 𝐃 𝐄 F F' G G' FF GG B/=. rewrite !cats. Admitted.  *)
+  Next Obligation. move=>𝐂 𝐃 𝐄 F F' G G' FF GG A/=. sorry. Qed.
+  Next Obligation. move=>𝐂 𝐃 𝐄 F F' G G' FF GG B/=. sorry. Qed.
 
   Definition op {𝐂 𝐃 F G} (FG: adjunction 𝐂 𝐃 F G): funcop G ⊣ funcop F :=
     mk
