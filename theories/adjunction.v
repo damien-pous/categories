@@ -402,8 +402,8 @@ Module ladj.
 Section binding.
 Context {𝐂 𝐃: Cat} (F: LeftAdjoint 𝐂 𝐃).
 
-Definition unit: NTX idfun (catcomp F (adj F)) := Adj.unit ladjP.
-Definition counit: NTX (catcomp (adj F) F) idfun := Adj.counit ladjP.
+Definition unit: functor_id ~> functor_comp F (adj F) := Adj.unit ladjP.
+Definition counit: functor_comp (adj F) F ~> functor_id := Adj.counit ladjP.
 Definition unit_counit_l_at: forall a, Fhom F (unit a) \; counit (F a) ≡ F a := Adj.unit_counit_l_at ladjP.
 Definition unit_counit_r_at: forall b, unit (adj F b) \; Fhom (adj F) (counit b) ≡ adj F b := Adj.unit_counit_r_at ladjP.
 Definition unit_counit_l: idmap ⊚ unit \; counit ⊚ idmap ≡ ntx_id _ := Adj.unit_counit_l ladjP.
@@ -435,8 +435,8 @@ Module radj.
 Section binding.
 Context {𝐂 𝐃: Cat} (F: RightAdjoint 𝐂 𝐃).
 
-Definition unit: NTX idfun (catcomp (adj F) F) := Adj.unit radjP.
-Definition counit: NTX (catcomp F (adj F)) idfun := Adj.counit radjP.
+Definition unit: functor_id ~> functor_comp (adj F) F := Adj.unit radjP.
+Definition counit: functor_comp F (adj F) ~> functor_id := Adj.counit radjP.
 Definition unit_counit_l_at: forall a, Fhom (adj F) (unit a) \; counit (adj F a) ≡ adj F a := Adj.unit_counit_l_at radjP.
 Definition unit_counit_r_at: forall b, unit (F b) \; Fhom F (counit b) ≡ F b := Adj.unit_counit_r_at radjP.
 Definition unit_counit_l: idmap ⊚ unit \; counit ⊚ idmap ≡ ntx_id _ := Adj.unit_counit_l radjP.
@@ -457,6 +457,58 @@ End radj.
 (* TOFIX: wrongly detected forgetful inheritance (two distinct hierarchies) *)
 #[export,non_forgetful_inheritance]
 HB.instance Definition _ 𝐂 𝐃 F A := IsTerminal.Build _ _ (@radj.preserve_Terminal 𝐂 𝐃 F A).
+
+Module lrefl.
+Section binding.
+Context {𝐂 𝐃: Cat} (F: LeftReflection 𝐂 𝐃).
+Definition counit': TX idfun (catcomp (adj F) F) := Adj.counit' lreflP.
+Definition iso_tx_counit: is_iso_tx (ladj.counit F) counit' := proj2_sig lreflP. 
+Definition counit: functor_comp (adj F) F ≃ functor_id.
+  exact/iso_functor/(iso_ntx' iso_tx_counit).
+Defined.
+End binding.
+End lrefl.
+HB.instance Definition _ {𝐂 𝐃: Cat} (F: LeftReflection 𝐂 𝐃) :=
+  ISO.copy (ladj.counit F) (lrefl.counit F).
+
+Module lcorefl.
+Section binding.
+Context {𝐂 𝐃: Cat} (F: LeftCoreflection 𝐂 𝐃).
+Definition unit': TX (catcomp F (adj F)) idfun := Adj.unit' lcoreflP.
+Definition iso_tx_unit: is_iso_tx (ladj.unit F) unit' := proj2_sig lcoreflP. 
+Definition unit: functor_id ≃ functor_comp F (adj F).
+  exact/iso_functor/(iso_ntx' iso_tx_unit).
+Defined.
+End binding.
+End lcorefl.
+HB.instance Definition _ {𝐂 𝐃: Cat} (F: LeftCoreflection 𝐂 𝐃) :=
+  ISO.copy (ladj.unit F) (lcorefl.unit F).
+
+Module rrefl.
+Section binding.
+Context {𝐂 𝐃: Cat} (F: RightReflection 𝐂 𝐃).
+Definition counit': TX idfun (catcomp F (adj F)) := Adj.counit' rreflP.
+Definition iso_tx_counit: is_iso_tx (radj.counit F) counit' := proj2_sig rreflP. 
+Definition counit: functor_comp F (adj F) ≃ functor_id.
+  exact/iso_functor/(iso_ntx' iso_tx_counit).
+Defined.
+End binding.
+End rrefl.
+HB.instance Definition _ {𝐂 𝐃: Cat} (F: RightReflection 𝐂 𝐃) :=
+  ISO.copy (radj.counit F) (rrefl.counit F).
+
+Module rcorefl.
+Section binding.
+Context {𝐂 𝐃: Cat} (F: RightCoreflection 𝐂 𝐃).
+Definition unit': TX (catcomp (adj F) F) idfun := Adj.unit' rcoreflP.
+Definition iso_tx_unit: is_iso_tx (radj.unit F) unit' := proj2_sig rcoreflP. 
+Definition unit: functor_id ≃ functor_comp (adj F) F.
+  exact/iso_functor/(iso_ntx' iso_tx_unit).
+Defined.
+End binding.
+End rcorefl.
+HB.instance Definition _ {𝐂 𝐃: Cat} (F: RightCoreflection 𝐂 𝐃) :=
+  ISO.copy (radj.unit F) (rcorefl.unit F).
 
 
 (** * equivalence C^op^op ≃ C *)

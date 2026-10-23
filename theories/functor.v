@@ -436,9 +436,7 @@ Proof. move=>a. exact/iso_id. Qed.
 Definition iso_tx_id': sig (is_iso_tx (ntx_id F)) := exist _ _ iso_tx_id.
 
 (** natural isomorphisms can be constructed from pointwise isomorphisms *)
-Program Definition iso_ntx'
-  (i: forall X, F X ≃ G X) (n: F ~> G)
-  (H: forall X, n X ≡ i X): F ≃ G :=
+Program Definition iso_ntx_ (i: forall X, F X ≃ G X) (n: F ~> G) (H: forall X, n X ≡ i X): F ≃ G :=
   iso_ n (mk_ntx G F (fun X => (i X)⁻¹) _) _.
 Next Obligation.
   intros=>/=X Y f. rewrite -iso_src.
@@ -448,10 +446,13 @@ Qed.
 Next Obligation. move=>i n H. split; cbn=>A/=; by rewrite H isoP. Qed.
 
 (** via natural tranformations which are pointwise isomorphisms *)
-Definition iso_ntx
-  (i: forall X, F X ≃ G X):
-  (forall X Y h, i Y ∘ Fhom F h ≡ Fhom G h ∘ i X) -> F ≃ G.
-Proof. move=>N. exact: (@iso_ntx' i (mk_ntx _ _ i N)). Defined.
+Definition iso_ntx (i: forall X, F X ≃ G X) (N: forall X Y h, i Y ∘ Fhom F h ≡ Fhom G h ∘ i X): F ≃ G.
+Proof. exact: (@iso_ntx_ i (mk_ntx _ _ i N)). Defined.
+Definition iso_ntx' (i: F ~> G) (j: TX G F) (ij: is_iso_tx i j): F ≃ G.
+Proof.
+  set i' := fun X => iso_ (i X) (j X) (ij X).
+  exact: (@iso_ntx_ i' i (fun _ => eqv_refl)).
+Defined.
 
 (** when the functors actually are pointwise equal *)
 Program Definition same_diagram

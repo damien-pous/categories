@@ -1,33 +1,34 @@
     Time |  Peak Mem | File Name               
 -----------------------------------------------
-2m38.43s | 890148 ko | Total Time / Peak Mem   
+2m39.89s | 862012 ko | Total Time / Peak Mem   
 -----------------------------------------------
-0m56.12s | 890148 ko | product.vo              
-0m25.38s | 582536 ko | coproduct.vo            
-0m14.01s | 477880 ko | colimit.vo              
+0m52.75s | 862012 ko | product.vo              
+0m24.14s | 569780 ko | coproduct.vo            
+0m14.42s | 489252 ko | colimit.vo              
 0m12.42s | 609452 ko | adjunction.vo           
-0m08.55s | 589932 ko | cartesian.vo            
+0m07.50s | 529232 ko | cartesian.vo            
 0m06.66s | 549616 ko | functor.vo              
 0m04.99s | 512336 ko | morphisms.vo            
-0m03.25s | 469052 ko | monoidal_def.vo         
-0m03.02s | 469040 ko | algebra.vo              
+0m03.68s | 527888 ko | limit.vo                
+0m03.21s | 474956 ko | monoidal_def.vo         
+0m03.08s | 471168 ko | algebra.vo              
 0m02.25s | 429412 ko | cat.vo                  
-0m01.92s | 457340 ko | span.vo                 
-0m01.84s | 496852 ko | setoid.vo               
+0m02.13s | 423504 ko | endo.vo                 
+0m04.93s | 501516 ko | base.vo                 
 0m01.78s | 420504 ko | cast.vo                 
-0m01.72s | 427836 ko | endo.vo                 
-0m01.56s | 474484 ko | pushout.vo              
-0m01.55s | 447340 ko | limit.vo                
-0m01.48s | 433768 ko | coalgebra.vo            
-0m01.30s | 461900 ko | pullback.vo             
-0m01.06s | 413596 ko | tests/arewrite_tests.vo 
+0m01.78s | 485604 ko | setoid.vo               
+0m01.49s | 453656 ko | pushout.vo              
+0m01.44s | 433816 ko | coalgebra.vo            
+0m01.15s | 446012 ko | pullback.vo             
 0m01.04s | 414652 ko | bicat.vo                
-0m00.99s | 412504 ko | cat_bicat.vo            
-0m00.88s | 435164 ko | cospan.vo               
+0m00.99s | 409452 ko | tests/arewrite_tests.vo 
+0m00.98s | 412284 ko | cat_bicat.vo            
+0m00.90s | 420144 ko | span.vo                 
 0m00.84s | 417684 ko | airewrite.vo            
-0m00.75s | 406408 ko | tests/airewrite_tests.vo
-0m00.67s | 400352 ko | tests/coercions.vo      
+0m00.81s | 421908 ko | cospan.vo               
+0m00.65s | 410392 ko | tests/airewrite_tests.vo
 0m00.63s | 400228 ko | arewrite.vo             
+0m00.53s | 400736 ko | tests/coercions.vo      
 0m00.35s | 408280 ko | arity.vo                
 0m00.35s | 400252 ko | bifunctor.vo            
 0m00.35s | 348504 ko | prelim.vo               
