@@ -11,7 +11,7 @@ From Categories.elpi Extra Dependency "common.elpi" as common.
 From Categories.elpi Extra Dependency "areflexivity.elpi" as areflexivity.
 From Categories.elpi Extra Dependency "arewrite.elpi" as arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Module Import Internals.
 Section s.

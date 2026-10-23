@@ -2,7 +2,7 @@
 
 Require Import cat functor bicat.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Unset Universe Checking.
 

@@ -3,7 +3,7 @@
 Require Import cat functor adjunction limit.
 Require Import arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** * cocones *)
 

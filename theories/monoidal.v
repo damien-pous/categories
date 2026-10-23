@@ -1,7 +1,7 @@
 Require Export monoidal_def.
 Require Import monoidal_maclane monoidal_gmaclane monoidal_tactic.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Definition box {X} (x: X) := x.
 

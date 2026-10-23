@@ -3,7 +3,7 @@
 Require Import cat morphisms span.
 Require Import arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** ** products *)
 
@@ -168,6 +168,7 @@ Infix "×" := prod: cat_scope.
 (** also called Cartesian (monoidal) categories *)
 #[short(type="CatProd")]
 HB.structure Definition CATPROD := { 𝐂 of CAT1 𝐂 & CATBPROD 𝐂}.
+
 
 Section s.
 Context {𝐂: CatBProd}.

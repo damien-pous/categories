@@ -3,7 +3,7 @@
 Require Import cat morphisms functor algebra.
 Require Import arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** ** coalgebras *)
 

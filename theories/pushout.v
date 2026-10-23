@@ -3,7 +3,7 @@
 Require Import cat morphisms span cospan pullback.
 Require Import arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 #[primitive] HB.mixin Record IsSquareBelow (𝐂: PreCat) (a b x: ob 𝐂) (f: x ~> a) (g: x ~> b) y of COSPAN 𝐂 a b y :=
   {#[canonical=no]squareBelow: @square 𝐂 a b x y f g in1 in2}.

@@ -1,6 +1,6 @@
 Require Import cat functor morphisms algebra coalgebra.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Check fun (C: Cat) (A: ob C) => A: A ~> A.
 

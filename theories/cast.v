@@ -2,7 +2,7 @@
 
 Require Import cat morphisms.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** casting homomorphisms (in quivers) *)
 Definition hcast {𝐂: Quiver} A B A' B' a b (f: A ~> B): A' ~> B' :=

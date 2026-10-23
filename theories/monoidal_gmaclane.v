@@ -3,7 +3,7 @@
 
 Require Import arity monoidal_def monoidal_maclane.
 
-Local Open Scope cat_scope. 
+Open Scope cat_scope. 
 
 Section s.
 Context {X: Type}.

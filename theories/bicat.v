@@ -2,7 +2,7 @@
 
 Require Import cat morphisms.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** * bicategories *)
 #[primitive] HB.mixin Record HomCats 𝐂 of BAREQUIVER 𝐂  := {

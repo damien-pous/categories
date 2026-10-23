@@ -3,7 +3,7 @@
 Require Import monoidal.
 Import NiceNotations.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Section warmup.
 

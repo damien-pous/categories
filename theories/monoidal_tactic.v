@@ -3,7 +3,7 @@
 Require Import arity monoidal_def monoidal_maclane monoidal_gmaclane arewrite.
 From Stdlib Require Import List.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 
 (** morphism expressions *)

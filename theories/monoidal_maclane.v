@@ -11,7 +11,7 @@
 
 Require Import arity monoidal_def arewrite airewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Section t.
 

@@ -5,7 +5,7 @@ A Rocq library about category theory and monoidal categories
 
 # REQUIREMENTS
 
-- rocq-prover 9.1
+- rocq-prover >= 9.1
 - rocq-partial-orders (https://github.com/damien-pous/partial-orders) 
 
 # AUTHORS
@@ -30,6 +30,23 @@ make
 # FILES
 
 see file _RocqProject, which is documented
+main dependencies are listed below
+
+cat < morphisms < functor < adjunction < (co)limit <
+                < bicat   < monoidal <             <
+    < (co)span  < (co)product        < cartesian   <
+                < pullback/pushout                 <
+		                                           < base
+
+in base: 
+  all exports 
+  + (co)spans as (co)cones
+  + products/pullbacks as limits
+  + coproducts/pushouts as colimits
+  + lifting 0,1,BProd/BCoprod,PB,PO through adjunctions
+    thus duality for cartesian cats, 
+	thus lifting of coproducts to functors
+
 
 # LICENSE
 

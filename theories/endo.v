@@ -3,7 +3,7 @@
 Require Import cat functor monoidal_def.
 From Stdlib Require Import ProofIrrelevance. 
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Section s.
 Context {𝐂: Cat}.

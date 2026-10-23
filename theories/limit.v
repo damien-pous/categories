@@ -3,7 +3,7 @@
 Require Import cat functor adjunction.
 Require Import arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** * cones *)
 

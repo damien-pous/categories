@@ -1,6 +1,7 @@
 (* concrete (bare) quivers for defining diagrams for (co)limits *)
 
 Require Import cat.
+
 Open Scope cat_scope.
 
 Module Import shape.

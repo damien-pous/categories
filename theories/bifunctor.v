@@ -2,7 +2,7 @@
 
 Require Import cat functor.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (*TMP-UNIV: * -> × *)
 Definition app11 {A B D: Type} (F: A∧B -> D) (a: ob A) (b: ob B): D := F(a,b).

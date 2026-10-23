@@ -4,9 +4,9 @@
    its needs universe polymorphism, which is not supported by HB, yet
    as a workaround, we temporarily deactivate universe-checking
  *)
-Require Export span functor product.
+Require Import cat span functor product.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Unset Universe Checking.
 

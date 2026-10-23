@@ -1,10 +1,10 @@
 (** * more on (co)cartesian monoidal categories *)
 
-Require Import cat morphisms span cospan product coproduct functor adjunction monoidal_def.
+Require Import cat morphisms span cospan product coproduct functor monoidal_def.
 From Stdlib Require Import ProofIrrelevance. (* TO REMOVE *)
 Require Import arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Definition cartesian (𝐂: Type) := 𝐂.
 Definition cocartesian (𝐂: Type) := 𝐂.
@@ -31,6 +31,32 @@ HB.instance Definition _ :=
 
 HB.instance Definition _ :=
   @IsMonoidal.Build (cartesian 𝐂) prodA_pentagon prodA_triangle.
+End s.
+
+(** coCartesian monoidal structure of categories with finite coproducts *)
+(* TOTHINK: could also be done by explicit duality
+   (thus removing the need to dualise prodA,U... in [coproduct.v] ) *)
+Section s.
+Context {𝐂: CatCoprod}.
+
+Definition COPROD (x: ob 𝐂 ∧ ob 𝐂): ob 𝐂 := x.1 + x.2.
+Program Definition _COPROD_functor := @IsFunctor.Build _ _ COPROD (fun x y f => hcoprod f.1 f.2) _ _ _.
+Next Obligation.
+  move=>/=a b f g [fg1 fg2]; apply: copair_eqv; exact: comp_eqv.
+Qed.
+Next Obligation. intro. exact: coprod_id. Qed.
+Next Obligation. intros. exact: coprod_comp. Qed.
+HB.instance Definition _ := _COPROD_functor.
+
+HB.instance Definition _ := CATCOPROD.on (cocartesian 𝐂).
+HB.instance Definition _ := HasMonoidalOps.Build (cocartesian 𝐂) zero COPROD.
+HB.instance Definition _ := HasUIP.Build (cocartesian 𝐂) (fun _ _ => proof_irrelevance _).
+
+HB.instance Definition _ :=
+  @IsPreMonoidal.Build (cocartesian 𝐂) coprodA coprodUl coprodUr coprodA_nat coprodUl_nat coprodUr_nat.
+
+HB.instance Definition _ :=
+  @IsMonoidal.Build (cocartesian 𝐂) coprodA_pentagon coprodA_triangle.
 
 End s.
 
@@ -50,6 +76,31 @@ HB.instance Definition _ := IsTerminal.Build _ Fone terminal_Fone.
 End s.
 HB.instance Definition _ :=
   Has1.Build (Functor 𝐂 𝐃) cartesian_Fone__canonical__cat_TERMINAL.
+End s.
+
+(** lifting initial objects to functors *)
+(* TOTHINK: could also be done by explicit duality *)
+Section s.
+Context (𝐂: PreCat) {𝐃: Cat0}.
+Section s.
+Definition Fzero: Functor 𝐂 𝐃 := cst zero.
+Lemma initial_Fzero: initial Fzero.
+Proof.
+  move=>/=F.
+  move: (@terminal_Fone (𝐂^op) (𝐃^op)).
+  (* TODO: optimise duality *)
+  rewrite /terminal/initial. cbn.
+  move=>/(_ (funcop F)). unshelve apply: unique_impl.
+  intro n. unshelve esplit. move=>a. exact: (n a).
+  split;split=>a b f. symmetry; exact: (natural n).
+  intro n. unshelve esplit. move=>a. exact: (n a).
+  split;split=>a b f. symmetry; exact: (natural n).
+  done.
+Defined.
+HB.instance Definition _ := IsInitial.Build _ Fzero initial_Fzero.
+End s.
+HB.instance Definition _ :=
+  Has0.Build (Functor 𝐂 𝐃) cartesian_Fzero__canonical__cat_INITIAL.
 End s.
 
 
@@ -100,73 +151,4 @@ HB.instance Definition _ :=
   HasBinaryProducts.Build (Functor 𝐂 𝐃) cartesian_Fprod___canonical__product_PRODUCT.
 End s.
 
-
-(** coCartesian monoidal structure of categories with finite coproducts *)
-Section s.
-Context {𝐂: CatCoprod}.
-
-Definition COPROD (x: ob 𝐂 ∧ ob 𝐂): ob 𝐂 := x.1 + x.2.
-Program Definition _COPROD_functor := @IsFunctor.Build _ _ COPROD (fun x y f => hcoprod f.1 f.2) _ _ _.
-Next Obligation.
-  move=>/=a b f g [fg1 fg2]; apply: copair_eqv; exact: comp_eqv.
-Qed.
-Next Obligation. intro. exact: coprod_id. Qed.
-Next Obligation. intros. exact: coprod_comp. Qed.
-HB.instance Definition _ := _COPROD_functor.
-
-HB.instance Definition _ := CATCOPROD.on (cocartesian 𝐂).
-HB.instance Definition _ := HasMonoidalOps.Build (cocartesian 𝐂) zero COPROD.
-HB.instance Definition _ := HasUIP.Build (cocartesian 𝐂) (fun _ _ => proof_irrelevance _).
-
-HB.instance Definition _ :=
-  @IsPreMonoidal.Build (cocartesian 𝐂) coprodA coprodUl coprodUr coprodA_nat coprodUl_nat coprodUr_nat.
-
-HB.instance Definition _ :=
-  @IsMonoidal.Build (cocartesian 𝐂) coprodA_pentagon coprodA_triangle.
-
-End s.
-
-(** lifting initial objects to functors *)
-Section s.
-Context (𝐂: PreCat) {𝐃: Cat0}.
-Section s.
-Definition Fzero: Functor 𝐂 𝐃 := cst zero.
-Lemma initial_Fzero: initial Fzero.
-Proof.
-  move=>/=F.
-  move: (@terminal_Fone (𝐂^op) (𝐃^op)).
-  (* TODO: optimise duality *)
-  rewrite /terminal/initial. cbn.
-  move=>/(_ (funcop F)). unshelve apply: unique_impl.
-  intro n. unshelve esplit. move=>a. exact: (n a).
-  split;split=>a b f. symmetry; exact: (natural n).
-  intro n. unshelve esplit. move=>a. exact: (n a).
-  split;split=>a b f. symmetry; exact: (natural n).
-  done.
-Defined.
-HB.instance Definition _ := IsInitial.Build _ Fzero initial_Fzero.
-End s.
-HB.instance Definition _ :=
-  Has0.Build (Functor 𝐂 𝐃) cartesian_Fzero__canonical__cat_INITIAL.
-End s.
-
-(** lifting binary coproducts to functors *)
-Section s.
-Context (𝐂: PreCat) {𝐃: CatBCoprod}.
-Section s.
-Variables (F G: Functor 𝐂 𝐃).
-Definition Fcoprod: Functor 𝐂 𝐃 := opfunc' (opfunc F × opfunc G).
-Definition Fin1: F ~> Fcoprod := ntxop' (pi1 (s := opfunc F × opfunc G)): NTX _ _.
-Definition Fin2: G ~> Fcoprod := ntxop' (pi2 (s := opfunc F × opfunc G)): NTX _ _.
-HB.instance Definition _ := IsCospan.Build _ F G Fcoprod Fin1 Fin2.
-Lemma coproduct_Fcoprod: coproduct F G Fcoprod in1 in2.
-  apply: product_op. 
-  move: (@product_Fprod _ _ (opfunc F) (opfunc G))=>/product_terminal H.
-  (* need to lift the adjuction to spans *)
-  Fail move: (radj.preserve_terminal opfunc' H).
-Admitted.
-HB.instance Definition _ := IsCoproduct.Build _ F G Fcoprod coproduct_Fcoprod.
-End s.
-HB.instance Definition _ :=
-  HasBinaryCoproducts.Build (Functor 𝐂 𝐃) cartesian_Fcoprod__canonical__coproduct_COPRODUCT.
-End s.
+(** Coproducts are lifted to functor categories in [base.v], by explicit duality *)

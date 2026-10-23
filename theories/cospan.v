@@ -1,8 +1,8 @@
 (** * cospans *)
 
-Require Import cat morphisms span (* shape functor adjunction colimit *).
+Require Import cat morphisms span.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** ** cospans *)
 

@@ -13,7 +13,7 @@ From Categories.elpi Extra Dependency "inv_common.elpi" as inv_common.
 From Categories.elpi Extra Dependency "aireflexivity.elpi" as aireflexivity.
 From Categories.elpi Extra Dependency "airewrite.elpi" as airewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Module Import Internals.
 Export arewrite.Internals.

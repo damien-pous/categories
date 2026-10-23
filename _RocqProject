@@ -32,6 +32,7 @@ theories/cast.v                            # casting operations
 theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors
 theories/cartesian.v                       # (co)cartesian monoidal categories
+theories/base.v                            # summary + consolidation of above modules
 
 ## below: to be ported
 # theories/cat_cat.v                         # Cat: Cat (needs universe polymorphism, hence type:type for now)

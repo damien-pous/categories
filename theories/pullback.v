@@ -3,7 +3,7 @@
 Require Import cat morphisms span cospan.
 Require Import arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Definition square (𝐂: PreCat) (a b x y: ob 𝐂) (p: hom x a) (q: hom x b) (i: hom a y) (j: hom b y) :=
   p \; i ≡ q \; j.

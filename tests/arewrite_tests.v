@@ -5,7 +5,7 @@
 
 Require Import cat morphisms functor arewrite.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 Section s.
 Context (C : Cat).

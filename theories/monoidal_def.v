@@ -2,7 +2,7 @@
 
 Require Import cat morphisms cast functor bifunctor.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** ** premonoidal categories (i.e., without coherence) *)
 

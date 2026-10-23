@@ -3,7 +3,7 @@
 Require Import cat morphisms functor span cospan product coproduct.
 From Stdlib Require Import List.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (*
   the rest of the library requires OBJECT < SETOID

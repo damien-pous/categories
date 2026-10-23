@@ -4,7 +4,7 @@ From elpi Require Import elpi coercion.
 
 Declare Scope cat_scope.
 Delimit Scope cat_scope with cat.
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
        
 (** * Categories *)

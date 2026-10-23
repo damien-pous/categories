@@ -2,7 +2,7 @@
 
 Require Import cat morphisms span cospan product.
 
-Local Open Scope cat_scope.
+Open Scope cat_scope.
 
 (** ** products *)
 
