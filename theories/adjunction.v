@@ -415,21 +415,11 @@ Definition dn: forall a b, (a ~> adj F b) -> (F a ~> b) := @Adj.dn _ _ _ _ (@lad
 Lemma preserve_initial A: initial A -> initial (F A).
 Proof. exact:(Adj.preserve_initial ladjP). Defined.
 
-Lemma preserve_Initial (A: Initial 𝐂): initial (F A).
-Proof. exact:(preserve_initial initialP). Defined.
+Definition preserve_Initial (A: Initial 𝐂): Initial 𝐃 :=
+  mk_initial (F A) (preserve_initial initialP). 
 
 End binding.
 End ladj.
-
-(* TOFIX: wrongly detected forgetful inheritance (two distinct hierarchies) *)
-#[non_forgetful_inheritance]
-HB.instance Definition _ 𝐂 𝐃 F A := IsInitial.Build _ _ (@ladj.preserve_Initial 𝐂 𝐃 F A).
-
-Check fun (𝐂 𝐃: Cat) (F: LeftAdjoint 𝐂 𝐃) (A: Initial 𝐂) => F A: Initial _.
-(* TOFIX: HB does not register the required things...
-   use a tag above to adhere to its discipline? *)
-Fail Check fun (𝐂 𝐃: Cat) (F: AdjointEquivalence 𝐂 𝐃) (A: Initial 𝐂) => F A: Initial _.
-
 
 Module radj.
 Section binding.
@@ -448,15 +438,11 @@ Definition dn: forall a b, (a ~> F b) -> (adj F a ~> b) := @Adj.dn _ _ _ _ (@rad
 Lemma preserve_terminal A: terminal A -> terminal (F A).
 Proof. exact:(Adj.preserve_terminal radjP). Defined.
 
-Lemma preserve_Terminal (A: Terminal 𝐂): terminal (F A).
-Proof. exact:(preserve_terminal terminalP). Defined.
+Definition preserve_Terminal (A: Terminal 𝐂): Terminal 𝐃 :=
+  mk_terminal (F A) (preserve_terminal terminalP). 
 
 End binding.
 End radj. 
-
-(* TOFIX: wrongly detected forgetful inheritance (two distinct hierarchies) *)
-#[export,non_forgetful_inheritance]
-HB.instance Definition _ 𝐂 𝐃 F A := IsTerminal.Build _ _ (@radj.preserve_Terminal 𝐂 𝐃 F A).
 
 Module lrefl.
 Section binding.

@@ -204,8 +204,11 @@ Section s.
 Context {𝐂: Quiver}.
 Definition init (x: Initial 𝐂) y: x ~> y := (initialP y).1. 
 Definition initU (x: Initial 𝐂) y (f g: x ~> y): f ≡ g := (initialP y).2 f g. 
+Definition mk_initial (x: ob 𝐂) (H: initial x): Initial 𝐂
+  := HB.pack_for (Initial 𝐂) x (IsInitial.Build _ x H).
 End s.
 Arguments init {_} _ _/.
+Arguments mk_initial {_}. 
 
 (** ** terminal objects *)
 Definition terminal {𝐂: Quiver} (x: ob 𝐂) := forall y, unique (y ~> x).
@@ -217,8 +220,11 @@ Section s.
 Context {𝐂: Quiver}.
 Definition term (x: Terminal 𝐂) y: y ~> x := (terminalP y).1. 
 Definition termU (x: Terminal 𝐂) y (f g: y ~> x): f ≡ g := (terminalP y).2 f g. 
+Definition mk_terminal (x: ob 𝐂) (H: terminal x): Terminal 𝐂
+  := HB.pack_for (Terminal 𝐂) x (IsTerminal.Build _ x H).
 End s.
 Arguments term {_} _ _/.
+Arguments mk_terminal {_}. 
 
 (** duality between initial and terminal objects *)
 Definition terminal_op 𝐂 x (H: @terminal 𝐂 x): initial (obop x) := H.

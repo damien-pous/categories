@@ -32,6 +32,7 @@ theories/cast.v                            # casting operations
 theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors
 theories/cartesian.v                       # (co)cartesian monoidal categories
+theories/products_as_limits.v              # products as limits
 theories/base.v                            # summary + consolidation of above modules
 
 ## below: to be ported
