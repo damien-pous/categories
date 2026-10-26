@@ -45,6 +45,7 @@ HB.end.
 (** lifting binary coproducts to functors *)
 HB.instance Definition _ (𝐂: Cat) {𝐃: CatBCoprod} :=
   HasBCoprodThroughAdj.Build (Functor 𝐂^op 𝐃^op)^op (Functor 𝐂 𝐃) deopfunc.
+HB.saturate Functor.
 
 HB.factory Record HasPullbackThroughAdj (𝐃: CatPb) 𝐂 & CAT 𝐂 := { F: RightCoreflection 𝐃 𝐂 }.
 HB.builders Context 𝐃 𝐂 & HasPullbackThroughAdj 𝐃 𝐂.

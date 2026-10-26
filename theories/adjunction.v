@@ -77,8 +77,19 @@ Module Adj.
     
     Lemma dn_inj: injective dn.
     Proof. move=>f g H. rewrite -(up_dn f) -(up_dn g). exact/up_eqv. Qed.
-    
   End s.
+
+  Lemma up_id (a: ob 𝐂): up (F a) ≡ unit s a.
+  Proof. by rewrite /up !cats. Qed.
+
+  Lemma up_comp (a: ob 𝐂) (b c: ob 𝐃) (f: F a ~> b) (g: b ~> c): up (f \; g) ≡ up f \; Fhom G g.
+  Proof. by rewrite /up !cats. Qed.
+
+  Lemma dn_id (b: ob 𝐃): dn (G b) ≡ counit s b.
+  Proof. by rewrite /dn !cats. Qed.
+
+  Lemma dn_comp (a b: ob 𝐂) (c: ob 𝐃) (f: a ~> b) (g: b ~> G c): dn (f \; g) ≡ Fhom F f \; dn g.
+  Proof. by rewrite /dn !cats. Qed.
 
   (** left adjoints preserve initial objects *)
   Theorem preserve_initial (a: ob 𝐂) (H: initial a): initial (F a).

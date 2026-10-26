@@ -84,12 +84,13 @@ Section s.
     Definition Fcone' (x: cone (catcomp F G)): cone F.
       exists (adj G (cone_ob x)).
       exists (fun c => radj.dn (cone_mor x c)).
-      move=>c c' f. cbn. sorry.  (* TODO *)
+      move=>c c' f. cbn. apply: (Adj.up_inj (s:=radjP)).
+      rewrite Adj.up_dn Adj.up_comp Adj.up_dn. exact/coneP.
     Defined.
     
     Definition Fcone'hom (x y: cone (catcomp F G)) (f: conehom x y): Fcone' x ~> Fcone' y.
       exists (Fhom (adj G) f).
-      move=>c. cbn. sorry.       (* TODO *)
+      move=>c. cbn. rewrite -Adj.dn_comp. exact/Adj.dn_eqv/conehomP.
     Defined.
     
     HB.instance Definition _ :=
@@ -99,18 +100,21 @@ Section s.
     HB.instance Definition _ := IsPreAdjointF.Build _ _ (Fcone G) Fcone'. 
 
     Definition Fcone_adj: adjunction Fcone' (Fcone G).
-      (* TODO: finish proofs *)
       unshelve esplit. 
       - unshelve esplit.
         move=>/=C. exists (radj.unit G (cone_ob C)).
-        move=>/=c. cbn. sorry.
-        split; split. move=>/=C D h. cbn. sorry.
+        move=>/=c. exact/Adj.up_dn.
+        split; split. move=>/=C D h. cbn.
+        (* TODO: improve this subproof *)
+        apply: (Adj.dn_inj (s:=radjP)). rewrite Adj.dn_up Adj.dn_comp.
+        set i := Adj.dn _ _. setoid_replace i with (idmap (adj G (cone_ob D))). cat.
+        apply: Adj.up_inj. rewrite /i. setoid_rewrite Adj.up_dn. by rewrite Adj.up_id.
       - unshelve esplit.
         move=>/=C. exists (radj.counit G (cone_ob C)).
-        move=>/=c. cbn. sorry.
-        split; split. move=>/=C D h. cbn. sorry.
-      - cbn=>C. sorry.  
-      - cbn=>C. sorry.  
+        move=>/=c. symmetry. exact/(natural (radj.counit G)).
+        split; split. move=>/=C D h. cbn. exact/(natural (radj.counit G)).
+      - cbn=>C. exact: Adj.unit_counit_l_at.
+      - cbn=>C. exact: Adj.unit_counit_r_at.
     Defined.
     HB.instance Definition _ := IsRightAdjoint.Build _ _ (Fcone G) Fcone_adj.
 
