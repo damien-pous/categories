@@ -34,6 +34,7 @@ theories/endo.v                            # the (strict) monoidal category of e
 theories/cartesian.v                       # (co)cartesian monoidal categories
 theories/products_as_limits.v              # products as limits
 theories/coproducts_as_colimits.v          # coproducts as colimits
+theories/pullbacks_as_limits.v             # pullbacks as limits
 theories/base.v                            # summary + consolidation of above modules
 
 ## below: to be ported
