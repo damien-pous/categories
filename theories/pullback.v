@@ -135,3 +135,34 @@ Arguments pb2 {_ _ _ _ _}, {_ _ _} _ _.
 Definition pbP a b y (f: a ~> y) (g: b ~> y): is_pullback f g pb1 pb2 := pullbackP. 
 
 End s.
+
+(** building pullbacks from binary products and equalizers *)
+Require Import product equalizer.
+
+Lemma prod_iff (A B A' B': Prop): (A <-> A') -> (B <-> B') -> (A ∧ B <-> A' ∧ B').
+Proof. firstorder. Qed.         
+
+Lemma product_equalizer_pullback {𝐂: Cat} (a b y: ob 𝐂) (f: a ~> y) (g: b ~> y)
+  (x: Product a b) (z: Equalizer (pi1 (s:=x) \; f) (pi2 (s:=x) \; g)):
+  is_pullback f g (equalizer z \; pi1) (equalizer z \; pi2).
+Proof.
+  split. normalise. exact: (equalizerP (s:=z)).1.
+  move=>x' p q S.
+  have S': pair (x:=x) p q \; pi1 \; f ≡ pair (x:=x) p q \; pi2 \; g.
+  by rewrite -2!compoA 2!pairE.  
+  move: ((equalizerP (s:=z)).2 x' (pair p q) S').
+  apply: unique_sig_impl. clear.
+  move=>/=e. rewrite -prod_ext. apply/prod_iff; by rewrite compoA pairE. 
+Defined.
+  
+HB.factory Record PullbacksOfEqualizers 𝐂 & CATBPROD 𝐂 & CATEQZ 𝐂 := {}.
+HB.builders Context 𝐂 & PullbacksOfEqualizers 𝐂.
+Definition pb (a b y: ob 𝐂) (f: a ~> y) (g: b ~> y): ob 𝐂 := Eqz (a:=a×b) (pi1 \; f) (pi2 \; g).
+HB.instance Definition _ a b y f g :=
+  IsSpan.Build 𝐂 a b (@pb a b y f g) (eqz _ _ \; pi1) (eqz _ _ \; pi2). 
+HB.instance Definition _ a b y f g :=
+  IsSquareAbove.Build 𝐂 a b y f g (@pb a b y f g) (product_equalizer_pullback _).1. 
+HB.instance Definition _ a b y f g :=
+  IsPullback.Build 𝐂 a b y f g (@pb a b y f g) (product_equalizer_pullback _). 
+HB.instance Definition _ := HasPullbacks.Build 𝐂 (fun _ _ _ f g => pb f g: Pullback _ _).
+HB.end.

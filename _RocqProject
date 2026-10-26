@@ -21,6 +21,8 @@ theories/span.v                            # spans
 theories/cospan.v                          # cospans
 theories/product.v                         # products
 theories/coproduct.v                       # coproducts
+theories/equalizer.v                       # equalizers
+theories/coequalizer.v                     # coequalizers
 theories/pullback.v                        # pullbacks
 theories/pushout.v                         # pushouts
 theories/algebra.v                         # algebras

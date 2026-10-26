@@ -23,15 +23,15 @@ Definition square_below_ H: SquareBelow f g := square_below H.
 End s.
 
 Section s.
-Context (C: PreCat) (a b: ob C).
-HB.instance Definition _ x f g (y: @SquareAbove C a b x f g) :=
-  IsSquareBelow.Build (op C) (obop a) (obop b) (obop x) (morphop f) (morphop g) (obop (y: ob C)) squareAbove.
-HB.instance Definition _ x f g (y: @SquareAbove (op C) (obop a) (obop b) (obop x) (morphop f) (morphop g)) :=
-  IsSquareBelow.Build C a b x f g (obop' (y: ob C)) (squareAbove (s:=y)).
-HB.instance Definition _ x f g (y: @SquareBelow C a b x f g) :=
-  IsSquareAbove.Build (op C) (obop a) (obop b) (obop x) (morphop f) (morphop g) (obop (y: ob C)) squareBelow.
-HB.instance Definition _ x f g (y: @SquareBelow (op C) (obop a) (obop b) (obop x) (morphop f) (morphop g)) :=
-  IsSquareAbove.Build C a b x f g (obop' (y: ob C)) (squareBelow (s:=y)).
+Context (𝐂: PreCat) (a b: ob 𝐂).
+HB.instance Definition _ x f g (y: @SquareAbove 𝐂 a b x f g) :=
+  IsSquareBelow.Build (op 𝐂) (obop a) (obop b) (obop x) (morphop f) (morphop g) (obop (y: ob 𝐂)) squareAbove.
+HB.instance Definition _ x f g (y: @SquareAbove (op 𝐂) (obop a) (obop b) (obop x) (morphop f) (morphop g)) :=
+  IsSquareBelow.Build 𝐂 a b x f g (obop' (y: ob 𝐂)) (squareAbove (s:=y)).
+HB.instance Definition _ x f g (y: @SquareBelow 𝐂 a b x f g) :=
+  IsSquareAbove.Build (op 𝐂) (obop a) (obop b) (obop x) (morphop f) (morphop g) (obop (y: ob 𝐂)) squareBelow.
+HB.instance Definition _ x f g (y: @SquareBelow (op 𝐂) (obop a) (obop b) (obop x) (morphop f) (morphop g)) :=
+  IsSquareAbove.Build 𝐂 a b x f g (obop' (y: ob 𝐂)) (squareBelow (s:=y)).
 End s.
 
 
@@ -72,15 +72,15 @@ Definition pushout_ y i j H: Pushout f g := @pushout y i j H.
 End s.
 
 Section s.
-Context (C: PreCat) (a b: ob C).
-HB.instance Definition _ x f g (y: @Pullback C a b x f g) :=
-  IsPushout.Build (op C) (obop a) (obop b) (obop x) (morphop f) (morphop g) (obop (y: ob C)) ((* is_pullback_op *) pullbackP).
-HB.instance Definition _ x f g (y: @Pullback (op C) (obop a) (obop b) (obop x) (morphop f) (morphop g)) :=
-  IsPushout.Build C a b x f g (obop' (y: ob C)) (pullbackP (s:=y)).
-HB.instance Definition _ x f g (y: @Pushout C a b x f g) :=
-  IsPullback.Build (op C) (obop a) (obop b) (obop x) (morphop f) (morphop g) (obop (y: ob C)) ((* is_pushout_op *) pushoutP).
-HB.instance Definition _ x f g (y: @Pushout (op C) (obop a) (obop b) (obop x) (morphop f) (morphop g)) :=
-  IsPullback.Build C a b x f g (obop' (y: ob C)) (pushoutP (s:=y)).
+Context (𝐂: PreCat) (a b: ob 𝐂).
+HB.instance Definition _ x f g (y: @Pullback 𝐂 a b x f g) :=
+  IsPushout.Build (op 𝐂) (obop a) (obop b) (obop x) (morphop f) (morphop g) (obop (y: ob 𝐂)) ((* is_pullback_op *) pullbackP).
+HB.instance Definition _ x f g (y: @Pullback (op 𝐂) (obop a) (obop b) (obop x) (morphop f) (morphop g)) :=
+  IsPushout.Build 𝐂 a b x f g (obop' (y: ob 𝐂)) (pullbackP (s:=y)).
+HB.instance Definition _ x f g (y: @Pushout 𝐂 a b x f g) :=
+  IsPullback.Build (op 𝐂) (obop a) (obop b) (obop x) (morphop f) (morphop g) (obop (y: ob 𝐂)) ((* is_pushout_op *) pushoutP).
+HB.instance Definition _ x f g (y: @Pushout (op 𝐂) (obop a) (obop b) (obop x) (morphop f) (morphop g)) :=
+  IsPullback.Build 𝐂 a b x f g (obop' (y: ob 𝐂)) (pushoutP (s:=y)).
 End s.
 
 
@@ -154,3 +154,23 @@ Arguments po2 {_ _ _ _ _}, {_ _ _} _ _.
 Definition poP a b x (f: x ~> a) (g: x ~> b): is_pushout f g po1 po2 := pushoutP. 
 
 End s.
+
+(** building pushouts from binary coproducts and coequalizers *)
+Require Import product coproduct equalizer coequalizer.
+
+Lemma coproduct_coequalizer_pushout {𝐂: Cat} (a b x: ob 𝐂) (f: x ~> a) (g: x ~> b)
+  (y: Coproduct a b) (z: Coequalizer (f \; in1 (s:=y)) (g \; in2 (s:=y))):
+  is_pushout f g (in1 \; coequalizer z) (in2 \; coequalizer z).
+Proof. exact: (@product_equalizer_pullback _ _ _ _ _ _ (obop (y: ob 𝐂)) (obop z)). Defined.
+  
+HB.factory Record PushoutsOfCoequalizers 𝐂 & CATBCOPROD 𝐂 & CATCOEQZ 𝐂 := {}.
+HB.builders Context 𝐂 & PushoutsOfCoequalizers 𝐂.
+Definition po (a b x: ob 𝐂) (f: x ~> a) (g: x ~> b): ob 𝐂 := Coeqz (b:=a+b) (f \; in1) (g \; in2).
+HB.instance Definition _ a b x f g :=
+  IsCospan.Build 𝐂 a b (@po a b x f g) (in1 \; coeqz _ _) (in2 \; coeqz _ _). 
+HB.instance Definition _ a b x f g :=
+  IsSquareBelow.Build 𝐂 a b x f g (@po a b x f g) (coproduct_coequalizer_pushout _).1. 
+HB.instance Definition _ a b x f g :=
+  IsPushout.Build 𝐂 a b x f g (@po a b x f g) (coproduct_coequalizer_pushout _). 
+HB.instance Definition _ := HasPushouts.Build 𝐂 (fun _ _ _ f g => po f g: Pushout _ _).
+HB.end.

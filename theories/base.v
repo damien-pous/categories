@@ -1,4 +1,5 @@
-Require Export cat morphisms span cospan product coproduct pullback pushout limit colimit.
+Require Export cat morphisms.
+Require Export span cospan product coproduct equalizer coequalizer pullback pushout limit colimit.
 Require Export shape functor adjunction monoidal_def cartesian.
 Require Import products_as_limits coproducts_as_colimits.
 Require Import pullbacks_as_limits (* pushouts_as_colimits *).
