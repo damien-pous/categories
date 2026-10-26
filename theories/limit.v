@@ -202,6 +202,10 @@ End s.
 
 #[short(type="CatLim")]
 HB.structure Definition CATLIM (S: BareQuiver) := { 𝐂 of HasLimits S 𝐂 & }.
+Definition mk_limits S 𝐂 (lim: limits S 𝐂): Type := 𝐂.
+Arguments mk_limits _ {_} _/.
+HB.instance Definition _ S 𝐂 lim := CAT.on (@mk_limits S 𝐂 lim).
+HB.instance Definition _ S 𝐂 lim := @HasLimits.Build S (@mk_limits S 𝐂 lim) lim.
 
 HB.factory Record HasLimitsThroughAdj S (𝐃: CatLim S) 𝐂 & CAT 𝐂 := { F: RightCoreflection 𝐃 𝐂 }.
 HB.builders Context S 𝐃 𝐂 & HasLimitsThroughAdj S 𝐃 𝐂.

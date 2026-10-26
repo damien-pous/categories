@@ -233,6 +233,8 @@ HB.instance Definition _ 𝐂 (x: Initial 𝐂) := IsTerminal.Build 𝐂^op (obo
 HB.instance Definition _ 𝐂 (x: Initial _) := IsTerminal.Build 𝐂 (obop' x) (@initialP _ x).
 HB.instance Definition _ 𝐂 (x: Terminal 𝐂) := IsInitial.Build 𝐂^op (obop x) (@terminalP _ x).
 HB.instance Definition _ 𝐂 (x: Terminal _) := IsInitial.Build 𝐂 (obop' x) (@terminalP _ x).
+Definition Initial_op {𝐂: Quiver} (x: Initial 𝐂): Terminal 𝐂^op := obop x.
+Definition Terminal_op {𝐂: Quiver} (x: Terminal 𝐂): Initial 𝐂^op := obop x.
 
 
 (** ** extensible normalisation tactic via canonical structures *)

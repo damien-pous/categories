@@ -1,6 +1,6 @@
 (** cocones and colimits *)
 
-Require Import cat functor adjunction limit.
+Require Import cat morphisms functor adjunction limit.
 Require Import arewrite.
 
 Open Scope cat_scope.
@@ -46,6 +46,15 @@ Section s.
   Definition is_colimit := @initial cocone.
   Definition Colimit := Initial cocone.
   
+End s.
+
+(** duality between limits and colimits *)
+Section s.
+Context {𝐂: BareQuiver} {𝐃: Cat} (F: Diagram 𝐂 𝐃).
+Definition limit_op C (H: @is_limit _ _ F C): @is_colimit _ _ (funcop F) (obop C) := H. 
+Definition colimit_op C (H: @is_colimit _ _ F C): @is_limit _ _ (funcop F) (obop C) := H. 
+Definition Limit_op (L: Limit F): Colimit (funcop F) := Terminal_op L. 
+Definition Colimit_op (L: Colimit F): Limit (funcop F) := Initial_op L. 
 End s.
 
 (** * lifting functors to cocones *)
@@ -99,10 +108,73 @@ Section s.
       IsInitial.Build _ (Fcocone G (INITIAL.sort A)) (ladj_preserve_colimit initialP). 
   End s.
   
-  Section s.
-    Context (G: AdjointEquivalence 𝐃 𝐄).
-    (* TODO: declare [Fcocone G] as an adjoint equivalence, through proper factories *)
-  End s.
-  
 End s.
 
+
+(** * equivalent diagrams yield equivalent categories of cocones *)
+
+Section s.
+  Context {𝐂: BareQuiver} {𝐃: Cat}.
+  Definition transport_cocone (F G: Diagram 𝐂 𝐃) (n: G ~> F) (C: cocone F): cocone G.
+  Proof. exact: (transport_cone (ntxop n: NTX _ _)). Defined.
+  Definition transport_coconehom (F G: Diagram 𝐂 𝐃) (n: G ~> F) (C D: cocone F) (h: coconehom C D):
+    coconehom (transport_cocone n C) (transport_cocone n D).
+  Proof. exact: (transport_conehom (ntxop n: NTX _ _)). Defined.
+
+  HB.instance Definition _ (F G: Diagram 𝐂 𝐃) (n: G ~> F) :=
+    @IsFunctor.Build _ _ (transport_cocone n) (transport_coconehom n)
+      (fun _ _ _ _ H => H) (fun _ => eqv_refl) (fun _ _ _ _ _ => eqv_refl).
+
+  HB.instance Definition _ (F G: Diagram 𝐂 𝐃) (n: G ≃ F) :=
+    IsPreAdjointF.Build _ _ (transport_cocone n) (transport_cocone n⁻¹). 
+
+  Definition transport_cocone_ladj (F G: Diagram 𝐂 𝐃) (n: G ≃ F):
+    adjunction (transport_cocone n) (transport_cocone n⁻¹).
+  Proof.
+    set n' := @iso_ (Diagram _ _) _ _ (ntxop n⁻¹: NTX _ _) (ntxop n¹: NTX _ _) (isoP n).
+    (* TOFIX: LOOOONG *)
+    exact: (Adj.op (@transport_cone_ladj _ _ (funcop G) (funcop F) n')).
+  Defined.
+  HB.instance Definition _ (F G: Diagram 𝐂 𝐃) (n: G ≃ F) :=
+    IsLeftAdjoint.Build _ _ (transport_cocone n) (transport_cocone_ladj n). 
+  HB.instance Definition _ (F G: Diagram 𝐂 𝐃) (n: G ≃ F) :=
+    IsRightAdjoint.Build _ _ (transport_cocone n) (transport_cocone_ladj n⁻¹). 
+  HB.instance Definition _ (F G: Diagram 𝐂 𝐃) (n: G ≃ F) :=
+    IsAdjointEquivalence.Build _ _ (transport_cocone n). 
+End s.
+
+
+(** * creating colimits through left reflections *)
+
+Definition colimits (S: BareQuiver) (𝐂: Cat) := forall D: Diagram S 𝐂, Colimit D.
+
+Section s.  
+  Context {𝐂 𝐃: Cat} (F: LeftReflection 𝐂 𝐃) (S: BareQuiver).
+  Hypothesis colim: colimits S 𝐂.
+  Theorem lrefl_create_colimits: colimits S 𝐃.
+  Proof.
+    set lim𝐂op := fun D: Diagram S^op 𝐂^op => Colimit_op (colim (funcop' D)).
+    set lim𝐃op := rcorefl_create_limits (funcop F) lim𝐂op.
+    exact: (fun D => Limit_op (lim𝐃op (funcop D))).
+  Defined.
+End s.
+
+
+(** * HB packaging *)
+
+
+(** ** categories with all colimits of shape [S] *)
+#[primitive] HB.mixin Record HasColimits (S: BareQuiver) 𝐂 & CAT 𝐂 := 
+  { #[canonical=no] colim: colimits S 𝐂 }.
+
+#[short(type="CatColim")]
+HB.structure Definition CATCOLIM (S: BareQuiver) := { 𝐂 of HasColimits S 𝐂 & }.
+Definition mk_colimits S 𝐂 (colim: colimits S 𝐂): Type := 𝐂.
+Arguments mk_colimits _ {_} _/.
+HB.instance Definition _ S 𝐂 colim := CAT.on (@mk_colimits S 𝐂 colim).
+HB.instance Definition _ S 𝐂 colim := @HasColimits.Build S (@mk_colimits S 𝐂 colim) colim.
+
+HB.factory Record HasColimitsThroughAdj S (𝐃: CatColim S) 𝐂 & CAT 𝐂 := { F: LeftReflection 𝐃 𝐂 }.
+HB.builders Context S 𝐃 𝐂 & HasColimitsThroughAdj S 𝐃 𝐂.
+HB.instance Definition _ := HasColimits.Build S 𝐂 (lrefl_create_colimits F colim).
+HB.end.

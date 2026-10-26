@@ -33,6 +33,7 @@ theories/monoidal_def.v                    # definition of monoidal categories
 theories/endo.v                            # the (strict) monoidal category of endofuntcors
 theories/cartesian.v                       # (co)cartesian monoidal categories
 theories/products_as_limits.v              # products as limits
+theories/coproducts_as_colimits.v          # coproducts as colimits
 theories/base.v                            # summary + consolidation of above modules
 
 ## below: to be ported
